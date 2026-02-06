@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manjuu - Waiting for Payment</title>
+        <link rel="stylesheet" href="./assets/css/waiting_payment.css">
+    <script src="./assets/js/waiting_payment.js" defer></script>
+</head>
+<body>
+    <div class="container">
+        <div class="status-icon">
+            <div class="clock-icon">⏰</div>
+        </div>
+
+        <h1>Waiting for Payment</h1>
+        <p class="subtitle">Please complete your payment to activate your subscription</p>
+
+        <div class="payment-method-badge" id="payment-badge">QRIS Payment</div>
+
+        <div class="timer-section">
+            <div class="timer-label">Payment expires in</div>
+            <div class="timer" id="countdown">15:00</div>
+        </div>
+
+        <!-- QRIS Payment Section -->
+        <div class="qr-section" id="qris-section">
+            <div class="qr-code">📱</div>
+            <p class="qr-instruction">Scan this QR code with your mobile banking or e-wallet app</p>
+        </div>
+
+        <!-- Bank Transfer Section -->
+        <div class="bank-section" id="bank-section">
+            <h3 style="color: #2d3748; margin-bottom: 16px;">Transfer to Bank Account</h3>
+            <div class="bank-info">
+                <div class="bank-detail">
+                    <span class="bank-label">Bank Name</span>
+                    <span class="bank-value">BCA (Bank Central Asia)</span>
+                </div>
+                <div class="bank-detail">
+                    <span class="bank-label">Account Number</span>
+                    <div>
+                        <span class="bank-value" id="account-number">1234567890</span>
+                        <button class="copy-btn" onclick="copyText('account-number')">Copy</button>
+                    </div>
+                </div>
+                <div class="bank-detail">
+                    <span class="bank-label">Account Name</span>
+                    <span class="bank-value">PT Manjuu Indonesia</span>
+                </div>
+                <div class="bank-detail" style="border-top: 2px solid #e2e8f0; padding-top: 16px; margin-top: 12px;">
+                    <span class="bank-label">Transfer Amount</span>
+                    <div>
+                        <span class="bank-value" style="color: #667eea;" id="transfer-amount">RP. 700,000</span>
+                        <button class="copy-btn" onclick="copyText('transfer-amount')">Copy</button>
+                    </div>
+                </div>
+            </div>
+            <p style="color: #718096; font-size: 13px; margin-top: 12px;">⚠️ Please transfer the exact amount shown above</p>
+        </div>
+
+        <!-- E-Wallet Section -->
+        <div class="ewallet-section" id="ewallet-section">
+            <h3 style="color: #2d3748; margin-bottom: 8px;">Select Your E-Wallet</h3>
+            <div class="ewallet-options">
+                <div class="ewallet-card" onclick="selectEwallet('gopay')">
+                    <div class="ewallet-icon">💚</div>
+                    <div class="ewallet-name">GoPay</div>
+                </div>
+                <div class="ewallet-card" onclick="selectEwallet('ovo')">
+                    <div class="ewallet-icon">💜</div>
+                    <div class="ewallet-name">OVO</div>
+                </div>
+                <div class="ewallet-card" onclick="selectEwallet('dana')">
+                    <div class="ewallet-icon">💙</div>
+                    <div class="ewallet-name">DANA</div>
+                </div>
+                <div class="ewallet-card" onclick="selectEwallet('shopeepay')">
+                    <div class="ewallet-icon">🧡</div>
+                    <div class="ewallet-name">ShopeePay</div>
+                </div>
+                <div class="ewallet-card" onclick="selectEwallet('linkaja')">
+                    <div class="ewallet-icon">❤️</div>
+                    <div class="ewallet-name">LinkAja</div>
+                </div>
+                <div class="ewallet-card" onclick="selectEwallet('jenius')">
+                    <div class="ewallet-icon">💛</div>
+                    <div class="ewallet-name">Jenius</div>
+                </div>
+            </div>
+            <div class="ewallet-number" id="ewallet-number-box" style="display: none;">
+                <div class="ewallet-number-label">Send payment to:</div>
+                <div class="ewallet-number-value" id="ewallet-number">0812-3456-7890</div>
+                <button class="copy-btn" onclick="copyText('ewallet-number')" style="margin-top: 12px;">Copy Number</button>
+            </div>
+        </div>
+
+        <div class="payment-details">
+            <div class="detail-row">
+                <span class="detail-label">Order ID</span>
+                <span class="detail-value">#MNJ-2025-00142</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Product</span>
+                <span class="detail-value" id="product-name">WOOWA eco 12 bulan</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Quantity</span>
+                <span class="detail-value" id="quantity">1x</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Discount</span>
+                <span class="detail-value" id="discount-value">30% OFF</span>
+            </div>
+            <div class="total-row detail-row">
+                <span class="detail-label">Total Amount</span>
+                <span class="detail-value" id="total-amount">RP. 700,000</span>
+            </div>
+        </div>
+
+        <div class="loading-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <p class="status-message">Checking payment status...</p>
+
+        <div class="instructions" id="instructions">
+            <h3>How to Pay:</h3>
+            <ol id="instruction-list">
+                <li>Open your mobile banking or e-wallet app</li>
+                <li>Select "Scan QR" or "QRIS" option</li>
+                <li>Scan the QR code shown above</li>
+                <li>Confirm the payment amount</li>
+                <li>Complete the transaction</li>
+            </ol>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-secondary" onclick="window.history.back()">Back to Checkout</button>
+            <button class="btn btn-primary" onclick="checkPayment()">Check Payment Status</button>
+        </div>
+    </div>
+</body>
+</html>

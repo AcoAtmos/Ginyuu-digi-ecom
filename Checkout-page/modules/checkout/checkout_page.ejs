@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ginyuu - Checkout</title>
+    
+    <link rel="stylesheet" href="./assets/css/checkout.css">
+    <script src="./assets/js/checkout.js" defer></script>
+</head>
+<body>
+    
+    <div class="container">
+        <header>
+            <div class="logo">Ginyuu</div>
+            <div class="steps">
+                <div class="step active">
+                    <span class="number">✓</span>
+                    <span style="">Checkout</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="content">
+            <div class="checkout-form">
+                <h1>Checkout</h1>
+                <div class="form-group" >
+                    <label>Product <span class="required">*</span></label>
+                    <div style="display: flex;gap: 5px;">
+                        <select id="product-selection" >
+
+                        </select>
+                        <input 
+                            type="number" 
+                            id="product-amount" 
+                            min="1" 
+                            style="width: 15%;max-width: 20%;; text-align: center;" 
+                        >
+                    </div>
+                </div>
+
+                <div id="user-info-section">
+                    <div class="form-group">
+                        <label>Name/ Username <span class="required">*</span></label>
+                        <input type="text" id="username" placeholder="Enter full name">
+                    </div>
+    
+                    <div class="form-group">
+                        <label>Password <span class="required">*</span></label>
+                        <input type="password" id="password" placeholder="Enter Password">
+                    </div>
+    
+                    <div class="form-group">
+                        <label>Confirm Password <span class="required">*</span></label>
+                        <input type="password" id="confirm-password" placeholder="Confirm Password">
+                    </div>
+    
+                    <div class="form-group">
+                        <label>Email address <span class="required">*</span></label>
+                        <input type="email" id="email" placeholder="Enter email address">
+                    </div>
+    
+                    <div class="form-group">
+                        <label>Phone number <span class="required">*</span></label>
+                        <div class="phone-input">
+                            <input type="text" id="+62" value="+62" disabled style= "width: 10%">
+                            <input type="tel" id="phone" placeholder="Enter phone number" onblur=" hit_api_check_whatsapp()">   
+                        </div>
+                        <p id="phone-error"  style=" margin-top: 5px; font-size: 12px; display: none;"></p>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="payment-section"> 
+                    <label class="section-title">Payment Method *</label>
+
+                    <div class="payment-options">
+                        <label class="payment-card">
+                            <input type="radio" name="payment_method" value="qris">
+                            <span>QRIS</span>
+                        </label>
+
+                        <label class="payment-card">
+                            <input type="radio" name="payment_method" value="bank">
+                            <span>Transfer Bank</span>
+                        </label>
+
+                        <label class="payment-card">
+                            <input type="radio" name="payment_method" value="ewallet">
+                            <span>E-Wallet</span>
+                        </label>
+                    </div>
+
+                    <!-- input tambahan default hilang -->
+                    <!-- BANK TRANSFER -->
+                    <div class="payment-extra" id="bank-input" style="display: none;">
+                        <!-- <input
+                        type="text"
+                        id="bank-account"
+                        placeholder="Masukkan nomor rekening"
+                        > -->
+                        <select id="bank-name">
+                            <option value="" disabled selected>Pilih Bank</option>
+                            <option value="bca">BCA</option>
+                            <option value="bni">BNI</option>
+                            <option value="bri">BRI</option>
+                            <option value="mandiri">Mandiri</option>
+                        </select>
+                    </div>
+
+
+                    <!-- E-WALLET -->
+                    <div class="payment-extra" id="ewallet-input" style="display: none; flex-direction: row; gap: 10px;">
+                        <!-- <input
+                        type="text"
+                        id="ewallet-number"
+                        placeholder="Masukkan nomor e-wallet"
+                        > -->
+                        <select id="ewallet-name">
+                            <option value="" disabled selected>Pilih E-Wallet</option>
+                            <option value="gopay">GoPay</option>
+                            <option value="ovo">OVO</option>
+                            <option value="dana">DANA</option>
+                            <option value="shopeepay">ShopeePay</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="terms" checked>
+                    <label for="terms">I have read and agree to the Terms and Conditions.</label>
+                </div>
+            </div>
+
+            <div class="cart-review">
+                <h2>Review your cart</h2>
+                <div class="product-item">
+                    <div class="product-info">
+                        <div class="product-name"></div>
+                        <div class="product-qty"></div>
+                    </div>
+                    <div class="product-price">RP. 0 </div>
+                </div>
+                
+                <!-- upgrade plan -->
+                <div class="bonus-notification" id="bonus-notification" style="display: none;">
+                    <div class="bonus-content">
+                        <div class="bonus-icon">🎁</div>
+                        <div class="bonus-text">
+                            <strong>Special Offer!</strong>
+                            <p>Upgrade to 12-month plan and get <span class="highlight">30% OFF</span></p>
+                        </div>
+                        <button class="upgrade-btn" id="upgrade-btn">Upgrade Now</button>
+                    </div>
+                </div>
+
+                <!-- Discount applied notice for 12-month plan -->
+                <div class="discount-applied-notice" id="discount-applied-notice" style="display: none;">
+                    <div class="notice-content">
+                        <div class="check-icon">✓</div>
+                        <div class="notice-text">
+                            <strong>Discount Applied!</strong>
+                            <p>You're getting <span class="highlight">30% OFF</span> on the 12-month plan</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="discount-code">
+                    <span>🎟️</span>
+                    <input type="text" id="discount-input" placeholder="Discount code" value="" >
+                    <button class="apply-btn" id="Apply-discount">Apply</button>
+                </div>
+
+                <div class="summary" id="summary">
+                    <div class="summary-row subtotal">
+                        <span>Subtotal</span>
+                        <span>RP. 0 </span>
+                    </div>
+                    <div class="summary-row discount">
+                        <span>Discount</span>
+                        <span>-Rp. 0</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total</span>
+                        <span>RP. 0</span>
+                    </div>
+                </div>
+
+                <button class="pay-btn" id="pay-btn" onclick="submitForm()">Pay Now</button>
+
+                <div class="secure-notice">
+                    <span class="lock">🔒</span>
+                    <div>
+                        <h3>Secure Checkout - SSL Encrypted</h3>
+                        <p>Ensuring your financial and personal details are secure during every transaction.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+</body>
+</html>

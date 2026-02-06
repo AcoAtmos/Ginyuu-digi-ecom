@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manjuu — Showcase</title>
+
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      color: #1f2937;
+      line-height: 1.6;
+    }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 16px 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    }
+
+    .logo {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #6366f1;
+      letter-spacing: -0.7px;
+      text-decoration: none;
+    }
+
+    .nav-links a {
+      margin-left: 32px;
+      color: #374151;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: #6366f1; }
+
+    .hero-showcase {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      padding: 140px 5% 100px;
+      text-align: center;
+    }
+
+    .hero-showcase h1 {
+      font-size: clamp(3rem, 9vw, 5.2rem);
+      font-weight: 800;
+      margin-bottom: 24px;
+      letter-spacing: -1.5px;
+      line-height: 1.05;
+    }
+
+    .hero-showcase p {
+      font-size: 1.35rem;
+      max-width: 720px;
+      margin: 0 auto 48px;
+      opacity: 0.92;
+    }
+
+    .gallery {
+      padding: 100px 5%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 32px;
+    }
+
+    .showcase-item {
+      border-radius: 16px;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+      transition: all 0.28s ease;
+    }
+
+    .showcase-item:hover {
+      transform: translateY(-12px);
+      box-shadow: 0 20px 50px rgba(99,102,241,0.18);
+    }
+
+    .showcase-item img {
+      width: 100%;
+      height: 320px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .showcase-info {
+      padding: 28px 32px;
+    }
+
+    .showcase-info h3 {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+      color: #111827;
+    }
+
+    .showcase-info p {
+      color: #4b5563;
+      margin-bottom: 20px;
+    }
+
+    .tags {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      background: #eef2ff;
+      color: #6366f1;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .hero-showcase { padding: 100px 5% 80px; }
+      .gallery-grid { gap: 24px; }
+      .showcase-item img { height: 260px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="./index.html" class="logo">Manjuu</a>
+    <div class="nav-links">
+      <a href="./products.html">Browse Products</a>
+      <a href="./showcase.html">Showcase</a>
+      <a href="#">Pricing</a>
+      <a href="./login.html">Sign In</a>
+    </div>
+  </nav>
+
+  <section class="hero-showcase">
+    <h1>Real Work. Real Beauty.</h1>
+    <p>Made with Manjuu assets by creators from all around the world</p>
+  </section>
+
+  <section class="gallery">
+    <div class="gallery-grid">
+
+      <div class="showcase-item">
+        <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80" alt="Dashboard">
+        <div class="showcase-info">
+          <h3>Modern SaaS Dashboard</h3>
+          <p>Clean analytics interface built with our UI kit + charting components</p>
+          <div class="tags">
+            <span class="tag">Dashboard</span>
+            <span class="tag">SaaS</span>
+            <span class="tag">Figma</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-item">
+        <img src="https://images.unsplash.com/photo-1551650975-60cb5c2fce41?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80" alt="Mobile App">
+        <div class="showcase-info">
+          <h3>Fitness Mobile App</h3>
+          <p>Beautiful onboarding & tracking screens using our icon set + components</p>
+          <div class="tags">
+            <span class="tag">Mobile</span>
+            <span class="tag">Health</span>
+            <span class="tag">iOS</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-item">
+        <img src="https://images.unsplash.com/photo-1555066931-bf19c0fd1085?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80" alt="Landing Page">
+        <div class="showcase-info">
+          <h3>Startup Landing Page</h3>
+          <p>High-converting hero + pricing section from our landing page pack</p>
+          <div class="tags">
+            <span class="tag">Landing</span>
+            <span class="tag">Startup</span>
+            <span class="tag">Webflow</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-item">
+        <img src="https://images.unsplash.com/photo-1551650975-60cb5c2fce41?ixlib=rb-4.0.3&auto=format&fit=crop&w=1974&q=80" alt="E-commerce">
+        <div class="showcase-info">
+          <h3>Fashion E-commerce</h3>
+          <p>Product cards, filters & checkout flow using our commerce kit</p>
+          <div class="tags">
+            <span class="tag">E-commerce</span>
+            <span class="tag">Fashion</span>
+            <span class="tag">Next.js</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</body>
+</html>
