@@ -6,7 +6,8 @@ const {
     product,
     login,
     showcase,
-    checkout
+    checkout,
+    profile
 } = require("../modules/views_controller");
 
 // router.get("/", (req,res)=>{
@@ -20,4 +21,5 @@ router.get ("/product" , product);
 router.get ("/login" , login);
 router.get ("/showcase" , showcase);
 router.get ("/checkout/:slug" , checkout);
+router.get ("/profile" , profile);
 module.exports = router;

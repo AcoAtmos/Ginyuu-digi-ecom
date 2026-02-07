@@ -1,0 +1,245 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f8f9fa;
+    color: #1f2937;
+    line-height: 1.6;
+}
+
+nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 16px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+
+.logo {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: #6366f1;
+    letter-spacing: -0.7px;
+    text-decoration: none;
+}
+
+.nav-links a {
+    margin-left: 28px;
+    color: #374151;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.nav-links a:hover {
+    color: #6366f1;
+}
+
+.profile-header {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    padding: 100px 5% 80px;
+    text-align: center;
+    position: relative;
+}
+
+.avatar-container {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 6px solid rgba(255,255,255,0.25);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-name {
+    font-size: 2.4rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.profile-bio {
+    font-size: 1.15rem;
+    max-width: 620px;
+    margin: 0 auto 24px;
+    opacity: 0.95;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2.1rem;
+    font-weight: 800;
+}
+
+.stat-label {
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+.profile-content {
+    max-width: 1100px;
+    margin: -60px auto 80px;
+    padding: 0 5%;
+}
+
+.tabs {
+    display: flex;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 32px;
+    background: white;
+    border-radius: 12px 12px 0 0;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.tab {
+    padding: 16px 32px;
+    font-weight: 600;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+}
+
+.tab.active,
+.tab:hover {
+    color: #6366f1;
+    border-bottom-color: #6366f1;
+    background: #f8f9ff;
+}
+
+.tab-content {
+    background: white;
+    border-radius: 0 0 12px 12px;
+    padding: 32px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.section-title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: #111827;
+}
+
+.purchase-card {
+    display: flex;
+    gap: 24px;
+    padding: 24px;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+}
+
+.purchase-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(99,102,241,0.12);
+}
+
+.purchase-thumb {
+    width: 120px;
+    height: 120px;
+    border-radius: 10px;
+    background: #e5e7eb;
+    display: grid;
+    place-items: center;
+    font-size: 2.5rem;
+    color: #9ca3af;
+    flex-shrink: 0;
+}
+
+.purchase-info h3 {
+    font-size: 1.28rem;
+    margin-bottom: 8px;
+}
+
+.purchase-date {
+    color: #6b7280;
+    font-size: 0.92rem;
+    margin-bottom: 12px;
+}
+
+.purchase-price {
+    font-weight: 700;
+    color: #111827;
+    font-size: 1.15rem;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.95rem;
+}
+
+input, textarea {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+}
+
+.btn-save {
+    padding: 14px 36px;
+    background: #6366f1;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-save:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .profile-header { padding: 80px 5% 60px; }
+    .profile-stats { gap: 32px; }
+    .tabs { flex-wrap: wrap; }
+    .tab { padding: 14px 24px; flex: 1; text-align: center; }
+    .purchase-card { flex-direction: column; }
+}

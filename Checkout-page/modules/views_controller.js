@@ -24,3 +24,9 @@ exports.product = async (req , res ) =>{
 exports.checkout = async (req , res ) =>{
     res.render(path.join(__dirname ,"./checkout/checkout_page.ejs"));
 };
+
+// profile page
+exports.profile = async (req , res ) =>{
+    res.render(path.join(__dirname ,"./profile/profile_page.ejs"));
+};
+

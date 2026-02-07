@@ -80,61 +80,69 @@ async function hit_api_check_whatsapp() {
             // //         return null;
             // //     }
             // // }
-            // // ================== VALIDATION & SUBMISSION ==================
-            
-            // async function validateForm() {
-                
-            //     const alerts = [];
-            
-            //     // 1. Product
-            //     if (!selectProduct.value) alerts.push("Please select a product.");
-            //     if (productAmountInput.value < 1) alerts.push("Product amount must be at least 1.");
-            
-            //     // 2. User Details
-            //     if (!document.getElementById('username').value.trim()) alerts.push("Username is required.");
-            //     if (!document.getElementById('email').value.trim()) alerts.push("Email is required.");
-            
-            //     // 3. Password
-            //     const pass = document.getElementById('password').value;
-            //     const confirmPass = document.getElementById('confirm-password').value;
-            //     if (!pass) alerts.push("Password is required.");
-            //     if (pass !== confirmPass) alerts.push("Passwords do not match.");
-            
-            //     // 4. Phone & WhatsApp
-            //     const phoneVal = document.getElementById('phone').value;
-            //     if (!phoneVal) {
-                //         alerts.push("Phone number is required.");
-                //     } else {
-                    //         const isValidWA = await hit_api_check_whatsapp();
-                    //         if (!isValidWA) alerts.push("Phone number is not registered on WhatsApp.");
-                    //     }
-                    
-                    //     // 5. Payment Method
-                    //     const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-                    //     if (!paymentMethod) {
-                        //         alerts.push("Please select a payment method.");
-                        //     } else {
-                            //         const method = paymentMethod.value;
-                            //         if (method === 'bank') {
-                                //             if (!document.getElementById('bank-name').value) alerts.push("Please select a bank.");
-                                //         } else if (method === 'ewallet') {
-                                    //             if (!document.getElementById('ewallet-name').value) alerts.push("Please select an E-Wallet.");
-                                    //         }
-                                    //     }
-                                    
-                                    //     // 6. Terms
-                                    //     if (!document.getElementById('terms').checked) alerts.push("You must agree to the Terms and Conditions.");
-                                    
-                                    //     // Result
-                                    //     if (alerts.length > 0) {
-                                        //         alert(alerts.join("\n"));
-                                        //         return;
-                                        //     }
-                                        
-                                        //     alert("Validation Success! Proceeding to payment...");
-                                        //     // submit logic here...
-// }
 
+// ================== VALIDATION & SUBMISSION ================== 
+async function validateForm(event) {
+    event.preventDefault();
+    const alerts = [];
+
+    // 2. User Details
+    if (!document.getElementById('username').value.trim()) alerts.push("Username is required.");
+    if (!document.getElementById('email').value.trim()) alerts.push("Email is required.");
+
+    // 3. Password
+    const pass = document.getElementById('password').value;
+    const confirmPass = document.getElementById('confirm-password').value;
+    if (!pass) alerts.push("Password is required.");
+    if (pass !== confirmPass) alerts.push("Passwords do not match.");
+
+    // 4. Phone & WhatsApp
+    const phone = document.getElementById('phone').value;
+    if (!phone) {
+            alerts.push("Phone number is required.");
+    } else {
+            await hit_api_check_whatsapp();
+    }
+        
+    // 5. Payment Method
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+    if (!paymentMethod) {
+            alerts.push("Please select a payment method.");
+    } else {
+            const method = paymentMethod.value;
+            if (method === 'bank') {
+                    if (!document.getElementById('bank-name').value) alerts.push("Please select a bank.");
+                        } else if (method === 'ewallet') {
+                                if (!document.getElementById('ewallet-name').value) alerts.push("Please select an E-Wallet.");
+                            }
+                        }
+                    
+    // 6. Terms
+    if (!document.getElementById('terms').checked) alerts.push("You must agree to the Terms and Conditions.");
+                    
+    // Result
+    if (alerts.length > 0) {
+            alert(alerts.join("\n"));
+            return;
+    }
+    
+    alert("Validation Success! Proceeding to payment...");
+    // submit logic here...
+}
+async function submitForm(event){
+    event.preventDefault();
+    const payload = {
+        username: document.getElementById('username').value,
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+        phone: document.getElementById('phone').value,
+        payment_method: document.querySelector('input[name="payment_method"]:checked').value,
+        bank_name: document.getElementById('bank-name').value,
+        ewallet_name: document.getElementById('ewallet-name').value,
+        terms: document.getElementById('terms').checked,
+    };
+    console.log(payload);
+}
 // ================== USER ==================
 async function hideUserForm(){
     const userForm = document.getElementById('user-form');
@@ -217,30 +225,30 @@ function countTotal(product, qty) {
 
 
 // // =========== PAYMENT METHOD TOGGLE ==========
-// const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
-// const bankInput = document.getElementById('bank-input');
-// const ewalletInput = document.getElementById('ewallet-input');
+const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
+const bankInput = document.getElementById('bank-input');
+const ewalletInput = document.getElementById('ewallet-input');
 
-// function togglePaymentInputs() {
-//     const method = document.querySelector('input[name="payment_method"]:checked')?.value;
+function togglePaymentInputs() {
+    const method = document.querySelector('input[name="payment_method"]:checked')?.value;
 
-//     // Reset both to hidden
-//     if(bankInput) bankInput.style.display = 'none';
-//     if(ewalletInput) ewalletInput.style.display = 'none';
+    // Reset both to hidden
+    if(bankInput) bankInput.style.display = 'none';
+    if(ewalletInput) ewalletInput.style.display = 'none';
 
-//     if (method === 'bank' && bankInput) {
-//         bankInput.style.display = 'flex';
-//     } else if (method === 'ewallet' && ewalletInput) {
-//         ewalletInput.style.display = 'flex';
-//     }
-// }
+    if (method === 'bank' && bankInput) {
+        bankInput.style.display = 'flex';
+    } else if (method === 'ewallet' && ewalletInput) {
+        ewalletInput.style.display = 'flex';
+    }
+}
 
-// paymentRadios.forEach(radio => {
-//     radio.addEventListener('change', togglePaymentInputs);
-// });
+paymentRadios.forEach(radio => {
+    radio.addEventListener('change', togglePaymentInputs);
+});
 
 // Initialize payment inputs state
-// togglePaymentInputs();
+togglePaymentInputs();
 
 
 

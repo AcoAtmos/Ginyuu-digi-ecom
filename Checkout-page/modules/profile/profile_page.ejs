@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manjuu — My Profile</title>
+    <link rel="stylesheet" href="/assets/css/profile.css">
+    <script src="/assets/js/profile.js"></script>
+</head>
+<body>
+
+  <nav>
+    <a href="./index.html" class="logo">Manjuu</a>
+    <div class="nav-links">
+      <a href="./products.html">Products</a>
+      <a href="./showcase.html">Showcase</a>
+      <a href="./profile.html">Profile</a>
+      <a href="#" style="color:#ef4444;">Sign Out</a>
+    </div>
+  </nav>
+
+  <header class="profile-header">
+    <div class="avatar-container">
+      <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400" alt="Avatar" class="avatar">
+    </div>
+    <h1 class="profile-name">Aco Designer</h1>
+    <p class="profile-bio">UI/UX enthusiast • Figma & Webflow lover • Building beautiful digital products in Yogyakarta</p>
+
+    <div class="profile-stats">
+      <div class="stat-item">
+        <div class="stat-number">12</div>
+        <div class="stat-label">Products Owned</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">8</div>
+        <div class="stat-label">Purchases</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">94</div>
+        <div class="stat-label">Days Active</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="profile-content">
+
+    <div class="tabs">
+      <div class="tab active" data-tab="overview">Overview</div>
+      <div class="tab" data-tab="purchases">Purchases</div>
+      <div class="tab" data-tab="settings">Settings</div>
+    </div>
+
+    <!-- Tab: Overview -->
+    <div class="tab-content" id="overview">
+      <h2 class="section-title">Recent Activity</h2>
+      <p style="color:#6b7280; margin-bottom:32px;">
+        You recently downloaded <strong>Neon Dashboard UI Kit</strong> and left a 5-star review. Keep creating!
+      </p>
+
+      <h2 class="section-title">Quick Links</h2>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px;">
+        <a href="./products.html" style="padding:24px; background:#f9fafb; border-radius:12px; text-decoration:none; color:#111827; font-weight:600; border:1px solid #e5e7eb; transition:all 0.2s; display:block;">
+          Browse More Products →
+        </a>
+        <a href="#" style="padding:24px; background:#f9fafb; border-radius:12px; text-decoration:none; color:#111827; font-weight:600; border:1px solid #e5e7eb; transition:all 0.2s; display:block;">
+          View All Downloads →
+        </a>
+      </div>
+    </div>
+
+    <!-- Tab: Purchases -->
+    <div class="tab-content" id="purchases" style="display:none;">
+      <h2 class="section-title">Your Purchases</h2>
+
+      <div class="purchase-card">
+        <div class="purchase-thumb">UI</div>
+        <div class="purchase-info">
+          <h3>Neon Dashboard UI Kit</h3>
+          <div class="purchase-date">Purchased on Jan 15, 2026</div>
+          <div class="purchase-price">Rp 349.000</div>
+          <div style="margin-top:12px;">
+            <a href="#" style="color:#6366f1; font-weight:600; text-decoration:none;">Download Files</a>
+             • 
+            <a href="#" style="color:#10b981; font-weight:600; text-decoration:none;">View License</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="purchase-card">
+        <div class="purchase-thumb">ICO</div>
+        <div class="purchase-info">
+          <h3>Stroke Icons Vol.4</h3>
+          <div class="purchase-date">Purchased on Dec 28, 2025</div>
+          <div class="purchase-price">Rp 189.000</div>
+          <div style="margin-top:12px;">
+            <a href="#" style="color:#6366f1; font-weight:600; text-decoration:none;">Download Files</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- more items can be added here -->
+    </div>
+
+    <!-- Tab: Settings -->
+    <div class="tab-content" id="settings" style="display:none;">
+      <h2 class="section-title">Account Settings</h2>
+
+      <form>
+        <div class="form-group">
+          <label>Display Name</label>
+          <input type="text" value="Aco Designer" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" value="aco@example.com" disabled style="background:#f1f5f9;">
+        </div>
+
+        <div class="form-group">
+          <label>Bio</label>
+          <textarea rows="4">UI/UX enthusiast • Figma & Webflow lover • Building beautiful digital products in Yogyakarta</textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" value="Yogyakarta, Indonesia">
+        </div>
+
+        <button type="submit" class="btn-save">Save Changes</button>
+      </form>
+
+      <hr style="margin:40px 0; border-color:#e5e7eb;">
+
+      <h2 class="section-title" style="color:#ef4444;">Danger Zone</h2>
+      <button style="padding:12px 24px; background:#fee2e2; color:#991b1b; border:none; border-radius:10px; font-weight:600; cursor:pointer;">
+        Delete Account
+      </button>
+    </div>
+
+  </main>
+</body>
+</html>
