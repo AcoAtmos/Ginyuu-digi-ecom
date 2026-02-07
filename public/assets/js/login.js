@@ -1,6 +1,6 @@
 
 
-document.getElementById('loginForm').addEventListener('submit', function(e) {
+document.getElementById('loginBtn').addEventListener('click', function(e) {
   e.preventDefault();
 
   const email = document.getElementById('email').value.trim();
@@ -19,12 +19,12 @@ document.getElementById('loginForm').addEventListener('submit', function(e) {
 
   // hit api login
   // Simulate loading state
-  btn.textContent = 'Signing in...';
-  btn.disabled = true;
   hit_api_login(email, password); 
+  
+
 
   // redirect to home page
-  window.location.href = "/page/home";
+ 
 });
 
 async function hit_api_login(email, password){
@@ -41,11 +41,12 @@ async function hit_api_login(email, password){
     });
     const data = await res.json();
     console.log(data);
+    if(data.status === "success"){
+      window.location.href = "/page/home";
+    }
   }catch(error){
     console.log(error);
-    // Simulate loading state
-    btn.textContent = 'Signing in...';
-    btn.disabled = true;
+
   }
 }
 
