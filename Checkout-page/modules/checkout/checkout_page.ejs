@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ginyuu - Checkout</title>
     
-    <link rel="stylesheet" href="./assets/css/checkout.css">
-    <script src="./assets/js/checkout.js" defer></script>
+    <link rel="stylesheet" href="/assets/css/checkout.css">
+    <script src="/assets/js/checkout.js" defer></script>
 </head>
 <body>
     
@@ -24,21 +24,6 @@
         <div class="content">
             <div class="checkout-form">
                 <h1>Checkout</h1>
-                <div class="form-group" >
-                    <label>Product <span class="required">*</span></label>
-                    <div style="display: flex;gap: 5px;">
-                        <select id="product-selection" >
-
-                        </select>
-                        <input 
-                            type="number" 
-                            id="product-amount" 
-                            min="1" 
-                            style="width: 15%;max-width: 20%;; text-align: center;" 
-                        >
-                    </div>
-                </div>
-
                 <div id="user-info-section">
                     <div class="form-group">
                         <label>Name/ Username <span class="required">*</span></label>
@@ -134,7 +119,7 @@
 
             <div class="cart-review">
                 <h2>Review your cart</h2>
-                <div class="product-item">
+                <div class="product-item" id="product-item">
                     <div class="product-info">
                         <div class="product-name"></div>
                         <div class="product-qty"></div>

@@ -19,5 +19,5 @@ router.get ("/home" , home);
 router.get ("/product" , product);
 router.get ("/login" , login);
 router.get ("/showcase" , showcase);
-router.get ("/checkout" , checkout);
+router.get ("/checkout/:slug" , checkout);
 module.exports = router;

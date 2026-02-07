@@ -17,7 +17,7 @@ app.use(
     express.static(path.join(__dirname, "assets"))
 );
 
-app.use("/", routes);
+app.use("/page", routes);
 
 app.listen("3100", ()=>{
     console.log("server berjalan pada port 3100");

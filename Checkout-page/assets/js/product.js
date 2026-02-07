@@ -138,7 +138,7 @@ function setupCheckout() {
     checkoutBtn.addEventListener('click', () => {
         const slug = checkoutBtn.dataset.slug;
         if (slug) {
-            window.location.href = `checkout.html?product=${slug}`;
+            window.location.href = `http://localhost:3100/page/checkout/${slug}`;
         } else {
             alert("No product selected");
         }
