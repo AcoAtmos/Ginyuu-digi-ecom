@@ -52,8 +52,8 @@ exports.check_whatsapp = async (phone) => {
     return dt;
 };
 
-exports.send_whatsapp = async(results) => {
-    if(results.status == "fail"){return results;}
+exports.send_whatsapp = async(result) => {
+    if(result.status == "fail"){return result;}
 
     // hit api and check number
     try{
@@ -65,9 +65,9 @@ exports.send_whatsapp = async(results) => {
         }
 
         const payload = {
-            phone_no: results.payload.phone_no,
+            phone_no: result.payload.phone,
             key: apiKey,
-            message: results.payload.message,
+            message: result.payload.message,
         };
 
         const response = await axios.post(`${baseUrl}/send_message`, payload, {
@@ -76,16 +76,16 @@ exports.send_whatsapp = async(results) => {
         console.log('response : ', response.data)
 
         // return response
-        results.data = response.data;
-        results.message = "Success";
-        results.status = "success";
-        results.code = 200;
-        return results;
+        result.data = response.data;
+        result.message = "Success";
+        result.status = "success";
+        result.code = 200;
+        return result;
 
     }catch(err){
-        results.message = "Invalid response from WhatsApp API";
-        results.status = "fail";
-        results.code = err.response?.data?.code || 500;
+        result.message = "Invalid response from WhatsApp API";
+        result.status = "fail";
+        result.code = err.response?.data?.code || 500;
         throw new Error(err);
     }
 };

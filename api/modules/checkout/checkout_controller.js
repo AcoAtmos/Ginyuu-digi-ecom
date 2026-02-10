@@ -2,29 +2,27 @@ const {
     capturePayload,
     validatePayload,
     getPrice,
-    countTotal
+    countTotal,
+    checkout_add_user,
+    checkout_send_whatsapp,
+    createResponse
 } =require('./checkout_service');
 
 
 
 exports.checkout = async (req, res) => {
-    try {
-        let result = await capturePayload(req.body);
-        result = await validatePayload(result);
-        result = await getPrice(result); 
-        result = await countTotal(result); 
-        result = await createAccount(result);
-        return res.status(200).json({
-            code: 200,
-            message: "Success",
-            data: result
-        });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            code: 500,
-            message: "Internal Server Error",
-            data: error
-        });
-    }
+    let result = await capturePayload(req.body);
+    result = await validatePayload(result);
+    result = await getPrice(result); 
+    result = await countTotal(result); 
+    result = await checkout_add_user(result);
+    result = await checkout_send_whatsapp(result);
+    result = await createResponse(result);
+    res.status(result.code).json({
+        code: result.code,
+        status: result.status,
+        message: result.message,
+        data: result.data
+    });
+
 }
