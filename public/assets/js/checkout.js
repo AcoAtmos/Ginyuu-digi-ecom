@@ -1,18 +1,30 @@
+
 // ================== GLOBAL STATE ==================
 let discount = 0.2; //example discount
 let qty = 1;
+const username = document.getElementById('username');
+const password = document.getElementById('password');
+const confirmPass = document.getElementById('confirm-password');
+const email = document.getElementById('email');
+const phone = document.getElementById('phone');
+const slug = window.location.pathname.split("/")[3];
+const paymentEl = document.querySelector(
+  'input[name="payment_method"]:checked'
+);
+const payment_method = paymentEl ? paymentEl.value : null;
+
 // ================== LOAD DATA ==================
 document.addEventListener("DOMContentLoaded", async () => {
     // Check user (cek token)
     const token = localStorage.getItem('token');
     if (!token){
-        showUserForm();
+        emptyUserForm();
     }else{
         const isValid = await hit_api_verify_token(token);
         if(!isValid){
-            showUserForm();
+            emptyUserForm();
         }else{
-            hideUserForm();
+            fillUserform();
         }
     }
 
@@ -25,7 +37,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         cartProduct(product);
         countTotal(product, qty);
     }
-    
 });
 
 // ================== API ==================
@@ -156,11 +167,12 @@ async function validateForm(event) {
 async function submitForm(event){
     event.preventDefault();
     const payload = {
+        product: window.location.pathname.split("/")[3],
         username: document.getElementById('username').value,
         email: document.getElementById('email').value,
         password: document.getElementById('password').value,
         phone: document.getElementById('phone').value,
-        payment_method: document.querySelector('input[name="payment_method"]:checked').value,
+        payment_method: payment_method,
         bank_name: document.getElementById('bank-name').value,
         ewallet_name: document.getElementById('ewallet-name').value,
         terms: document.getElementById('terms').checked,
@@ -169,12 +181,24 @@ async function submitForm(event){
 }
 // ================== USER ==================
 async function fillUserform(){
+    const user = JSON.parse(localStorage.getItem('user'));
+    username.value = user.username;
+    // password.value = user.password;
+    // confirmPass.value = user.password;
+    email.value = user.email;
+    phone.value = user.phone;
+
+    // disable input
+    username.disabled = true;
+    email.disabled = true;
+    phone.disabled = true;
 }
 async function emptyUserForm(){
-    const userForm = document.querySelectorAll('.dataNeeded');
-    userForm.forEach((form) => {
-        form.style.display = 'block';
-    });
+    username.value = "";
+    password.value = "";
+    confirmPass.value = "";
+    email.value = "";
+    phone.value = "";
 }
 // ================== BONUS DISCOUNT LOGIC ==================
 // function checkBonusEligibility() {

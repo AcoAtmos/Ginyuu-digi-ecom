@@ -1,6 +1,11 @@
+//=========import==========
+import {
+    check_login
+} from "/common/view/main.js";
 
 // ============ LOAD DOCUMENT ============
 document.addEventListener('DOMContentLoaded', async () => {
+    check_login(); // check login and automatically change img user
     // get product from api
     const fetchedProducts = await hit_api_getproduct();
     // if product not found

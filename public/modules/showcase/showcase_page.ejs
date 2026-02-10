@@ -6,19 +6,12 @@
   <title>Manjuu — Showcase</title>
   
   <link rel="stylesheet" href="/assets/css/showcase.css">
+  <script type="module" src="/assets/js/showcase.js" defer></script>
 
 </head>
 <body>
 
-  <nav>
-    <a href="/page/home" class="logo">Manjuu</a>
-    <div class="nav-links">
-      <a href="/page/product">Products</a>
-      <a href="/page/showcase">Showcase</a>
-      <a href="/page/home">Home</a>
-      <a href="/page/login" class="btn-signin">Sign In</a>
-    </div>
-  </nav>
+  <%- include('../../common/view/navbar.ejs') %>
 
   <section class="hero-showcase">
     <h1>Real Work. Real Beauty.</h1>
