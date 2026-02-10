@@ -2,19 +2,18 @@
 let discount = 0.2; //example discount
 let qty = 1;
 // ================== LOAD DATA ==================
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener("DOMContentLoaded", async () => {
     // Check user (cek token)
     const token = localStorage.getItem('token');
-    if (token){
-        const isValid = await verifyToken(token);
+    if (!token){
+        showUserForm();
+    }else{
+        const isValid = await hit_api_verify_token(token);
         if(!isValid){
-            localStorage.removeItem('token');
             showUserForm();
         }else{
             hideUserForm();
         }
-    }else{
-        showUserForm();
     }
 
     // get products
@@ -69,6 +68,31 @@ async function hit_api_check_whatsapp() {
     }
 }
 
+async function hit_api_verify_token() {
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) return null;
+        
+        const result = await fetch (`http://localhost:4100/api/auth/verify_token`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        })
+        const json = await result.json();
+        console.log(json);
+        
+        if(json.status === "success"){
+            return true;
+        }else{
+            return false;
+        }
+    }catch (error){
+        console.error(error)
+        return false;
+    }
+}
 // // async function hit_api_submit() {
     // //     try {
         // //         const res = await fetch(`http://localhost:4100/api/submit/`);
@@ -144,13 +168,13 @@ async function submitForm(event){
     console.log(payload);
 }
 // ================== USER ==================
-async function hideUserForm(){
-    const userForm = document.getElementById('user-form');
-    userForm.style.display = 'none';
+async function fillUserform(){
 }
-async function showUserForm(){
-    const userForm = document.getElementById('user-form');
-    userForm.style.display = 'block';
+async function emptyUserForm(){
+    const userForm = document.querySelectorAll('.dataNeeded');
+    userForm.forEach((form) => {
+        form.style.display = 'block';
+    });
 }
 // ================== BONUS DISCOUNT LOGIC ==================
 // function checkBonusEligibility() {

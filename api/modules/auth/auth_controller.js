@@ -25,6 +25,7 @@ exports.register = async(req, res) => {
 exports.login = async (req, res) => {
     try{
         const result = await login(req.body);
+        console.log(result);
         return res.status(200).json({
             code: 200,
             status: "success",
@@ -41,11 +42,18 @@ exports.login = async (req, res) => {
     }
 };
 
+// verify token
+exports.verifyToken = async (req, res) => {
+    return res.status(200).json({
+        code: 200,
+        status: "success",
+        message: "Token verified successfully"
+    });
+};
 // register in checkout
 exports.registerCheckout = async (req, res) => {
     try{
         const result = await registerCheckout(req.body);
-        console.log(result);
         return res.status(200).json({
             code: 200,
             status: "success",

@@ -27,31 +27,3 @@ exports.authMiddleware = (req, res, next) => {
         next();
     });
 };
-
-exports.checkLoginStatus = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-
-  // tidak ada token
-  if (!authHeader) {
-    req.isLogin = false;
-    req.user = null;
-    return next(); // lanjut
-  }
-
-  const token = authHeader.split(" ")[1];
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // token valid
-    req.isLogin = true;
-    req.user = decoded;
-
-  } catch (err) {
-    // token salah / expired
-    req.isLogin = false;
-    req.user = null;
-  }
-
-  next(); // tetap lanjut
-};

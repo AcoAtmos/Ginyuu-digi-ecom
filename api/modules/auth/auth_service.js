@@ -23,7 +23,7 @@ exports.login = async (body) =>{
         // search user by email
         const {rows} = await db.query(query, [email]); 
         const user = rows[0];
-        console.log(user);
+
         if (!user){
             throw new Error("User not found");
         }
@@ -41,7 +41,12 @@ exports.login = async (body) =>{
         }, process.env.JWT_SECRET, {expiresIn: "24h"});
 
         return {
-            user : user,
+            user : {
+                username : user.username,
+                email : user.email,
+                phone : user.phone,
+                image_url : user.image_url
+            },
             token : token
         };
     }catch(err){
@@ -51,10 +56,11 @@ exports.login = async (body) =>{
 // register in checkout
 exports.registerCheckout = async (body) =>{
     const {username, email, password, phone} = body;
-    const query = `INSERT INTO users (username, email, password, phone) VALUES ($1, $2, $3, $4)`;
+    const query = `INSERT INTO users (username, email, password, phone) VALUES ($1, $2, $3, $4) RETURNING *`;
+    const hashedPassword = await bcrypt.hash(password, 10);
     try{
-        const [rows] = await db.query(query, [username, email, password, phone]);
-        return rows;
+        const {rows} = await db.query(query, [username, email, hashedPassword, phone]);
+        return rows[0];
     }catch(err){
         throw new Error(err);
     }

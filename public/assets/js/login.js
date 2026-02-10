@@ -40,13 +40,15 @@ async function hit_api_login(email, password){
       }),
     });
     const data = await res.json();
+    localStorage.setItem('token', data.data.token);
+    localStorage.setItem('user', JSON.stringify(data.data.user));
     console.log(data);
     if(data.status === "success"){
       window.location.href = "/page/home";
     }
   }catch(error){
     console.log(error);
-
+    alert("Login failed");
   }
 }
 

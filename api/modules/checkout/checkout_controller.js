@@ -12,7 +12,6 @@ exports.checkout = async (req, res) => {
         let result = await capturePayload(req.body);
         result = await validatePayload(result);
         result = await getPrice(result); 
-
         result = await countTotal(result); 
         console.log(result);
         return res.status(200).json({

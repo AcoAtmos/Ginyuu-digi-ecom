@@ -92,7 +92,9 @@ header {
     padding: 50px;
     border-right: 1px solid #e0e0e0;
 }
-
+#user-info-section{
+    display: block;
+}
 .cart-review {
     padding: 50px 40px;
     background: #fafafa;

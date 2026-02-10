@@ -19,7 +19,7 @@ nav {
     z-index: 100;
     background: white;
     border-bottom: 1px solid #e5e7eb;
-    padding: 16px 5%;
+    padding: 16px 3%;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -48,7 +48,8 @@ nav {
     transition: color 0.2s;
 }
 .nav-links a.btn-signin {
-    color: white;
+    color: white !important; 
+    display: block;
 }
 .nav-links a:hover {
     color: #6366f1;
@@ -57,7 +58,7 @@ nav {
 .btn-signin {
     padding: 10px 20px;
     background: #6366f1;
-    color: white !important;
+    color: white;
     border: none;
     border-radius: 10px;
     font-weight: 600;
@@ -68,6 +69,70 @@ nav {
     background: #4f46e5;
     transform: translateY(-1px);
 }
+
+#profileToggle {
+    display: inline-block;
+    background-color: #4f46e5;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+/* dropdown */
+.profile-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* dropdown box */
+#profileDropdown {
+  position: absolute;
+  top: 100%; /* jarak ke bawah dari avatar */
+  right: 0;
+  width: 180px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  padding: 8px 0;
+  display: none ;
+  z-index: 999;
+}
+
+.profile-dropdown a {
+  display: block;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: #333;
+  text-decoration: none;
+}
+
+.profile-dropdown a:hover {
+  background: #f4f4f4;
+  transform: translateY(-1px);
+}
+
+.profile-dropdown hr {
+  margin: 6px 0;
+  border: none;
+  border-top: 1px solid #eee;
+}
+
+.profile-dropdown .logout {
+  color: #e53935;
+}
+.profile-dropdown .logout:hover {
+  color: #e53935;
+  transform: translateY(-1px);
+}
+
 
 /* ── Hero ── */
 .hero {

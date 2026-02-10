@@ -19,8 +19,8 @@ exports.capturePayload = async (data) =>{
             phone : phone,
             payment_method : payment_method,
             product : product,
-            amount : amount,
-            discount : discount
+            amount : amount || 1,
+            discount : discount || 0
         },
         code : 200,
         status : "success",
