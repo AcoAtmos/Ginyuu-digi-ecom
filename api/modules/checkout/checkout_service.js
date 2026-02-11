@@ -8,7 +8,7 @@ exports.capturePayload = async (data) =>{
     let password = data?.password;
     let phone = data?.phone;
     let payment_method = data?.payment_method;
-    let product = data?.product;
+    let productId = data?.productId;
     let amount = data?.amount;
     let discount = data?.discount;
     let terms = data?.terms;
@@ -20,7 +20,7 @@ exports.capturePayload = async (data) =>{
             password : password || "",
             phone : phone,
             payment_method : payment_method,
-            product : product,
+            productId : productId,
             amount : amount || 1,
             discount : discount || 0,
             terms : terms || true
@@ -33,66 +33,67 @@ exports.capturePayload = async (data) =>{
     }
     return result;
 }
+
 exports.validatePayload = async (result) =>{
     if (result.status !== "success"){
         result.message("Invalid payload");
         result.code = 400;
         result.status = "failed";
-        throw new Error ("Invalid payload");
+        console.log ("Invalid payload");
     }
     if (result.payload.username === "" || result.payload.username === null || result.payload.username === undefined){
         result.message("Username is required");
         result.code = 400;
         result.status = "failed";
-        throw new Error ("Username is required");
+        console.log ("Username is required");
     }
     if (result.payload.email === "" || result.payload.email === null || result.payload.email === undefined){
         result.message("Email is required");
         result.code = 400;
         result.status = "failed";
-        throw new Error ("Email is required");
+        console.log ("Email is required");
     }
     if (result.payload.phone === "" || result.payload.phone === null || result.payload.phone === undefined){
         result.message("Phone is required");
         result.code = 400;
         result.status = "failed";
-        throw new Error ("Phone is required");
+        console.log ("Phone is required");
     }
     if (result.payload.payment_method === "" || result.payload.payment_method === null || result.payload.payment_method === undefined){
         result.message("Payment method is required");
         result.code = 400;
         result.status = "failed";
-        throw new Error ("Payment method is required");
+        console.log ("Payment method is required");
     }
-    if (result.payload.product === "" || result.payload.product === null || result.payload.product === undefined){
+    if (result.payload.productId === "" || result.payload.productId === null || result.payload.productId === undefined){
         result.message("Product is required");
         result.code = 400;
         result.status = "failed";
-        throw new Error ("Product is required");
+        console.log ("Product is required");
     }
     if (result.payload.terms == false){
         result.message("Terms and conditions must be accepted");
         result.code = 400;
         result.status = "failed";
-        throw new Error ("Terms and conditions must be accepted");
+        console.log ("Terms and conditions must be accepted");
     }
     return result;
 }
 exports.getPrice = async (result) => {
     try{
-        const rows = await db.query("SELECT price FROM products WHERE slug = $1", [result.payload.product]);
+        const rows = await db.query("SELECT price FROM products WHERE id = $1", [result.payload.productId]);
         if (rows.length == 0 ){
             result.message("Product not found");
             result.code = 400;
             result.status = "failed";
-            throw new Error("Product not found");
+            console.log("Product not found");
         }
         result.payload.price = rows.price;
     }catch(err){
         result.message("Get price failed");
         result.code = 400;
         result.status = "failed";
-        throw new Error("Get price failed");
+        console.log("Get price failed");
     }
     return result;
 }
@@ -103,12 +104,12 @@ exports.countTotal = async (result) => {
         result.message("Count total failed");
         result.code = 400;
         result.status = "failed";
-        throw new Error("Count total failed");
+        console.log("Count total failed");
     }
     return result;
 }
 
-// ============= CHECKOUT AUTH ==============
+// ============= Begin  ==============
 
 exports.checkout_add_user = async (result) => {
   if (result.status === "failed") return result;
@@ -126,7 +127,7 @@ exports.checkout_add_user = async (result) => {
         result.status = "failed";
         result.code = 400;
         result.message = "Password is required";
-        throw new Error("Password is required");
+        console.log("Password is required");
       }
       const hashedPassword = await bcrypt.hash(result.payload.password, 10);
       const insertResult = await db.query(
@@ -158,16 +159,48 @@ exports.checkout_add_user = async (result) => {
     result.status = "failed";
     result.code = 500;
     result.message = "Create account failed";
-    throw err;
+    console.log("create account failed");
+    return result
   }
 };
 
+exports.checkout_create_order = async (result) => {
+    if (result.status == 'failed') { return result; }
+    try {
+        const orderResult = await db.query(
+            `INSERT INTO orders (customer_name ,customer_email ,customer_phone ,product_id, amount, total_price, payment_method, order_status)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+             RETURNING id`,
+            [
+                result.payload.username,
+                result.payload.email,
+                result.payload.phone,
+                result.payload.productId,
+                result.payload.amount,
+                result.payload.total,
+                result.payload.payment_method,
+                "pending"
+            ]
+        );
+        result.payload.idOrder = orderResult.rows[0].id;
+        result.status = "success";
+        result.code = 200;
+        result.message = "Success";
+        return result;
+    } catch (err) {
+        result.status = "failed";
+        result.code = 500;
+        result.message = "Create order failed";
+        console.log("create order failed");
+        return result
+    }
+}
 
 exports.checkout_send_whatsapp = async (result)=>{
     if (result.status == 'failed') { return result; }
     result.payload.message = `Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:
     
-    Produk: ${result.payload.product}
+    Produk: ${result.payload.productId}
     Harga: ${result.payload.price}
     Total: ${result.payload.total}
     
@@ -189,15 +222,19 @@ exports.checkout_send_whatsapp = async (result)=>{
         result.message = "Send whatsapp failed";
         result.code = 400;
         result.status = "fail";
-        throw new Error(err);
+        console.log("send whatsapp failed");
     }
     return result;
 }
+
+
 exports.createResponse =async (result) =>{
     let res = {
+        payload : result.payload,
         code : result.code,
         status : result.status,
-        message : result.message
+        message : result.message,
+        data : result.data
     }
     return res;
 }
