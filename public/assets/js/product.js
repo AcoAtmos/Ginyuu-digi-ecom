@@ -45,7 +45,7 @@ function setProductDOM(products) {
         
         // Format price
         const priceFormatted = parseInt(product.price).toLocaleString('id-ID');
-
+        productCard.setAttribute('category', product.category);
         productCard.innerHTML = `
             <div class="product-image">${product.category || 'Product'}</div>
             <div class="product-body">
@@ -97,7 +97,6 @@ function setupModalEvents(){
 
 
 }
-
 function openModal(data) {
     const modal = document.getElementById('productModal');
     const modalTitle = document.getElementById('modalTitle');
@@ -150,4 +149,28 @@ function setupCheckout() {
         }
     });
 }
+
+
+//=============Filter Logic===============
+const categoryButtons = document.querySelectorAll('.category-btn');
+
+// Add click event listener to each category button
+categoryButtons.forEach(button => {
+    button.addEventListener("click", () => {
+        // Toggle active class
+        categoryButtons.forEach(btn => btn.classList.remove('active'));
+        button.classList.add('active');
+
+        const category = button.getAttribute("category");
+        const products = document.querySelectorAll('.product-card');
+
+        products.forEach(product => {
+            if(category == "all" || product.getAttribute("category") == category){
+                product.style.display = "block";
+            }else{
+                product.style.display = "none";
+            }
+        });
+    });
+});
 
