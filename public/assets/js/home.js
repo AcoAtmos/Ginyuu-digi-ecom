@@ -57,6 +57,29 @@ async function set_dom_product_home(data){
         `;
     });
 
+    top_selling.forEach(item => { 
+        top_selling_html += `
+            <div class="product-card" data-product="5">
+                <div class="product-image">
+                    <span class="product-icon"><img src="${item.gallery_images}" alt="Product Image"></span>
+                </div>
+                <div class="product-info">
+                    <div class="product-name">${item.title}</div>
+                    <div class="product-category">${item.category}</div>
+                    <div class="product-rating">
+                        <span class="stars">★★★★★</span>
+                        <span class="rating-text">${item.rating_avg}</span>
+                    </div>
+                    <div class="product-price">
+                        <span class="current-price">${item.currency}.${item.discount_price}</span>
+                        <span class="original-price">${item.currency}.${item.price}</span>
+                        <span class="discount">-${item.discount}%</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    })
+
 
 
     container_new_arrival.innerHTML = new_arrival_html;
