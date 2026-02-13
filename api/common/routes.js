@@ -14,10 +14,11 @@ router.get("/", (req, res) => {
 });
 
 /// =================ROUTES API=======================
-// home page
-router.get("/product/home", product.get_product_home); // get product for home 
+
 // Product and checkout routes
-router.get("/get_product", product.get_product); // get product for home
+router.get("/product/home", product.get_product_home); // get product for home // baru  
+router.get("/product/category/:page/:limit", product.get_product_category); // get product for category
+// router.get("/get_product", product.get_product); // get product for home
 router.get("/get_product/:slug", product.get_product); // get product for checkout
 router.post("/checkout", checkout.checkout); // checkout process
 

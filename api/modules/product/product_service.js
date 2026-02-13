@@ -29,3 +29,14 @@ exports.getProduct = async () => {
     return results.rows;
 };
 
+// for category
+exports.getProductCategory = async (page, limit) => {
+    const query = "SELECT * FROM products ORDER BY id ASC LIMIT $1 OFFSET $2";
+    try{
+        const results = await helper.db.query(query, [limit, (page - 1) * limit]);
+        return results.rows;
+    }catch(error){
+        console.log(error); 
+        return [];
+    }
+};
