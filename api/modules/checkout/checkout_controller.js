@@ -13,9 +13,14 @@ const {db} = require("../../common/helper");
 
 exports.checkout = async (req, res) => {
     const client = await db.connect();
+    let result = { 
+        code: 500, 
+        status: "failed", 
+        message: "Internal Server Error" 
+    };
 
     try {
-        let result = await capturePayload(req.body);
+        result = await capturePayload(req.body);
         result = await validatePayload(result);
         result = await getPrice(result); 
         result = await countTotal(result); 
@@ -33,11 +38,13 @@ exports.checkout = async (req, res) => {
         });
     }catch(err){
         await client.query("ROLLBACK");
+        console.log(err);
         res.status(result.code).json({
             code: result.code,
-            status: result.status,
+            status: result.status ,
             message: result.message,
-            data: result.data
+            debug_error: err.toString(),
+            stack: err.stack
         });
     } finally {
         client.release();

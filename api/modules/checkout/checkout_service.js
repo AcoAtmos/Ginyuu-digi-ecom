@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 exports.capturePayload = async (data) =>{
     let username = data?.username;
     let email = data?.email;
-    let password = data?.password;
+    let password = data?.password || null;
     let phone = data?.phone;
     let payment_method = data?.payment_method;
     let productId = data?.productId;
@@ -17,7 +17,7 @@ exports.capturePayload = async (data) =>{
         payload : {
             username : username,
             email : email,
-            password : password || "",
+            password : password || null,
             phone : phone,
             payment_method : payment_method,
             productId : productId,
@@ -35,44 +35,57 @@ exports.capturePayload = async (data) =>{
 }
 
 exports.validatePayload = async (result) =>{
+    // check if payload is valid
     if (result.status !== "success"){
-        result.message("Invalid payload");
+        result.message = "Invalid payload";
         result.code = 400;
         result.status = "failed";
         console.log ("Invalid payload");
     }
+
+    // check if username is valid
     if (result.payload.username === "" || result.payload.username === null || result.payload.username === undefined){
-        result.message("Username is required");
+        result.message = "Username is required";
         result.code = 400;
         result.status = "failed";
         console.log ("Username is required");
     }
+
+    // check if email is valid
     if (result.payload.email === "" || result.payload.email === null || result.payload.email === undefined){
-        result.message("Email is required");
+        result.message = "Email is required";
         result.code = 400;
         result.status = "failed";
         console.log ("Email is required");
-    }
+    } 
+    
+    // check if phone is valid
     if (result.payload.phone === "" || result.payload.phone === null || result.payload.phone === undefined){
-        result.message("Phone is required");
+        result.message = "Phone is required";
         result.code = 400;
         result.status = "failed";
         console.log ("Phone is required");
     }
+    
+    // check if payment method is valid
     if (result.payload.payment_method === "" || result.payload.payment_method === null || result.payload.payment_method === undefined){
-        result.message("Payment method is required");
+        result.message = "Payment method is required";
         result.code = 400;
         result.status = "failed";
         console.log ("Payment method is required");
     }
+    
+    // check if product is valid
     if (result.payload.productId === "" || result.payload.productId === null || result.payload.productId === undefined){
-        result.message("Product is required");
+        result.message = "Product is required";
         result.code = 400;
         result.status = "failed";
         console.log ("Product is required");
     }
+    
+    // check if terms is valid
     if (result.payload.terms == false){
-        result.message("Terms and conditions must be accepted");
+        result.message = "Terms and conditions must be accepted";
         result.code = 400;
         result.status = "failed";
         console.log ("Terms and conditions must be accepted");
@@ -80,28 +93,33 @@ exports.validatePayload = async (result) =>{
     return result;
 }
 exports.getPrice = async (result) => {
+    if (result.status == 'failed') { return result; }
     try{
-        const rows = await db.query("SELECT price FROM products WHERE id = $1", [result.payload.productId]);
-        if (rows.length == 0 ){
-            result.message("Product not found");
+        const queryResult = await db.query("SELECT price FROM products WHERE id = $1", [result.payload.productId]);
+        if (queryResult.rows.length == 0 ){
+            result.message = "Product not found";
             result.code = 400;
             result.status = "failed";
             console.log("Product not found");
+            return result;
         }
-        result.payload.price = rows.price;
+        result.payload.price = queryResult.rows[0].price;
     }catch(err){
-        result.message("Get price failed");
+        result.message = "Get price failed";
         result.code = 400;
         result.status = "failed";
         console.log("Get price failed");
+        console.log(err);
     }
     return result;
 }
 exports.countTotal = async (result) => {
+    if (result.status == 'failed') { return result; }
     try{
-        result.payload.total = result.payload.price * result.payload.amount;
+        let total = result.payload.price * result.payload.amount;
+        result.payload.total = parseInt(total);
     }catch(err){
-        result.message("Count total failed");
+        result.message = "Count total failed";
         result.code = 400;
         result.status = "failed";
         console.log("Count total failed");
@@ -110,7 +128,6 @@ exports.countTotal = async (result) => {
 }
 
 // ============= Begin  ==============
-
 exports.checkout_add_user = async (result) => {
   if (result.status === "failed") return result;
 
@@ -128,6 +145,7 @@ exports.checkout_add_user = async (result) => {
         result.code = 400;
         result.message = "Password is required";
         console.log("Password is required");
+        return result;
       }
       const hashedPassword = await bcrypt.hash(result.payload.password, 10);
       const insertResult = await db.query(
@@ -156,11 +174,7 @@ exports.checkout_add_user = async (result) => {
     return result;
 
   } catch (err) {
-    result.status = "failed";
-    result.code = 500;
-    result.message = "Create account failed";
-    console.log("create account failed");
-    return result
+    console.error(err)
   }
 };
 
@@ -168,20 +182,26 @@ exports.checkout_create_order = async (result) => {
     if (result.status == 'failed') { return result; }
     try {
         const orderResult = await db.query(
-            `INSERT INTO orders (customer_name ,customer_email ,customer_phone ,product_id, amount, total_price, payment_method, order_status)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-             RETURNING id`,
+            `INSERT INTO orders 
+            (   
+                user_id,
+                product_id, 
+                amount, 
+                total_price, 
+                payment_method
+                )
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id `,
             [
-                result.payload.username,
-                result.payload.email,
-                result.payload.phone,
+                result.payload.idUser,
                 result.payload.productId,
                 result.payload.amount,
                 result.payload.total,
-                result.payload.payment_method,
-                "pending"
+                result.payload.payment_method
             ]
         );
+        
+        console.log(orderResult);
         result.payload.idOrder = orderResult.rows[0].id;
         result.status = "success";
         result.code = 200;
@@ -192,6 +212,7 @@ exports.checkout_create_order = async (result) => {
         result.code = 500;
         result.message = "Create order failed";
         console.log("create order failed");
+        console.log(err);
         return result
     }
 }
@@ -234,7 +255,7 @@ exports.createResponse =async (result) =>{
         code : result.code,
         status : result.status,
         message : result.message,
-        data : result.data
+        data : result
     }
     return res;
 }
