@@ -344,3 +344,5 @@ function closeModal() {
     document.body.style.overflow = 'auto';
     current_product = null;
 }
+
+
