@@ -46,6 +46,7 @@ async function hit_api_login(email, password){
 
     // parse data from BE
     const data = await res.json();
+    
     // set data 
     // localStorage.setItem('token', data.data.token);
     setCookie('token', data.data.token, 1);
