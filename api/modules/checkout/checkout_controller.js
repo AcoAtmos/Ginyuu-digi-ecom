@@ -6,6 +6,8 @@ const {
     checkout_add_user,
     checkout_create_order,
     checkout_send_whatsapp,
+    checkout_send_email,
+    checkout_create_invoice,
     createResponse
 } =require('./checkout_service');
 const {db} = require("../../common/helper");
@@ -27,7 +29,9 @@ exports.checkout = async (req, res) => {
         await client.query("BEGIN");
         result = await checkout_add_user(result);
         result = await checkout_create_order(result);
+        result = await checkout_create_invoice(result);
         result = await checkout_send_whatsapp(result);
+        result = await checkout_send_email(result);
         await client.query("COMMIT");
         result = await createResponse(result);
         res.status(result.code).json({

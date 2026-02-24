@@ -127,7 +127,7 @@ exports.countTotal = async (result) => {
     return result;
 }
 
-// ============= Begin  ==============
+// ============= Begin ==============
 exports.checkout_add_user = async (result) => {
   if (result.status === "failed") return result;
 
@@ -217,6 +217,46 @@ exports.checkout_create_order = async (result) => {
     }
 }
 
+exports.checkout_create_invoice = async (result) => {
+    if (result.status == 'failed') { return result; }
+    try {
+        const invoice_number = "INV-" + Date.now() + result.payload.idUser + "-" + result.payload.idOrder;
+        const issued_at = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+        const invoiceResult = await db.query(
+            `INSERT INTO invoices (
+                order_id, 
+                invoice_number,
+                discount_amount,
+                final_amount, 
+                issued_at
+            )
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id `,
+            [
+                result.payload.idOrder,
+                invoice_number,
+                result.payload.discount,
+                result.payload.total,
+                issued_at // jatuh tempo
+            ]
+        );
+        
+        console.log(invoiceResult);
+        result.payload.idInvoice = invoiceResult.rows[0].id;
+        result.status = "success";
+        result.code = 200;
+        result.message = "Success";
+        return result;
+    } catch (err) {
+        result.status = "failed";
+        result.code = 500;
+        result.message = "Create invoice failed";
+        console.log("create invoice failed");
+        console.log(err);
+        return result
+    }
+}
+
 exports.checkout_send_whatsapp = async (result)=>{
     if (result.status == 'failed') { return result; }
     result.payload.message = `Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:
@@ -248,7 +288,37 @@ exports.checkout_send_whatsapp = async (result)=>{
     return result;
 }
 
-
+exports.checkout_send_email = async (result)=>{
+    if (result.status == 'failed') { return result; }
+    result.payload.message = `Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:
+    
+    Produk: ${result.payload.productId}
+    Harga: ${result.payload.price}
+    Total: ${result.payload.total}
+    
+    Silahkan lakukan pembayaran ke rekening berikut:
+    Bank: BCA
+    No. Rekening: 1234567890
+    Atas Nama: PT. Billing Digital Indonesia
+    
+    Setelah melakukan pembayaran, silahkan konfirmasi ke nomor WhatsApp berikut: 0000000000
+    
+    Terima kasih.`;
+    try{
+        const {send_email} = require("../email/email_service");
+        result = await send_email(result);
+        result.message = "Send email success";
+        result.code = 200;
+        result.status = "success";
+    }catch(err){
+        result.message = "Send email failed";
+        result.code = 400;
+        result.status = "fail";
+        console.log("send email failed");
+    }
+    return result;
+}
+// ============= Commit ==============
 exports.createResponse =async (result) =>{
     let res = {
         payload : result.payload,
