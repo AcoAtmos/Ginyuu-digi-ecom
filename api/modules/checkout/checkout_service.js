@@ -259,26 +259,26 @@ exports.checkout_create_invoice = async (result) => {
 
 exports.checkout_add_queue = async (result) => {
     if (result.status == 'failed') { return result; }
+
     try {
-        // pesan WA
-        let messageWA = `Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:
-    
+
+        let messageWA = `Halo ${result.payload.username}, terima kasih telah melakukan pembelian.
+
         Produk: ${result.payload.productId}
         Harga: ${result.payload.price}
         Total: ${result.payload.total}
-        
+
         Silahkan lakukan pembayaran ke rekening berikut:
         Bank: BCA
         No. Rekening: 1234567890
         Atas Nama: PT. Billing Digital Indonesia
-        
+
         Setelah melakukan pembayaran, silahkan konfirmasi ke nomor WhatsApp berikut: 0000000000
-        
+
         Terima kasih.`;
 
-        // pesan email
         let messageEmail = `
-        <p>Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:</p>
+        <p>Halo ${result.payload.username}, terima kasih telah melakukan pembelian.</p>
         <p>Produk: ${result.payload.productId}</p>
         <p>Harga: ${result.payload.price}</p>
         <p>Total: ${result.payload.total}</p>
@@ -286,30 +286,42 @@ exports.checkout_add_queue = async (result) => {
         <p>Bank: BCA</p>
         <p>No. Rekening: 1234567890</p>
         <p>Atas Nama: PT. Billing Digital Indonesia</p>
-        
         <p>Setelah melakukan pembayaran, silahkan konfirmasi ke nomor WhatsApp berikut: 0000000000</p>
-        
         <p>Terima kasih.</p>`;
 
-        //insert wa dan email
-        const queueResult = await db.query(
+        // INSERT WHATSAPP
+        const queueResultWA = await db.query(
             `INSERT INTO queue (
-                order_id, 
+                order_id,
                 destination,
                 tipe,
                 pesan,
                 status,
                 created_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id `,
+            VALUES ($1, $2, $3, $4, $5, NOW())
+            RETURNING id`,
             [
                 result.payload.idOrder,
                 result.payload.phone,
                 "whatsapp",
                 messageWA,
                 "pending"
-            ],
+            ]
+        );
+
+        // INSERT EMAIL
+        const queueResultEmail = await db.query(
+            `INSERT INTO queue (
+                order_id,
+                destination,
+                tipe,
+                pesan,
+                status,
+                created_at
+            )
+            VALUES ($1, $2, $3, $4, $5, NOW())
+            RETURNING id`,
             [
                 result.payload.idOrder,
                 result.payload.email,
@@ -317,91 +329,73 @@ exports.checkout_add_queue = async (result) => {
                 messageEmail,
                 "pending"
             ]
-
-
         );
-        
-        
-        
-        console.log(queueResult);
+
         result.payload.idQueueWA = queueResultWA.rows[0].id;
         result.payload.idQueueEmail = queueResultEmail.rows[0].id;
+
         result.status = "success";
         result.code = 200;
         result.message = "Success";
         return result;
+
     } catch (err) {
         result.status = "failed";
         result.code = 500;
         result.message = "Create queue failed";
-        console.log("create queue failed");
         console.log(err);
-        return result
+        return result;
     }
-}
+};
 
-exports.checkout_send_whatsapp = async (result)=>{
-    if (result.status == 'failed') { return result; }
-    result.payload.message = `Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:
-    
-    Produk: ${result.payload.productId}
-    Harga: ${result.payload.price}
-    Total: ${result.payload.total}
-    
-    Silahkan lakukan pembayaran ke rekening berikut:
-    Bank: BCA
-    No. Rekening: 1234567890
-    Atas Nama: PT. Billing Digital Indonesia
-    
-    Setelah melakukan pembayaran, silahkan konfirmasi ke nomor WhatsApp berikut: 0000000000
-    
-    Terima kasih.`;
+exports.checkout_send_whatsapp = async ()=>{
     try{
+        const data = await db.query(
+            `SELECT * FROM queue WHERE tipe = 'whatsapp' AND status = 'pending'`
+        );
+        if (data.rows.length == 0) {
+            console.log("No whatsapp to send");
+            return;
+        }
         const {send_whatsapp} = require("../whatsapp/whatsapp_service");
-        result = await send_whatsapp(result);
-        result.message = "Send whatsapp success";
-        result.code = 200;
-        result.status = "success";
+        result = await send_whatsapp();
     }catch(err){
-        result.message = "Send whatsapp failed";
-        result.code = 400;
-        result.status = "fail";
-        console.log("send whatsapp failed");
+       throw new Error(err);
     }
     return result;
 }
 
-exports.checkout_send_email = async (result)=>{
-    if (result.status == 'failed') { return result; }
+// exports.checkout_send_email = async (result)=>{
+//     if (result.status == 'failed') { return result; }
 
-    result.payload.message = `
-    <p>Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:</p>
-    <p>Produk: ${result.payload.productId}</p>
-    <p>Harga: ${result.payload.price}</p>
-    <p>Total: ${result.payload.total}</p>
-    <p>Silahkan lakukan pembayaran ke rekening berikut:</p>
-    <p>Bank: BCA</p>
-    <p>No. Rekening: 1234567890</p>
-    <p>Atas Nama: PT. Billing Digital Indonesia</p>
+//     result.payload.message = `
+//     <p>Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:</p>
+//     <p>Produk: ${result.payload.productId}</p>
+//     <p>Harga: ${result.payload.price}</p>
+//     <p>Total: ${result.payload.total}</p>
+//     <p>Silahkan lakukan pembayaran ke rekening berikut:</p>
+//     <p>Bank: BCA</p>
+//     <p>No. Rekening: 1234567890</p>
+//     <p>Atas Nama: PT. Billing Digital Indonesia</p>
     
-    <p>Setelah melakukan pembayaran, silahkan konfirmasi ke nomor WhatsApp berikut: 0000000000</p>
+//     <p>Setelah melakukan pembayaran, silahkan konfirmasi ke nomor WhatsApp berikut: 0000000000</p>
     
-    <p>Terima kasih.</p>`;
+//     <p>Terima kasih.</p>`;
 
-    try{
-        const {send_email} = require("../email/email_service");
-        result = await send_email(result.payload.email, "Invoice berhasil dibuat", result.payload.message);
-        result.message = "Send email success";
-        result.code = 200;
-        result.status = "success";
-    }catch(err){
-        result.message = "Send email failed";
-        result.code = 400;
-        result.status = "fail";
-        console.log("send email failed");
-    }
-    return result;
-}
+//     try{
+//         const {send_email} = require("../email/email_service");
+//         result = await send_email(result.payload.email, "Invoice berhasil dibuat", result.payload.message);
+//         result.message = "Send email success";
+//         result.code = 200;
+//         result.status = "success";
+//     }catch(err){
+//         result.message = "Send email failed";
+//         result.code = 400;
+//         result.status = "fail";
+//         console.log("send email failed");
+//     }
+//     return result;
+// }
 // ============= Commit ==============
 exports.createResponse =async (result) =>{
     let res = {
