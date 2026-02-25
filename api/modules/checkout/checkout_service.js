@@ -257,6 +257,88 @@ exports.checkout_create_invoice = async (result) => {
     }
 }
 
+exports.checkout_add_queue = async (result) => {
+    if (result.status == 'failed') { return result; }
+    try {
+        // pesan WA
+        let messageWA = `Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:
+    
+        Produk: ${result.payload.productId}
+        Harga: ${result.payload.price}
+        Total: ${result.payload.total}
+        
+        Silahkan lakukan pembayaran ke rekening berikut:
+        Bank: BCA
+        No. Rekening: 1234567890
+        Atas Nama: PT. Billing Digital Indonesia
+        
+        Setelah melakukan pembayaran, silahkan konfirmasi ke nomor WhatsApp berikut: 0000000000
+        
+        Terima kasih.`;
+
+        // pesan email
+        let messageEmail = `
+        <p>Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:</p>
+        <p>Produk: ${result.payload.productId}</p>
+        <p>Harga: ${result.payload.price}</p>
+        <p>Total: ${result.payload.total}</p>
+        <p>Silahkan lakukan pembayaran ke rekening berikut:</p>
+        <p>Bank: BCA</p>
+        <p>No. Rekening: 1234567890</p>
+        <p>Atas Nama: PT. Billing Digital Indonesia</p>
+        
+        <p>Setelah melakukan pembayaran, silahkan konfirmasi ke nomor WhatsApp berikut: 0000000000</p>
+        
+        <p>Terima kasih.</p>`;
+
+        //insert wa dan email
+        const queueResult = await db.query(
+            `INSERT INTO queue (
+                order_id, 
+                destination,
+                tipe,
+                pesan,
+                status,
+                created_at
+            )
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id `,
+            [
+                result.payload.idOrder,
+                result.payload.phone,
+                "whatsapp",
+                messageWA,
+                "pending"
+            ],
+            [
+                result.payload.idOrder,
+                result.payload.email,
+                "email",
+                messageEmail,
+                "pending"
+            ]
+
+
+        );
+        
+        
+        
+        console.log(queueResult);
+        result.payload.idQueueWA = queueResultWA.rows[0].id;
+        result.payload.idQueueEmail = queueResultEmail.rows[0].id;
+        result.status = "success";
+        result.code = 200;
+        result.message = "Success";
+        return result;
+    } catch (err) {
+        result.status = "failed";
+        result.code = 500;
+        result.message = "Create queue failed";
+        console.log("create queue failed");
+        console.log(err);
+        return result
+    }
+}
 
 exports.checkout_send_whatsapp = async (result)=>{
     if (result.status == 'failed') { return result; }
