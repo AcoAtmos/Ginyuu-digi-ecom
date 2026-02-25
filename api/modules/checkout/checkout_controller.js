@@ -30,8 +30,8 @@ exports.checkout = async (req, res) => {
         result = await checkout_add_user(result);
         result = await checkout_create_order(result);
         result = await checkout_create_invoice(result);
-        result = await checkout_send_whatsapp(result);
-        result = await checkout_send_email(result);
+        // result = await checkout_send_whatsapp(result);
+        // result = await checkout_send_email(result);
         await client.query("COMMIT");
         result = await createResponse(result);
         res.status(result.code).json({

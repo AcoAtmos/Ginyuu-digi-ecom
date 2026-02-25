@@ -257,6 +257,7 @@ exports.checkout_create_invoice = async (result) => {
     }
 }
 
+
 exports.checkout_send_whatsapp = async (result)=>{
     if (result.status == 'failed') { return result; }
     result.payload.message = `Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:
@@ -290,23 +291,24 @@ exports.checkout_send_whatsapp = async (result)=>{
 
 exports.checkout_send_email = async (result)=>{
     if (result.status == 'failed') { return result; }
-    result.payload.message = `Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:
+
+    result.payload.message = `
+    <p>Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:</p>
+    <p>Produk: ${result.payload.productId}</p>
+    <p>Harga: ${result.payload.price}</p>
+    <p>Total: ${result.payload.total}</p>
+    <p>Silahkan lakukan pembayaran ke rekening berikut:</p>
+    <p>Bank: BCA</p>
+    <p>No. Rekening: 1234567890</p>
+    <p>Atas Nama: PT. Billing Digital Indonesia</p>
     
-    Produk: ${result.payload.productId}
-    Harga: ${result.payload.price}
-    Total: ${result.payload.total}
+    <p>Setelah melakukan pembayaran, silahkan konfirmasi ke nomor WhatsApp berikut: 0000000000</p>
     
-    Silahkan lakukan pembayaran ke rekening berikut:
-    Bank: BCA
-    No. Rekening: 1234567890
-    Atas Nama: PT. Billing Digital Indonesia
-    
-    Setelah melakukan pembayaran, silahkan konfirmasi ke nomor WhatsApp berikut: 0000000000
-    
-    Terima kasih.`;
+    <p>Terima kasih.</p>`;
+
     try{
         const {send_email} = require("../email/email_service");
-        result = await send_email(result);
+        result = await send_email(result.payload.email, "Invoice berhasil dibuat", result.payload.message);
         result.message = "Send email success";
         result.code = 200;
         result.status = "success";
