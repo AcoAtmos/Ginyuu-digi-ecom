@@ -168,7 +168,7 @@ const menus = {
     shop: [
         { name: "New Arrivals", href: "#new-arrivals" },
         { name: "Top Selling",  href: "#top-selling" },
-        { name: "All Categories", href: "#categories" },
+        { name: "Browse All", href: "/page/browsAll" },
         { name: "On Sale",      href: "#sale" }
     ]
 };
@@ -239,6 +239,16 @@ function logout() {
     window.location.href = '/page/home';
 }
 
+function setupSearch() {
+    const searchContainer = document.querySelector('.search-container');
+    const searchInput = searchContainer.querySelector('input');
+    const searchButton = searchContainer.querySelector('button');
+
+    searchButton.addEventListener('click', () => {
+        searchContainer.classList.toggle('active');
+    });
+}
+
 // ────────────────────────────────────────────────
 // event listeners
 // ────────────────────────────────────────────────
@@ -272,9 +282,11 @@ function attachGlobalEventListeners() {
     window.addEventListener('scroll', () => {
         const heroImage = document.querySelector('.hero-image');
         if (heroImage) {
-            heroImage.style.transform = `translateY(${window.pageYOffset * 0.3}px)`;
+            heroImage.style.transform = `translateY(${window.pageYOffset * 0.3 / 16}rem)`;
         }
     });
+
+    setupSearch()
 }
 
 function attachProductCardListeners() {
