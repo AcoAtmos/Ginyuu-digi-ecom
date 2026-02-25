@@ -18,6 +18,14 @@ pool.on('error', (err) => {
     process.exit(-1);
 });
 
+
+// workker 20s
+exports.worker20 = ()=>{
+    setInterval(() => {
+        console.log('20 seconds have passed');
+    }, 20000);
+}
 module.exports = {
-    db
+    db,
+    worker20
 }
