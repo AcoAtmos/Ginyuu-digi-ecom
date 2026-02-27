@@ -15,9 +15,19 @@ app.use(cors({
 app.use(express.json());
 
 // Set up worker
-const {worker20} = require("./common/helper");
-worker20();
-
+// workker 10s
+const {
+    checkout_send_whatsapp,
+    checkout_send_email
+} = require("./modules/checkout/checkout_service");
+const worker10 = async()=>{
+    setInterval(async() => {
+        console.log('10 seconds have passed');
+        await checkout_send_whatsapp();
+        await checkout_send_email();
+    }, 10000);
+} 
+worker10();
 // Set up routes
 app.use("/api", routes);
 
