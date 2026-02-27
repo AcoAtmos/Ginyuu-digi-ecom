@@ -94,6 +94,7 @@ exports.validatePayload = async (result) =>{
 }
 exports.getPrice = async (result) => {
     if (result.status == 'failed') { return result; }
+    console.log(result.payload.productId);
     try{
         const queryResult = await db.query("SELECT price FROM products WHERE id = $1", [result.payload.productId]);
         if (queryResult.rows.length == 0 ){
@@ -358,44 +359,29 @@ exports.checkout_send_whatsapp = async ()=>{
             return;
         }
         const {send_whatsapp} = require("../whatsapp/whatsapp_service");
-        result = await send_whatsapp();
+        await send_whatsapp(data.rows[0].destination, data.rows[0].pesan);
     }catch(err){
        throw new Error(err);
     }
-    return result;
+    return;
 }
 
-// exports.checkout_send_email = async (result)=>{
-//     if (result.status == 'failed') { return result; }
-
-//     result.payload.message = `
-//     <p>Halo ${result.payload.username}, terima kasih telah melakukan pembelian. Berikut adalah detail pembelian Anda:</p>
-//     <p>Produk: ${result.payload.productId}</p>
-//     <p>Harga: ${result.payload.price}</p>
-//     <p>Total: ${result.payload.total}</p>
-//     <p>Silahkan lakukan pembayaran ke rekening berikut:</p>
-//     <p>Bank: BCA</p>
-//     <p>No. Rekening: 1234567890</p>
-//     <p>Atas Nama: PT. Billing Digital Indonesia</p>
-    
-//     <p>Setelah melakukan pembayaran, silahkan konfirmasi ke nomor WhatsApp berikut: 0000000000</p>
-    
-//     <p>Terima kasih.</p>`;
-
-//     try{
-//         const {send_email} = require("../email/email_service");
-//         result = await send_email(result.payload.email, "Invoice berhasil dibuat", result.payload.message);
-//         result.message = "Send email success";
-//         result.code = 200;
-//         result.status = "success";
-//     }catch(err){
-//         result.message = "Send email failed";
-//         result.code = 400;
-//         result.status = "fail";
-//         console.log("send email failed");
-//     }
-//     return result;
-// }
+exports.checkout_send_email = async ()=>{
+    try{
+        const data = await db.query(
+            `SELECT * FROM queue WHERE tipe = 'email' AND status = 'pending'`
+        );
+        if (data.rows.length == 0) {
+            console.log("No email to send");
+            return;
+        }
+        const {send_email} = require("../email/email_service");
+        await send_email(data.rows[0].destination, "Invoice berhasil dibuat", data.rows[0].pesan);
+    }catch(err){
+        throw new Error(err);
+    }
+    return;
+}
 // ============= Commit ==============
 exports.createResponse =async (result) =>{
     let res = {
