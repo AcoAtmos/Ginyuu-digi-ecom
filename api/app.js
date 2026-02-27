@@ -14,6 +14,10 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Set up worker
+const {worker20} = require("./common/helper");
+worker20();
+
 // Set up routes
 app.use("/api", routes);
 
