@@ -1,5 +1,5 @@
 
-const {db} = require("../../common/helper");
+const { db } = require("../../common/helper");
 const bcrypt = require("bcrypt");
 // ============= CHECKOUT PROCESS =============
 exports.capturePayload = async (data) =>{
@@ -94,7 +94,6 @@ exports.validatePayload = async (result) =>{
 }
 exports.getPrice = async (result) => {
     if (result.status == 'failed') { return result; }
-    console.log(result.payload.productId);
     try{
         const queryResult = await db.query("SELECT price FROM products WHERE id = $1", [result.payload.productId]);
         if (queryResult.rows.length == 0 ){
@@ -201,8 +200,6 @@ exports.checkout_create_order = async (result) => {
                 result.payload.payment_method
             ]
         );
-        
-        console.log(orderResult);
         result.payload.idOrder = orderResult.rows[0].id;
         result.status = "success";
         result.code = 200;
@@ -241,8 +238,6 @@ exports.checkout_create_invoice = async (result) => {
                 issued_at // jatuh tempo
             ]
         );
-        
-        console.log(invoiceResult);
         result.payload.idInvoice = invoiceResult.rows[0].id;
         result.status = "success";
         result.code = 200;
@@ -352,7 +347,11 @@ exports.checkout_add_queue = async (result) => {
 exports.checkout_send_whatsapp = async ()=>{
     try{
         const data = await db.query(
-            `SELECT * FROM queue WHERE tipe = 'whatsapp' AND status = 'pending'`
+            `SELECT * FROM queue
+            WHERE tipe = 'whatsapp'
+            AND status = 'pending'
+            FOR UPDATE SKIP LOCKED
+            LIMIT 1;`
         );
         if (data.rows.length == 0) {
             console.log("No whatsapp to send");
@@ -360,6 +359,10 @@ exports.checkout_send_whatsapp = async ()=>{
         }
         const {send_whatsapp} = require("../whatsapp/whatsapp_service");
         await send_whatsapp(data.rows[0].destination, data.rows[0].pesan);
+        await db.query(
+            `UPDATE queue SET status = 'sent' WHERE id = $1`,
+            [data.rows[0].id]
+        );
     }catch(err){
        throw new Error(err);
     }
@@ -369,7 +372,11 @@ exports.checkout_send_whatsapp = async ()=>{
 exports.checkout_send_email = async ()=>{
     try{
         const data = await db.query(
-            `SELECT * FROM queue WHERE tipe = 'email' AND status = 'pending'`
+            `SELECT * FROM queue
+            WHERE tipe = 'email'
+            AND status = 'pending'
+            FOR UPDATE SKIP LOCKED
+            LIMIT 1;`
         );
         if (data.rows.length == 0) {
             console.log("No email to send");
@@ -377,6 +384,11 @@ exports.checkout_send_email = async ()=>{
         }
         const {send_email} = require("../email/email_service");
         await send_email(data.rows[0].destination, "Invoice berhasil dibuat", data.rows[0].pesan);
+        console.log("Email sent");
+        await db.query(
+            `UPDATE queue SET status = 'sent' WHERE id = $1`,
+            [data.rows[0].id]
+        );
     }catch(err){
         throw new Error(err);
     }
