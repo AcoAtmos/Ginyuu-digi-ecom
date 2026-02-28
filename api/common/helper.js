@@ -18,17 +18,6 @@ pool.on('error', (err) => {
     process.exit(-1);
 });
 
-
-// workker 20s
-const checkout_service = require("../modules/checkout/checkout_service");
-exports.worker20 = ()=>{
-    setInterval(() => {
-        console.log('20 seconds have passed');
-        checkout_service.checkout_send_whatsapp();
-        checkout_service.checkout_send_email();
-    }, 20000);
-}
 module.exports = {
-    db,
-    worker20
+    db
 }

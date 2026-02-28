@@ -866,7 +866,7 @@ footer {
     }
 
     .header-search {
-        display: none;
+        /* display: none; */
     }
 
     .mobile-menu-btn {
@@ -898,7 +898,7 @@ footer {
     }
 
     .product-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
         gap: 1rem;
     }
 
@@ -937,6 +937,17 @@ footer {
 
     .products-header h1 {
         font-size: 1.5rem;
+    }
+    .header-search{
+        position: absolute;
+        right: 8.5rem;
+    }
+    #searchInput{
+        display: none;
+        width: 15.5rem ;
+    }
+    #searchInput.show{
+        display: block;
     }
 
     .product-grid {

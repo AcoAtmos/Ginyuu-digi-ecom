@@ -27,7 +27,7 @@ const worker10 = async()=>{
         await checkout_send_email();
     }, 10000);
 } 
-worker10();
+// worker10();
 // Set up routes
 app.use("/api", routes);
 

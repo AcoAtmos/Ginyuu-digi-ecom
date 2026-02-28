@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Browse All Products - DESIGNHUB</title>
+    <title>Ginyuu - Browse All Products</title>
     <script type="module" src="/assets/js/browsAll.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/browsAll.css">
@@ -12,29 +12,37 @@
     <!-- Header -->
     <header>
         <div class="header-container">
-            <div class="logo">DESIGNHUB</div>
+            <div class="logo">Ginyuu</div>
             <div class="header-search">
-                <input type="text" id="searchInput" placeholder="Search for UI kits, icons, templates...">
-                <button id="searchBtn">
-                    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
-                    </svg>
-                </button>
+
+                    <input type="text" id="searchInput" placeholder="Search here...">
+                    <button id="searchBtn">
+                        <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
+                        </svg>
+                    </button>
+
             </div>
             <div class="header-actions">
                 <button class="icon-btn" title="Cart">
-                    🛒
+                    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"/>
+                    </svg>
                     <span class="cart-count">0</span>
                 </button>
-                <button class="icon-btn" title="Account">👤</button>
-                <button class="mobile-menu-btn">☰</button>
+                <button class="icon-btn" title="Account">
+                    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-width="2" d="M7 17v1a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-4a3 3 0 0 0-3 3Zm8-9a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                    </svg>
+                </button>
+                <button class="mobile-menu-btn">☰</button> 
             </div>
         </div>
     </header>
 
     <!-- Breadcrumb -->
     <div class="breadcrumb">
-        <a href="/">Home</a>
+        <a href="/page/home">Home</a>
         <span>›</span>
         <span>Browse All</span>
     </div>
@@ -107,7 +115,7 @@
             </div>
 
             <!-- Color Filter -->
-            <div class="filter-section">
+            <!-- <div class="filter-section">
                 <div class="filter-header">
                     <h3>Colors</h3>
                     <button class="filter-clear" data-clear="color">Clear</button>
@@ -123,7 +131,7 @@
                     <div class="color-option" data-color="pink" style="background: #ec4899;"></div>
                     <div class="color-option" data-color="black" style="background: #000000;"></div>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Rating Filter -->
             <div class="filter-section">
@@ -217,7 +225,7 @@
     <footer>
         <div class="footer-container">
             <div class="footer-brand">
-                <h3>DESIGNHUB</h3>
+                <h3>Ginyuu</h3>
                 <p>Your premier destination for high-quality digital design assets.</p>
                 <div class="social-links">
                     <div class="social-link">𝕏</div>
@@ -269,7 +277,7 @@
         </div>
 
         <div class="footer-bottom">
-            <div>DesignHub © 2024. All Rights Reserved.</div>
+            <div>Ginyuu © 2024. All Rights Reserved.</div>
         </div>
     </footer>
 
@@ -522,7 +530,20 @@
                 filterProducts();
             }, 500);
         });
-
+        // search input on mobile dissapare
+        searchBtn.addEventListener('click', ()=>{
+            if(window.innerWidth <= 425){
+                if(!searchInput.classList.contains('show')){
+                    searchInput.classList.add('show')
+                    searchInput.focus();
+                    return
+                }
+            }
+            //keyword
+            const keyword = searchInput.value;
+            console.log('tekrlik')
+            // add function search here
+        });
         // Apply Filters Button
         document.getElementById('applyFilters').addEventListener('click', filterProducts);
 
