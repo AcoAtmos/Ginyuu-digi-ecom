@@ -1,9 +1,6 @@
 // home.js
 import { isCookieSet,getCookie, setCookie } from "./main/main.js";
-
-// ────────────────────────────────────────────────
-// Global state
-// ────────────────────────────────────────────────
+//==================== Global state ==============================
 const products_map = {};
 let current_product = null;
 
@@ -20,9 +17,8 @@ const elements = {
     newsletterForm: document.getElementById('newsletterForm'),
 };
 
-// ────────────────────────────────────────────────
-// Initialization
-// ────────────────────────────────────────────────
+//============= Initialization ========================
+
 document.addEventListener('DOMContentLoaded', initialize);
 
 async function initialize() {
@@ -44,9 +40,8 @@ async function initialize() {
     attachProductCardListeners();
 }
 
-// ────────────────────────────────────────────────
-// calls API
-// ────────────────────────────────────────────────
+//================= calls API =======================
+
 async function fetchHomeProducts() {
     try {
         const res = await fetch('http://localhost:4100/api/product/home');
@@ -80,9 +75,8 @@ async function checkLogin() {
     }
 }
 
-// ────────────────────────────────────────────────
-// rendering
-// ────────────────────────────────────────────────
+// 
+//================= rendering ====================
 async function renderHomeProducts(data) {
     const { new_arrival, top_selling } = data;
 

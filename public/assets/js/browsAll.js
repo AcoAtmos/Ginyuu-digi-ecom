@@ -33,23 +33,24 @@ async function hit_api_get_product_category(){
     }
 }
 
-// Render Products
+// =============== Render Products ===============
 function renderProducts(data) {
+    // get element
     const productGrid = document.getElementById('productGrid');
     const emptyState = document.getElementById('emptyState');
     const productCount = document.getElementById('productCount');
-
+    // check data
     if (data.length === 0) {
         productGrid.style.display = 'none';
         emptyState.style.display = 'block';
         productCount.textContent = '0';
         return;
     }
-
+    // show products when data is available
     productGrid.style.display = 'grid';
     emptyState.style.display = 'none';
     productCount.textContent = data.length;
-
+    // render products
     productGrid.innerHTML = data.map(product => `
         <div class="product-card" data-id="${product.id}">
             <div class="product-image">
