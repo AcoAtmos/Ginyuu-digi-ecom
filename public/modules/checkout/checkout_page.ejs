@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ginyuu - Checkout</title>
-    
+
     <link rel="stylesheet" href="/assets/css/checkout.css">
     <script type="module" src="/assets/js/checkout.js" defer></script>
 </head>
+
 <body>
-    
+
     <div class="container">
         <header>
             <div class="logo">Ginyuu</div>
@@ -29,34 +31,35 @@
                         <label>Name/ Username <span class="required">*</span></label>
                         <input type="text" id="username" placeholder="Enter full name">
                     </div>
-    
+
                     <div class="form-group dataNeeded">
                         <label>Password <span class="required">*</span></label>
                         <input type="password" id="password" placeholder="Enter Password">
                     </div>
-    
+
                     <div class="form-group dataNeeded">
                         <label>Confirm Password <span class="required">*</span></label>
                         <input type="password" id="confirm-password" placeholder="Confirm Password">
                     </div>
-    
-                    <div class="form-group "> 
+
+                    <div class="form-group ">
                         <label>Email address <span class="required">*</span></label>
                         <input type="email" id="email" placeholder="Enter email address">
                     </div>
-    
+
                     <div class="form-group ">
                         <label>Phone number <span class="required">*</span></label>
                         <div class="phone-input">
-                            <input type="text" id="+62" value="+62" disabled style= "width: 10%">
-                            <input type="tel" id="phone" placeholder="Enter phone number" onblur=" hit_api_check_whatsapp()">   
+                            <input type="text" id="+62" value="+62" disabled style="width: 10%">
+                            <input type="tel" id="phone" placeholder="Enter phone number"
+                                onblur=" hit_api_check_whatsapp()">
                         </div>
-                        <p id="phone-error"  style=" margin-top: 5px; font-size: 12px; display: none;"></p>
+                        <p id="phone-error" style=" margin-top: 5px; font-size: 12px; display: none;"></p>
                     </div>
                 </div>
 
                 <!-- Payment Method -->
-                <div class="payment-section"> 
+                <div class="payment-section">
                     <label class="section-title">Choose your payment method *</label>
 
                     <div class="payment-options">
@@ -95,7 +98,8 @@
 
 
                     <!-- E-WALLET -->
-                    <div class="payment-extra" id="ewallet-input" style="display: none; flex-direction: row; gap: 10px;">
+                    <div class="payment-extra" id="ewallet-input"
+                        style="display: none; flex-direction: row; gap: 10px;">
                         <!-- <input
                         type="text"
                         id="ewallet-number"
@@ -126,7 +130,7 @@
                     </div>
                     <div class="product-price">RP. 0 </div>
                 </div>
-                
+
                 <!-- upgrade plan -->
                 <div class="bonus-notification" id="bonus-notification" style="display: none;">
                     <div class="bonus-content">
@@ -152,7 +156,7 @@
 
                 <div class="discount-code">
                     <span>🎟️</span>
-                    <input type="text" id="discount-input" placeholder="Discount code" value="" >
+                    <input type="text" id="discount-input" placeholder="Discount code" value="">
                     <button class="apply-btn" id="Apply-discount">Apply</button>
                 </div>
 
@@ -171,7 +175,7 @@
                     </div>
                 </div>
 
-                <button class="pay-btn" id="pay-btn" onclick="validateForm(event)">Pay Now</button>
+                <button class="pay-btn" id="pay-btn" onclick="alert('tes')">Pay Now</button>
 
                 <div class="secure-notice">
                     <span class="lock">🔒</span>
@@ -187,4 +191,5 @@
 
     </div>
 </body>
+
 </html>

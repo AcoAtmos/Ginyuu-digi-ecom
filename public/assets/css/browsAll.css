@@ -943,11 +943,14 @@ footer {
         right: 8.5rem;
     }
     #searchInput{
-        display: none;
+        display: block;
         width: 15.5rem ;
+        opacity: 0;
+        transition: ease 0.3s;
     }
     #searchInput.show{
         display: block;
+        opacity: 1;
     }
 
     .product-grid {
