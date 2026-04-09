@@ -10,9 +10,7 @@ const {
     profile
 } = require("../modules/views_controller");
 
-// router.get("/", (req,res)=>{
-//     res.send("halooo");
-// });
+router.get("/",home );
 
 
 
