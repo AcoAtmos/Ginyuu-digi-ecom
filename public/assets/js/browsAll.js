@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async function(){
 //============Hit api=========================
 async function hit_api_get_product_category(){
     try {
-        const response = await fetch('http://localhost:4100/api/product/category/2/12');
+        const response = await fetch(`${process.env.BE_URL}/api/product/category/2/12`);
         const result = await response.json();
         console.log(result);
         return result.data;

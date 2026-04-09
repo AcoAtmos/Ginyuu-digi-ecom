@@ -1,8 +1,9 @@
 const express = require("express"); // package
-const routes = require("./common/routes"); // file makanya pakai ./
-const path = require("path");
 const app = express();
-
+const path = require("path");
+const dotenv = require("dotenv");
+dotenv.config();
+const routes = require("./common/routes"); // file makanya pakai ./
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -29,6 +30,6 @@ app.use(
 
 app.use("/page", routes);
 
-app.listen("3100", ()=>{
-    console.log("server berjalan pada port 3100");
+app.listen(process.env.PORT, ()=>{
+    console.log(`server berjalan pada port ${process.env.PORT}`);
 });

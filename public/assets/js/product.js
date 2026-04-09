@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ============ HIT API  ====================
 async function hit_api_getproduct() {
     try {
-        const res = await fetch("http://localhost:4100/api/get_product/");
+        const res = await fetch(`${process.env.BE_URL}/api/get_product/`);
         const json = await res.json();
         console.log(json);
         return json.data;
