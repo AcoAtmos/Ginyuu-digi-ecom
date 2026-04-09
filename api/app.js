@@ -9,7 +9,7 @@ const routes = require("./common/routes");
 
 // Set up middleware
 app.use(cors({
-    origin: "http://localhost:3100",
+    origin: `${process.env.FE_APP_URL}`,
     credentials: true
 }));
 app.use(express.json());
