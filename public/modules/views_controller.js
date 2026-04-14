@@ -24,6 +24,11 @@ exports.checkout = async (req , res ) =>{
     res.render(path.join(__dirname ,"./checkout/checkout_page.ejs"));
 };
 
+// waiting payment page
+exports.waitingPayment = async (req , res ) =>{
+    res.render(path.join(__dirname ,"./checkout/waiting_payment.ejs"));
+};
+
 // profile page
 exports.profile = async (req , res ) =>{
     res.render(path.join(__dirname ,"./profile/profile_page.ejs"));
