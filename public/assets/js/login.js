@@ -33,7 +33,7 @@ document.getElementById('loginBtn').addEventListener('click', function(e) {
 
 async function hit_api_login(email, password){
   try{
-    const res = await fetch(`${process.env.BE_URL}/api/auth/login`, {
+    const res = await fetch(`${window.BE_URL}/api/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

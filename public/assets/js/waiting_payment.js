@@ -1,6 +1,83 @@
-// Get payment method from URL parameters
+// Get invoice number from URL parameters
 const urlParams = new URLSearchParams(window.location.search);
-const paymentMethod = urlParams.get('method') || 'qris';
+const invoiceNumber = urlParams.get('invoice');
+let paymentMethod = 'qris';
+let invoiceData = null;
+
+// Fetch invoice data from API
+async function fetchInvoiceData() {
+    if (!invoiceNumber) {
+        console.error('No invoice number provided');
+        return null;
+    }
+
+    try {
+        const response = await fetch(`${window.BE_URL}/api/get_invoice/${encodeURIComponent(invoiceNumber)}`);
+        const result = await response.json();
+        console.log('Invoice data:', result);
+        
+        if (result.status === 'success' && result.data) {
+            invoiceData = result.data;
+            paymentMethod = result.data.payment_method || 'qris';
+            return result.data;
+        } else {
+            console.error('Invoice not found:', result.message);
+            return null;
+        }
+    } catch (err) {
+        console.error('Error fetching invoice:', err);
+        return null;
+    }
+}
+
+// Display invoice data on page
+function displayInvoiceData(data) {
+    if (!data) return;
+
+    // Payment method badge
+    const paymentBadge = document.getElementById('payment-badge');
+    const methodLabels = {
+        'qris': 'QRIS Payment',
+        'bank': 'Bank Transfer',
+        'ewallet': 'E-Wallet'
+    };
+    paymentBadge.textContent = methodLabels[paymentMethod] || 'QRIS Payment';
+
+    // Invoice Number
+    const invoiceNumEl = document.getElementById('invoice-number');
+    if (invoiceNumEl) invoiceNumEl.textContent = data.invoice_number || '-';
+
+    // Buyer Name
+    const buyerNameEl = document.getElementById('buyer-name');
+    if (buyerNameEl) buyerNameEl.textContent = data.username || '-';
+
+    // Product name
+    const productNameEl = document.getElementById('product-name');
+    if (productNameEl) productNameEl.textContent = data.product_title || 'Product';
+
+    // Quantity
+    const quantityEl = document.getElementById('quantity');
+    if (quantityEl) quantityEl.textContent = `${data.amount || 1}x`;
+
+    // Discount
+    const discountEl = document.getElementById('discount-value');
+    if (discountEl) {
+        const discountAmount = data.discount_amount || 0;
+        if (discountAmount > 0) {
+            discountEl.textContent = `Rp. ${parseInt(discountAmount).toLocaleString('id-ID')}`;
+        } else {
+            discountEl.textContent = 'RP. 0';
+        }
+    }
+
+    // Total amount
+    const totalEl = document.getElementById('total-amount');
+    if (totalEl) totalEl.textContent = `Rp. ${parseInt(data.final_amount).toLocaleString('id-ID')}`;
+
+    // Transfer amount (for bank section)
+    const transferAmountEl = document.getElementById('transfer-amount');
+    if (transferAmountEl) transferAmountEl.textContent = `Rp. ${parseInt(data.final_amount).toLocaleString('id-ID')}`;
+}
 
 // Show appropriate payment section
 function initializePaymentMethod() {
@@ -10,13 +87,10 @@ function initializePaymentMethod() {
     const paymentBadge = document.getElementById('payment-badge');
     const instructionList = document.getElementById('instruction-list');
 
-    // Hide all sections first
-    qrisSection.classList.remove('active');
-    bankSection.classList.remove('active');
-    ewalletSection.classList.remove('active');
-
     if (paymentMethod === 'qris') {
-        qrisSection.classList.add('active');
+        qrisSection.style.display = 'block';
+        bankSection.style.display = 'none';
+        ewalletSection.style.display = 'none';
         paymentBadge.textContent = 'QRIS Payment';
         instructionList.innerHTML = `
             <li>Open your mobile banking or e-wallet app</li>
@@ -26,7 +100,9 @@ function initializePaymentMethod() {
             <li>Complete the transaction</li>
         `;
     } else if (paymentMethod === 'bank') {
-        bankSection.classList.add('active');
+        qrisSection.style.display = 'none';
+        bankSection.style.display = 'block';
+        ewalletSection.style.display = 'none';
         paymentBadge.textContent = 'Bank Transfer';
         instructionList.innerHTML = `
             <li>Open your mobile banking or ATM</li>
@@ -36,7 +112,9 @@ function initializePaymentMethod() {
             <li>Complete the transaction and save the receipt</li>
         `;
     } else if (paymentMethod === 'ewallet') {
-        ewalletSection.classList.add('active');
+        qrisSection.style.display = 'none';
+        bankSection.style.display = 'none';
+        ewalletSection.style.display = 'block';
         paymentBadge.textContent = 'E-Wallet Payment';
         instructionList.innerHTML = `
             <li>Select your e-wallet provider above</li>
@@ -115,7 +193,16 @@ function checkPayment() {
 }
 
 // Initialize on load
-initializePaymentMethod();
+async function init() {
+    // Fetch invoice data first
+    const data = await fetchInvoiceData();
+    displayInvoiceData(data);
+    
+    // Then initialize payment method display
+    initializePaymentMethod();
+}
+
+init();
 
 // Simulate payment check every 5 seconds
 setInterval(() => {

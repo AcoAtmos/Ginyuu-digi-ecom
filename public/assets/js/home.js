@@ -44,7 +44,7 @@ async function initialize() {
 
 async function fetchHomeProducts() {
     try {
-        const res = await fetch(`${process.env.BE_URL}/api/product/home`);
+        const res = await fetch(`${window.BE_URL}/api/product/home`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const json = await res.json();
         return json.data;
@@ -59,7 +59,7 @@ async function checkLogin() {
     if (!token) return false;
 
     try {
-        const res = await fetch(`${process.env.BE_URL}/api/auth/verify_token`, {
+        const res = await fetch(`${window.BE_URL}/api/auth/verify_token`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

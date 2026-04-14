@@ -73,7 +73,7 @@
 
     // send to backend
     try{
-    const response = await fetch(`${process.env.BE_URL}/api/auth/register`, {
+    const response = await fetch(`${window.BE_URL}/api/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

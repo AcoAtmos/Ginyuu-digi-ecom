@@ -3,22 +3,20 @@ import { isCookieSet, getCookie } from "./main/main.js";
 // ================== GLOBAL STATE ==================
 let discount = 0; //example discount
 let qty = 1;
+let currentProduct = null;
+let currentSlug = window.location.pathname.split("/")[3];
+
 const username = document.getElementById('username');
 const password = document.getElementById('password');
 const confirmPass = document.getElementById('confirm-password');
 const email = document.getElementById('email');
 const phone = document.getElementById('phone');
-const slug = window.location.pathname.split("/")[3];
-const paymentEl = document.querySelector(
-  'input[name="payment_method"]:checked'
-);
-const payment_method = paymentEl ? paymentEl.value : null;
 
 // ================== LOAD DATA ==================
 document.addEventListener("DOMContentLoaded", async () => {
     // Check user (cek token)
     const token = getCookie('token');
-    console.log(token);
+    // console.log(token);
     if (!token){
         emptyUserForm();
     }else{
@@ -31,19 +29,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // get products
-    const slug = window.location.pathname.split("/")[3];
-    const product = await hit_api_getproduct(slug);
+    const product = await hit_api_getproduct(currentSlug);
     // set product
     if(product){
+        currentProduct = product;
         cartProduct(product);
         countTotal(product, qty);
+    }
+    
+    // Add submit event to form
+    const payBtn = document.getElementById('pay-btn');
+    if (payBtn) {
+        payBtn.addEventListener('click', validateAndSubmit);
     }
 });
 
 // ================== API ==================
 async function hit_api_getproduct(slug) {
     try {
-        const res = await fetch(`${process.env.BE_URL}/api/get_product/${slug}`);
+        const res = await fetch(`${window.BE_URL}/api/get_product/${slug}`);
         const json = await res.json();
         return json.data;
     } catch (err) {
@@ -59,7 +63,7 @@ async function hit_api_check_whatsapp() {
         if (!phone) return null;
         
         const phone_number = parseInt(phone);
-        const result = await fetch (`${process.env.BE_URL}/api/check_whatsapp/${phone_number}`)
+        const result = await fetch (`${window.BE_URL}/api/check_whatsapp/${phone_number}`)
         const json = await result.json();
         console.log(json);
         
@@ -85,7 +89,7 @@ async function hit_api_verify_token() {
         const token = getCookie('token');
         if (!token) return null;
         
-        const result = await fetch (`${process.env.BE_URL}/api/auth/verify_token`, {
+        const result = await fetch (`${window.BE_URL}/api/auth/verify_token`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -107,7 +111,7 @@ async function hit_api_verify_token() {
 }
 async function hit_api_submit() {
         try {
-                const res = await fetch(`${process.env.BE_URL}/api/submit/`);
+                const res = await fetch(`${window.BE_URL}/api/submit/`);
                 const json = await res.json();
                 console.log(json);
                 return json.data;
@@ -118,71 +122,110 @@ async function hit_api_submit() {
             }
 
 // ================== VALIDATION & SUBMISSION ================== 
-async function validateForm(event) {
+async function validateAndSubmit(event) {
     event.preventDefault();
-    alert ("tes")
-    // const alerts = [];
+    const alerts = [];
 
-    // // 2. User Details
-    // if (!document.getElementById('username').value.trim()) alerts.push("Username is required.");
-    // if (!document.getElementById('email').value.trim()) alerts.push("Email is required.");
+    const usernameEl = document.getElementById('username');
+    const emailEl = document.getElementById('email');
+    const passwordEl = document.getElementById('password');
+    const confirmPassEl = document.getElementById('confirm-password');
+    const phoneEl = document.getElementById('phone');
 
-    // // 3. Password
-    // const pass = document.getElementById('password').value;
-    // const confirmPass = document.getElementById('confirm-password').value;
-    // if (!pass) alerts.push("Password is required.");
-    // if (pass !== confirmPass) alerts.push("Passwords do not match.");
+    // 1. User Details
+    if (!usernameEl || !usernameEl.value.trim()) alerts.push("Username is required.");
+    if (!emailEl || !emailEl.value.trim()) alerts.push("Email is required.");
 
-    // // 4. Phone & WhatsApp
-    // const phone = document.getElementById('phone').value;
-    // if (!phone) {
-    //         alerts.push("Phone number is required.");
-    // } else {
-    //         await hit_api_check_whatsapp();
-    // }
-        
-    // // 5. Payment Method
-    // const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-    // if (!paymentMethod) {
-    //         alerts.push("Please select a payment method.");
-    // } else {
-    //         const method = paymentMethod.value;
-    //         if (method === 'bank') {
-    //                 if (!document.getElementById('bank-name').value) alerts.push("Please select a bank.");
-    //                     } else if (method === 'ewallet') {
-    //                             if (!document.getElementById('ewallet-name').value) alerts.push("Please select an E-Wallet.");
-    //                         }
-    //                     }
-                    
-    // // 6. Terms
-    // if (!document.getElementById('terms').checked) alerts.push("You must agree to the Terms and Conditions.");
-                    
-    // // Result
-    // if (alerts.length > 0) {
-    //         alert(alerts.join("\n"));
-    //         return;
-    // }
+    // 2. Password (only for new users)
+    const pass = passwordEl ? passwordEl.value : '';
+    const confirmPass = confirmPassEl ? confirmPassEl.value : '';
+    const token = getCookie('token');
+    const isExistingUser = token && await hit_api_verify_token(token);
     
-    // alert("Validation Success! Proceeding to payment...");
-    // submit logic here...
-    // submitForm(product);
-    // window.location.href = `${process.env.BE_URL}/waitipayment?:noinvoice`;
+    if (!isExistingUser) {
+        if (!pass) {
+            alerts.push("Password is required for new users.");
+        } else if (pass !== confirmPass) {
+            alerts.push("Passwords do not match.");
+        }
+    }
+
+    // 3. Phone & WhatsApp
+    const phoneVal = phoneEl ? phoneEl.value : '';
+    if (!phoneVal) {
+        alerts.push("Phone number is required.");
+    }
+
+    // 4. Payment Method
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
+    if (!paymentMethod) {
+        alerts.push("Please select a payment method.");
+    } else {
+        const method = paymentMethod.value;
+        if (method === 'bank') {
+            const bankName = document.getElementById('bank-name')?.value;
+            if (!bankName) alerts.push("Please select a bank.");
+        } else if (method === 'ewallet') {
+            const ewalletName = document.getElementById('ewallet-name')?.value;
+            if (!ewalletName) alerts.push("Please select an E-Wallet.");
+        }
+    }
+                    
+    // 5. Terms
+    const termsEl = document.getElementById('terms');
+    if (termsEl && !termsEl.checked) alerts.push("You must agree to the Terms and Conditions.");
+                    
+    // Result
+    if (alerts.length > 0) {
+        alert(alerts.join("\n"));
+        return;
+    }
+
+    // Submit form
+    await submitForm();
 }
 
-// async function submitForm(product){
-//     const payload = {
-//         product: product.id,
-//         username: document.getElementById('username').value,
-//         email: document.getElementById('email').value,
-//         password: document.getElementById('password').value || null,
-//         phone: document.getElementById('phone').value,
-//         payment_method: payment_method,
-//         bank_name: document.getElementById('bank-name').value,
-//         ewallet_name: document.getElementById('ewallet-name').value,
-//         terms: document.getElementById('terms').checked,
-//     };
-//     console.log(payload);
-// }
+async function submitForm(){
+    const paymentMethod = document.querySelector('input[name="payment_method"]:checked')?.value;
+    
+    const payload = {
+        username: document.getElementById('username')?.value.trim() || '',
+        email: document.getElementById('email')?.value.trim() || '',
+        password: document.getElementById('password')?.value || null,
+        phone: document.getElementById('phone')?.value.trim() || '',
+        payment_method: paymentMethod,
+        productId: currentProduct?.id,
+        amount: qty,
+        discount: discount,
+        terms: document.getElementById('terms')?.checked || true
+    };
+    
+    console.log("Submitting payload:", payload);
+
+    try {
+        const response = await fetch(`${window.BE_URL}/api/checkout`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        console.log("Checkout response:", result);
+
+        if (result.status === 'success' && result.data && result.data.payload) {
+            const invoiceNumber = result.data.payload.invoice_number;
+            // Redirect to waiting payment page with invoice number
+            window.location.href = `/page/checkout/waiting-payment?invoice=${invoiceNumber}`;
+        } else {
+            alert(result.message || 'Checkout failed. Please try again.');
+        }
+    } catch (err) {
+        console.error("Checkout error:", err);
+        alert('An error occurred during checkout. Please try again.');
+    }
+}
 
 // ================== USER ==================
 async function fillUserform(){
@@ -205,11 +248,11 @@ async function fillUserform(){
     })
 }
 async function emptyUserForm(){
-    username.value = "";
-    password.value = "";
-    confirmPass.value = "";
-    email.value = "";
-    phone.value = "";
+    if (username) username.value = "";
+    if (password) password.value = "";
+    if (confirmPass) confirmPass.value = "";
+    if (email) email.value = "";
+    if (phone) phone.value = "";
 }
 // ================== BONUS DISCOUNT LOGIC ==================
 // function checkBonusEligibility() {
