@@ -865,9 +865,9 @@ footer {
         padding: 1rem;
     }
 
-    .header-search {
-        /* display: none; */
-    }
+    /* .header-search {
+        display: none;
+    } */
 
     .mobile-menu-btn {
         display: block;
