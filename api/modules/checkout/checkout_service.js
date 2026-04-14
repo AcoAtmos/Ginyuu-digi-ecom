@@ -229,7 +229,7 @@ exports.checkout_create_invoice = async (result) => {
                 issued_at
             )
             VALUES ($1, $2, $3, $4, $5)
-            RETURNING id `,
+            RETURNING id, invoice_number `,
             [
                 result.payload.idOrder,
                 invoice_number,
@@ -239,6 +239,7 @@ exports.checkout_create_invoice = async (result) => {
             ]
         );
         result.payload.idInvoice = invoiceResult.rows[0].id;
+        result.payload.invoice_number = invoiceResult.rows[0].invoice_number;
         result.status = "success";
         result.code = 200;
         result.message = "Success";
@@ -405,3 +406,59 @@ exports.createResponse =async (result) =>{
     }
     return res;
 }
+
+// ============= GET INVOICE BY NUMBER ==============
+exports.getInvoiceByNumber = async (invoice_number) => {
+    try {
+        const query = `
+            SELECT 
+                i.id AS invoice_id,
+                i.invoice_number,
+                i.discount_amount,
+                i.final_amount,
+                i.issued_at,
+                o.id AS order_id,
+                o.amount,
+                o.total_price,
+                o.payment_method,
+                o.created_at AS order_date,
+                u.username,
+                u.email,
+                u.phone,
+                p.id AS product_id,
+                p.title AS product_title,
+                p.slug AS product_slug,
+                p.price AS product_price
+            FROM invoices i
+            JOIN orders o ON o.id = i.order_id
+            JOIN users u ON u.id = o.user_id
+            JOIN products p ON p.id = o.product_id
+            WHERE i.invoice_number = $1
+        `;
+        const result = await db.query(query, [invoice_number]);
+        
+        if (result.rows.length === 0) {
+            return {
+                code: 404,
+                status: "failed",
+                message: "Invoice not found",
+                data: null
+            };
+        }
+
+        return {
+            code: 200,
+            status: "success",
+            message: "Invoice found",
+            data: result.rows[0]
+        };
+    } catch (err) {
+        console.error("getInvoiceByNumber error:", err);
+        return {
+            code: 500,
+            status: "failed",
+            message: "Internal server error",
+            data: null
+        };
+    }
+};

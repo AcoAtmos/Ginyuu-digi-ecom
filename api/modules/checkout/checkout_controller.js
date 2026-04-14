@@ -7,7 +7,8 @@ const {
     checkout_create_order,
     checkout_create_invoice,
     checkout_add_queue,
-    createResponse
+    createResponse,
+    getInvoiceByNumber
 } =require('./checkout_service');
 const {db} = require("../../common/helper");
 
@@ -53,3 +54,18 @@ exports.checkout = async (req, res) => {
     }
 
 }
+
+exports.getInvoice = async (req, res) => {
+    const { invoice_number } = req.params;
+    
+    if (!invoice_number) {
+        return res.status(400).json({
+            code: 400,
+            status: "failed",
+            message: "Invoice number is required"
+        });
+    }
+
+    const result = await getInvoiceByNumber(invoice_number);
+    res.status(result.code).json(result);
+};
