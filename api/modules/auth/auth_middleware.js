@@ -3,6 +3,8 @@ const jwt = require("jsonwebtoken");
 exports.authMiddleware = (req, res, next) => {
     // get token from header
     let token = req.headers.authorization;
+    console.log(`coockies : ${req.cookies}`);
+    console.log(token);
     token = token.split(" ")[1];
     if (!token){
         return res.status(401).json({
