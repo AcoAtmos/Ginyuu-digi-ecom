@@ -6,6 +6,6 @@
     "nodemon": "^3.1.11"
   },
   "scripts": {
-    "dev": "nodemon app.js"
+    "dev": "bun --watch app.js"
   }
 }
