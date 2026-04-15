@@ -1,338 +1,813 @@
-<!-- navbar -->
-<header>
-    <div class="header-container"> 
-        <div class="logo">GINYUU</div>
-        <nav>
-            <div class="dropdown">
-                <a href="#" class="dropdown-toggle" data-menu="shop">
-                    Shop <span>▼</span>
-                </a>
-            </div>
-            <a href="#categories">Categories</a>
-            <a href="#reviews">Reviews</a>
-            <a href="#about">About</a>
+<!-- ============================================
+     UNIFIED NAVBAR - Used across all pages
+     ============================================ -->
+
+<header class="main-header">
+    <div class="header-container">
+        <!-- Logo -->
+        <a href="/page/home" class="logo">GINYUU</a>
+
+        <!-- Navigation (desktop) -->
+        <nav class="main-nav">
+            <a href="/page/home" class="nav-link">Home</a>
+            <a href="/page/browsAll" class="nav-link">Products</a>
+            <a href="#categories" class="nav-link">Categories</a>
+            <a href="#reviews" class="nav-link">Reviews</a>
         </nav>
+
+        <!-- Actions -->
         <div class="header-actions">
-        <div class="search-container">
-            <input type="text" id="searchInput" placeholder="Search here ..">
-            <button class="icon-btn" title="Search">
-            <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/>
-            </svg>
-            </button>
-        </div>
-            <button class="icon-btn" title="Cart">
-                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"/>
-                </svg>
-                <span class="cart-count">3</span>
-            </button>
-            <div class="dropdown">
-                <a href="/page/login"  id="profile-dropdown">
-                    <button class="icon-btn" title="Account" id="profile-img">
-                    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M12 20a7.966 7.966 0 0 1-5.002-1.756l.002.001v-.683c0-1.794 1.492-3.25 3.333-3.25h3.334c1.84 0 3.333 1.456 3.333 3.25v.683A7.966 7.966 0 0 1 12 20ZM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10c0 5.5-4.44 9.963-9.932 10h-.138C6.438 21.962 2 17.5 2 12Zm10-5c-1.84 0-3.333 1.455-3.333 3.25S10.159 13.5 12 13.5c1.84 0 3.333-1.455 3.333-3.25S13.841 7 12 7Z" clip-rule="evenodd"/>
+            <!-- Search -->
+            <div class="search-wrapper">
+                <input type="text" id="headerSearch" placeholder="Search products..." class="search-input">
+                <button class="search-btn" title="Search">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
                     </svg>
-                    </button>
-                </a>
+                </button>
             </div>
 
-        </div>  
+            <!-- Cart -->
+            <button class="icon-btn cart-btn" title="Cart">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"/>
+                </svg>
+                <span class="cart-badge" id="cartBadge">0</span>
+            </button>
+
+            <!-- Profile Dropdown -->
+            <div class="profile-dropdown" id="profileDropdown">
+                <button class="profile-btn" id="profileBtn" title="Account">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </button>
+                <div class="dropdown-menu" id="profileMenu">
+                    <!-- Dynamic content via JS -->
+                </div>
+            </div>
+
+            <!-- Mobile Menu Toggle -->
+            <button class="mobile-menu-btn" id="mobileMenuBtn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18"/>
+                </svg>
+            </button>
+        </div>
     </div>
 </header>
 
-<!-- dropdown -->
-<div class="dropdown-menu">
-    <a href="#new-arrivals">Profile</a> 
-    <a href="#top-selling">Order</a>
-    <a href="#categories">All Categories</a>
-    <a href="#sale">On Sale</a>
+<!-- Mobile Menu Overlay -->
+<div class="mobile-menu-overlay" id="mobileOverlay">
+    <div class="mobile-menu">
+        <button class="mobile-menu-close" id="mobileMenuClose">×</button>
+        <nav class="mobile-nav">
+            <a href="/page/home">Home</a>
+            <a href="/page/browsAll">Products</a>
+            <a href="#categories">Categories</a>
+            <a href="#reviews">Reviews</a>
+            <div class="mobile-divider"></div>
+            <a href="/page/login" id="mobileLoginLink">Login</a>
+            <a href="/page/register" id="mobileRegisterLink">Register</a>
+            <a href="/page/profile" id="mobileProfileLink" style="display:none;">My Profile</a>
+            <a href="#" id="mobileLogoutLink" style="display:none;">Logout</a>
+        </nav>
+    </div>
 </div>
 
-<!-- style header/navbar -->
+<!-- Profile Dropdown Menu - Default for logged out users -->
+<template id="profileMenuTemplateLoggedOut">
+    <a href="/page/login">Login</a>
+    <a href="/page/register">Register</a>
+</template>
+<template id="profileMenuTemplateLoggedIn">
+    <a href="/page/profile">My Profile</a>
+    <a href="#orders">My Orders</a>
+    <div class="divider"></div>
+    <a href="#" id="logoutBtn">Logout</a>
+</template>
+
 <style>
-    header {
+/* ============================================
+   LAYOUT & NAVBAR STYLES
+   ============================================ */
+
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    --white: #ffffff;
+    --gray-100: #f7fafc;
+    --gray-200: #e2e8f0;
+    --gray-300: #cbd5e0;
+    --gray-600: #4a5568;
+    --gray-700: #2d3748;
+    --gray-900: #1a202c;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--gray-100);
+    min-height: 100vh;
+}
+
+/* Header */
+.main-header {
     position: sticky;
     top: 0;
     background: var(--white);
-    border-bottom: 0.0625rem solid var(--gray-200);
+    border-bottom: 1px solid var(--gray-200);
     z-index: 1000;
     box-shadow: var(--shadow-sm);
 }
 
 .header-container {
-    max-width: 112.5rem; /* 1800px */
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 1.25rem 5%;
+    padding: 1rem 2rem;
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
 }
 
 .logo {
     font-family: 'Sora', sans-serif;
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: 800;
     background: var(--gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    letter-spacing: -0.0625rem;
+    text-decoration: none;
+    letter-spacing: -0.5px;
 }
 
-nav {
+/* Navigation */
+.main-nav {
     display: flex;
-    gap: 2.5rem;
+    gap: 2rem;
     align-items: center;
 }
 
-nav a {
+.nav-link {
     text-decoration: none;
-    color: var(--gray-700);
+    color: var(--gray-600);
     font-weight: 500;
     font-size: 0.95rem;
-    transition: all 0.3s ease;
+    padding: 0.5rem 0;
     position: relative;
+    transition: color 0.3s ease;
 }
 
-nav a::after {
+.nav-link::after {
     content: '';
     position: absolute;
-    bottom: -0.3125rem;
+    bottom: 0;
     left: 0;
     width: 0;
-    height: 0.125rem;
+    height: 2px;
     background: var(--gradient);
     transition: width 0.3s ease;
 }
 
-nav a:hover {
+.nav-link:hover {
     color: var(--primary-color);
 }
 
-nav a:hover::after {
+.nav-link:hover::after,
+.nav-link.active::after {
     width: 100%;
 }
 
-.dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-.dropdown-toggle {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
-}
-
-.dropdown-menu {
-  display: none;
-  position: absolute;
-  top: 130%;
-  right: 0;
-  background: white;
-  border: 0.0625rem solid #e5e7eb;
-  border-radius: 0.375rem;
-  box-shadow: 0 0.25rem 0.75rem rgba(0,0,0,0.15);
-  min-width: 10rem;
-  z-index: 1000;
-  padding: 0.5rem 0;
-}
-
-.dropdown-menu.active {
-    display: block;
-}
-
-.dropdown-menu a {
-    display: block;
-    padding: 0.8rem 1.2rem;
-    color: var(--gray-700);
-    text-decoration: none;
-    transition: all 0.2s ease;
-}
-
-.dropdown-menu a::after {
-    display: none;
-}
-
-.dropdown-menu a:hover {
-    background: var(--gray-100);
-    color: var(--primary-color);
-    padding-left: 1.5rem;
-}
-
+/* Actions */
 .header-actions {
     display: flex;
+    align-items: center;
     gap: 1rem;
+}
+
+/* Search */
+.search-wrapper {
+    position: relative;
+    display: flex;
     align-items: center;
 }
 
+.search-input {
+    width: 0;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    opacity: 0;
+}
+
+.search-wrapper:hover .search-input,
+.search-input:focus {
+    width: 180px;
+    padding: 0.5rem 1rem;
+    opacity: 1;
+    outline: 1px solid var(--gray-300);
+}
+
+.search-btn {
+    background: none;
+    border: none;
+    color: var(--gray-600);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.search-btn:hover {
+    color: var(--primary-color);
+    background: var(--gray-100);
+}
+
+/* Icon Buttons */
 .icon-btn {
     background: var(--white);
-    color: var(--gray-800);
+    color: var(--gray-700);
     border: none;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.5s ease;
+    transition: all 0.3s ease;
     position: relative;
 }
 
 .icon-btn:hover {
     background: var(--gradient);
     color: var(--white);
-    transform: translateY(-0.125rem);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-md);
-    transition: all 0.5s ease;
 }
 
-.search-container {
+.cart-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #e74c3c;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Profile Dropdown */
+.profile-dropdown {
     position: relative;
 }
 
-.search-container input {
-    width: 100%;
-    height: 2.8125rem;
-    padding: 0.5rem 1rem;
-    border: 0.125rem solid var(--gray-200);
-    border-radius: 3.125rem;
-    font-size: 0.95rem;
-    transition: all 0.4s ease-in;
-}
-
-.search-container input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-}
-
-.search-container button {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.625rem;
+.profile-btn {
     background: var(--white);
-    color: var(--gray-800);
-    border: none;
-    width: 1.875rem;
-    height: 1.875rem;
+    color: var(--gray-700);
+    border: 2px solid var(--gray-200);
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.5s ease;
+    transition: all 0.3s ease;
+    overflow: hidden;
 }
 
-.search-container svg {
-    width: 1.25rem;
-    height: 1.25rem;
+.profile-btn:hover {
+    border-color: var(--primary-color);
 }
 
 .profile-img {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 50%;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border: 0.125rem solid var(--primary-color);
+    border-radius: 50%;
 }
 
-.cart-count {
+.dropdown-menu {
     position: absolute;
-    top: -0.3125rem;
-    right: -0.3125rem;
-    background: var(--secondary-color);
-    color: var(--white);
-    width: 1.125rem;
-    height: 1.125rem;
-    border-radius: 50%;
-    font-size: 0.7rem;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg);
+    min-width: 180px;
+    display: none;
+    overflow: hidden;
+}
+
+.dropdown-menu.active {
+    display: block;
+    animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: var(--gray-700);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.dropdown-menu a:hover {
+    background: var(--gray-100);
+    color: var(--primary-color);
+}
+
+.dropdown-menu a:first-child {
+    border-radius: 12px 12px 0 0;
+}
+
+.dropdown-menu a:last-child {
+    border-radius: 0 0 12px 12px;
+}
+
+.dropdown-menu .divider {
+    height: 1px;
+    background: var(--gray-200);
+    margin: 0.25rem 0;
+}
+
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--gray-700);
+    cursor: pointer;
+    padding: 0.5rem;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.mobile-menu-btn:hover {
+    background: var(--gray-100);
+}
+
+.mobile-menu-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Mobile Menu Overlay */
+.mobile-menu-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.mobile-menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.mobile-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    max-width: 85%;
+    height: 100%;
+    background: var(--white);
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    padding: 1.5rem;
+    overflow-y: auto;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+}
+
+.mobile-menu-close {
+    background: none;
+    border: none;
+    font-size: 1.75rem;
+    color: var(--gray-600);
+    cursor: pointer;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
+    border-radius: 50%;
+    transition: all 0.3s ease;
 }
+
+.mobile-menu-close:hover {
+    background: var(--gray-100);
+    color: var(--gray-900);
+}
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--gray-600);
+    cursor: pointer;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+}
+
+.mobile-nav {
+    margin-top: 3.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.mobile-nav a {
+    display: block;
+    padding: 0.875rem 1rem;
+    color: var(--gray-700);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.mobile-nav a:hover {
+    background: var(--gray-100);
+    color: var(--primary-color);
+}
+
+.mobile-divider {
+    height: 1px;
+    background: var(--gray-200);
+    margin: 0.5rem 0;
+}
+
+/* Page Content Container */
+.page-content {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* ============================================
+   RESPONSIVE - TABLET 1024px
+   ============================================ */
 @media (max-width: 1024px) {
     .header-container {
-        padding: 1rem 5%;
-    }
-    nav {
-        gap: 1.5rem;
-    }
-    nav a {
-        font-size: 1rem;
+        padding: 1rem 1.5rem;
     }
     
+    .logo {
+        font-size: 1.4rem;
+    }
+    
+    .main-nav {
+        gap: 1.5rem;
+    }
+    
+    .nav-link {
+        font-size: 0.9rem;
+    }
+    
+    .search-wrapper:hover .search-input,
+    .search-input:focus {
+        width: 150px;
+    }
 }
 
-@media (max-width: 768px) {
+/* ============================================
+   RESPONSIVE - MOBILE 769px
+   ============================================ */
+@media (max-width: 769px) {
     .header-container {
-        flex-wrap: wrap;
-        gap: 1rem;
-        justify-content: center;
-        position: relative;
-        height: 6.5rem;
+        padding: 0.75rem 1rem;
+        height: 60px;
     }
-    nav {
-        order: 3;
-        padding-top: 0.5rem;
-        gap: 10px;
-        position: absolute;
-        top: 4rem;
+    
+    .logo {
+        font-size: 1.3rem;
     }
-
-    .header-actions {
-        position: absolute;
-        top: 1rem;
-        right: 5%;
-        display: flex;
-        gap: 0.4rem;
-    }
-    .header-actions img{
-        width: 2rem;
-        height: 2rem;
-    }
-    .header-actions svg{
-        width: 1.5rem;
-        height: 1.5rem;
-    }
-    .search-container {
-        position: absolute;
-        top: 0rem;
-        right: 5.5rem;
-    }
-    .icon-btn:hover{
-        transform: translateY(0);
-        transition: all 0.5s ease;
-    }
-    .search-container input {
+    
+    .main-nav {
         display: none;
-        top: 0.5rem;
-        width: 19rem;
     }
-    .search-container.active input{
+    
+    .search-wrapper {
+        display: none;
+    }
+    
+    .header-actions {
+        gap: 0.5rem;
+    }
+    
+    .mobile-menu-btn {
+        display: flex;
+    }
+    
+    .mobile-menu-overlay {
         display: block;
     }
-    .search-container button{
-        position: absolute;
-        top: 0.4rem;
-        right: 0.4rem;
+    
+    .page-content {
+        padding: 1rem;
     }
-    .search-container svg{
-        width: 1.5rem;
-        height: 1.5rem;
+    
+    .icon-btn {
+        width: 40px;
+        height: 40px;
     }
-
-    .logo {
-        position: absolute;
-        top: 1.3rem;
-        left: 5%;
-        font-size: 1.5rem;
+    
+    .profile-btn {
+        width: 40px;
+        height: 40px;
     }
-
 }
 
+/* ============================================
+   RESPONSIVE - MOBILE 425px
+   ============================================ */
+@media (max-width: 425px) {
+    .header-container {
+        padding: 0.625rem 0.75rem;
+        height: 56px;
+    }
+    
+    .logo {
+        font-size: 1.2rem;
+    }
+    
+    .header-actions {
+        gap: 0.375rem;
+    }
+    
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .profile-btn {
+        width: 36px;
+        height: 36px;
+    }
+    
+    .cart-badge {
+        width: 16px;
+        height: 16px;
+        font-size: 0.65rem;
+    }
+    
+    .mobile-menu-btn {
+        padding: 0.375rem;
+    }
+    
+    .mobile-menu-btn svg {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .mobile-menu {
+        width: 85%;
+    }
+    
+    .mobile-nav {
+        margin-top: 3rem;
+    }
+    
+    .mobile-nav a {
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+}
+
+/* ============================================
+   RESPONSIVE - MOBILE <375px
+   ============================================ */
+@media (max-width: 375px) {
+    .header-container {
+        padding: 0.5rem 0.5rem;
+        height: 52px;
+    }
+    
+    .logo {
+        font-size: 1.1rem;
+    }
+    
+    .icon-btn {
+        width: 34px;
+        height: 34px;
+    }
+    
+    .profile-btn {
+        width: 34px;
+        height: 34px;
+    }
+    
+    .header-actions {
+        gap: 0.25rem;
+    }
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    const profileBtn = document.getElementById('profileBtn');
+    const profileMenu = document.getElementById('profileMenu');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+    const mobileMenuClose = document.getElementById('mobileMenuClose');
+    
+    // Helper: Get cookie
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    }
+    
+    // Helper: Set cookie
+    function setCookie(name, value, days) {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+        document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+    }
+    
+    // Check login status
+    const token = getCookie('token');
+    let isLoggedIn = false;
+    
+    if (token) {
+        try {
+            const res = await fetch(`${window.BE_URL}/api/auth/verify_token`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            isLoggedIn = data.status === 'success';
+            
+            if (isLoggedIn) {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                updateProfileUI(user, true);
+            }
+        } catch (err) {
+            console.log('Token verification failed');
+        }
+    }
+    
+    // Initialize UI with default logged-out state if not logged in
+    if (!isLoggedIn) {
+        updateProfileUI(null, false);
+    }
+    
+    // Update UI based on login status
+    function updateProfileUI(user, loggedIn) {
+        // Desktop menu
+        if (loggedIn && user) {
+            profileMenu.innerHTML = `
+                <a href="/page/profile">My Profile</a>
+                <a href="#orders">My Orders</a>
+                <div class="divider"></div>
+                <a href="#" id="logoutBtn">Logout</a>
+            `;
+            
+            // Add profile image if available
+            if (user.image_url) {
+                profileBtn.innerHTML = `<img src="/assets/img/profile/${user.image_url}" class="profile-img" alt="Profile">`;
+            }
+        } else {
+            profileMenu.innerHTML = `
+                <a href="/page/login">Login</a>
+                <a href="/page/register">Register</a>
+            `;
+        }
+        
+        // Mobile menu
+        const mobileLoginLink = document.getElementById('mobileLoginLink');
+        const mobileRegisterLink = document.getElementById('mobileRegisterLink');
+        const mobileProfileLink = document.getElementById('mobileProfileLink');
+        const mobileLogoutLink = document.getElementById('mobileLogoutLink');
+        
+        if (loggedIn) {
+            mobileLoginLink.style.display = 'none';
+            mobileRegisterLink.style.display = 'none';
+            mobileProfileLink.style.display = 'block';
+            mobileLogoutLink.style.display = 'block';
+        } else {
+            mobileLoginLink.style.display = 'block';
+            mobileRegisterLink.style.display = 'block';
+            mobileProfileLink.style.display = 'none';
+            mobileLogoutLink.style.display = 'none';
+        }
+    }
+    
+    // Profile dropdown toggle
+    if (profileBtn && profileMenu) {
+        profileBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            profileMenu.classList.toggle('active');
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (profileMenu.classList.contains('active') && 
+                !profileMenu.contains(e.target) && 
+                !profileBtn.contains(e.target)) {
+                profileMenu.classList.remove('active');
+            }
+        });
+        
+        // Close dropdown when clicking on a link inside it
+        profileMenu.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A') {
+                profileMenu.classList.remove('active');
+            }
+        });
+    }
+    
+    // Logout handler
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'logoutBtn') {
+            e.preventDefault();
+            setCookie('token', '', 0);
+            localStorage.removeItem('user');
+            window.location.href = '/page/home';
+        }
+    });
+    
+    // Mobile menu
+    if (mobileMenuBtn && mobileOverlay) {
+        mobileMenuBtn.addEventListener('click', function() {
+            mobileOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        });
+        
+        mobileOverlay.addEventListener('click', function(e) {
+            if (e.target === mobileOverlay) {
+                closeMobileMenu();
+            }
+        });
+    }
+    
+    if (mobileMenuClose) {
+        mobileMenuClose.addEventListener('click', closeMobileMenu);
+    }
+    
+    function closeMobileMenu() {
+        mobileOverlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    
+    // Mobile logout
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'mobileLogoutLink') {
+            e.preventDefault();
+            setCookie('token', '', 0);
+            localStorage.removeItem('user');
+            window.location.href = '/page/home';
+        }
+    });
+});
+</script>
