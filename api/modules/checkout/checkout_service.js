@@ -2,7 +2,7 @@
 const { db } = require("../../common/helper");
 const bcrypt = require("bcrypt");
 // ============= CHECKOUT PROCESS =============
-exports.capturePayload = async (data) =>{
+exports.capturePayload = async (data) => {
     let username = data?.username;
     let email = data?.email;
     let password = data?.password || null;
@@ -14,89 +14,89 @@ exports.capturePayload = async (data) =>{
     let terms = data?.terms;
 
     let result = {
-        payload : {
-            username : username,
-            email : email,
-            password : password || null,
-            phone : phone,
-            payment_method : payment_method,
-            productId : productId,
-            amount : amount || 1,
-            discount : discount || 0,
-            terms : terms || true
+        payload: {
+            username: username,
+            email: email,
+            password: password || null,
+            phone: phone,
+            payment_method: payment_method,
+            productId: productId,
+            amount: amount || 1,
+            discount: discount || 0,
+            terms: terms || true
         },
-        code : 200,
-        status : "success",
-        message : "Success",
-        data : {}
+        code: 200,
+        status: "success",
+        message: "Success",
+        data: {}
 
     }
     return result;
 }
 
-exports.validatePayload = async (result) =>{
+exports.validatePayload = async (result) => {
     // check if payload is valid
-    if (result.status !== "success"){
+    if (result.status !== "success") {
         result.message = "Invalid payload";
         result.code = 400;
         result.status = "failed";
-        console.log ("Invalid payload");
+        console.log("Invalid payload");
     }
 
     // check if username is valid
-    if (result.payload.username === "" || result.payload.username === null || result.payload.username === undefined){
+    if (result.payload.username === "" || result.payload.username === null || result.payload.username === undefined) {
         result.message = "Username is required";
         result.code = 400;
         result.status = "failed";
-        console.log ("Username is required");
+        console.log("Username is required");
     }
 
     // check if email is valid
-    if (result.payload.email === "" || result.payload.email === null || result.payload.email === undefined){
+    if (result.payload.email === "" || result.payload.email === null || result.payload.email === undefined) {
         result.message = "Email is required";
         result.code = 400;
         result.status = "failed";
-        console.log ("Email is required");
-    } 
-    
+        console.log("Email is required");
+    }
+
     // check if phone is valid
-    if (result.payload.phone === "" || result.payload.phone === null || result.payload.phone === undefined){
+    if (result.payload.phone === "" || result.payload.phone === null || result.payload.phone === undefined) {
         result.message = "Phone is required";
         result.code = 400;
         result.status = "failed";
-        console.log ("Phone is required");
+        console.log("Phone is required");
     }
-    
+
     // check if payment method is valid
-    if (result.payload.payment_method === "" || result.payload.payment_method === null || result.payload.payment_method === undefined){
+    if (result.payload.payment_method === "" || result.payload.payment_method === null || result.payload.payment_method === undefined) {
         result.message = "Payment method is required";
         result.code = 400;
         result.status = "failed";
-        console.log ("Payment method is required");
+        console.log("Payment method is required");
     }
-    
+
     // check if product is valid
-    if (result.payload.productId === "" || result.payload.productId === null || result.payload.productId === undefined){
+    if (result.payload.productId === "" || result.payload.productId === null || result.payload.productId === undefined) {
         result.message = "Product is required";
         result.code = 400;
         result.status = "failed";
-        console.log ("Product is required");
+        console.log("Product is required");
     }
-    
+
     // check if terms is valid
-    if (result.payload.terms == false){
+    if (result.payload.terms == false) {
         result.message = "Terms and conditions must be accepted";
         result.code = 400;
         result.status = "failed";
-        console.log ("Terms and conditions must be accepted");
+        console.log("Terms and conditions must be accepted");
     }
     return result;
 }
 exports.getPrice = async (result) => {
     if (result.status == 'failed') { return result; }
-    try{
+    try {
         const queryResult = await db.query("SELECT price FROM products WHERE id = $1", [result.payload.productId]);
-        if (queryResult.rows.length == 0 ){
+        if (queryResult.rows.length == 0) {
             result.message = "Product not found";
             result.code = 400;
             result.status = "failed";
@@ -104,7 +104,7 @@ exports.getPrice = async (result) => {
             return result;
         }
         result.payload.price = queryResult.rows[0].price;
-    }catch(err){
+    } catch (err) {
         result.message = "Get price failed";
         result.code = 400;
         result.status = "failed";
@@ -113,12 +113,37 @@ exports.getPrice = async (result) => {
     }
     return result;
 }
+
+exports.checkout_add_unique_num = async (result) => {
+    if (result.status == 'failed') { return result; }
+    try {
+        const unique_num = Math.floor(Math.random() * 999) + 1;
+        result.payload.unique_num = unique_num;
+        result.status = "success";
+        result.code = 200;
+        result.message = "Success";
+        return result;
+    } catch (err) {
+        result.status = "failed";
+        result.code = 500;
+        result.message = "Add unique number failed";
+        console.log("add unique number failed");
+        console.log(err);
+        return result
+    }
+}
+
 exports.countTotal = async (result) => {
     if (result.status == 'failed') { return result; }
-    try{
-        let total = result.payload.price * result.payload.amount;
+    try {
+        // hitung subtotal
+        let subtotal = result.payload.price * result.payload.amount;
+        // hitung total
+        let total = subtotal - (subtotal * result.payload.discount); // discount = 0
+        total = total - result.payload.unique_num; // unique_num = 1-999
+        result.payload.subtotal = parseInt(subtotal);
         result.payload.total = parseInt(total);
-    }catch(err){
+    } catch (err) {
         result.message = "Count total failed";
         result.code = 400;
         result.status = "failed";
@@ -129,53 +154,74 @@ exports.countTotal = async (result) => {
 
 // ============= Begin ==============
 exports.checkout_add_user = async (result) => {
-  if (result.status === "failed") return result;
+    if (result.status === "failed") return result;
 
-  try {
-    const userResult = await db.query(
-      "SELECT id FROM users WHERE email = $1",
-      [result.payload.email]
-    );
+    try {
+        const userResult = await db.query(
+            "SELECT id FROM users WHERE email = $1",
+            [result.payload.email]
+        );
 
-    // user belum ada
-    if (userResult.rows.length === 0) {
+        // Email sudah terdaftar di database
+        if (userResult.rows.length > 0) {
+            // Jika password disediakan → user belum login tapi email sudah terdaftar
+            // Wajib login terlebih dahulu
+            if (result.payload.password) {
+                result.status = "failed";
+                result.code = 401;
+                result.message = "EMAIL_ALREADY_REGISTERED";
+                result.data = {
+                    message: "Email ini sudah terdaftar. Silakan login terlebih dahulu sebelum checkout."
+                };
+                console.log("Email already registered - user must login first");
+                return result;
+            }
+            // Jika tidak ada password → user sudah login (token verified)
+            result.payload.idUser = userResult.rows[0].id;
+            result.status = "success";
+            result.code = 200;
+            return result;
+        }
 
-      if (!result.payload.password) {
-        result.status = "failed";
-        result.code = 400;
-        result.message = "Password is required";
-        console.log("Password is required");
-        return result;
-      }
-      const hashedPassword = await bcrypt.hash(result.payload.password, 10);
-      const insertResult = await db.query(
-        `INSERT INTO users (email, phone, username, password, terms)
+        // user belum ada → buat akun baru
+        if (userResult.rows.length === 0) {
+
+            if (!result.payload.password) {
+                result.status = "failed";
+                result.code = 400;
+                result.message = "Password is required";
+                console.log("Password is required");
+                return result;
+            }
+            const hashedPassword = await bcrypt.hash(result.payload.password, 10);
+            const insertResult = await db.query(
+                `INSERT INTO users (email, phone, username, password, terms)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING id`,
-        [
-          result.payload.email,
-          result.payload.phone,
-          result.payload.username,
-          hashedPassword,
-          result.payload.terms
-        ]
-      );
+                [
+                    result.payload.email,
+                    result.payload.phone,
+                    result.payload.username,
+                    hashedPassword,
+                    result.payload.terms
+                ]
+            );
 
-      result.payload.idUser = insertResult.rows[0].id;
+            result.payload.idUser = insertResult.rows[0].id;
 
-    } else {
-      // user sudah ada
-      result.payload.idUser = userResult.rows[0].id;
+        } else {
+            // user sudah ada
+            result.payload.idUser = userResult.rows[0].id;
+        }
+
+        result.status = "success";
+        result.code = 200;
+        result.message = "Success";
+        return result;
+
+    } catch (err) {
+        console.error(err)
     }
-
-    result.status = "success";
-    result.code = 200;
-    result.message = "Success";
-    return result;
-
-  } catch (err) {
-    console.error(err)
-  }
 };
 
 exports.checkout_create_order = async (result) => {
@@ -187,7 +233,7 @@ exports.checkout_create_order = async (result) => {
                 user_id,
                 product_id, 
                 amount, 
-                total_price, 
+                subtotal, 
                 payment_method
                 )
             VALUES ($1, $2, $3, $4, $5)
@@ -196,7 +242,7 @@ exports.checkout_create_order = async (result) => {
                 result.payload.idUser,
                 result.payload.productId,
                 result.payload.amount,
-                result.payload.total,
+                result.payload.subtotal,
                 result.payload.payment_method
             ]
         );
@@ -225,17 +271,19 @@ exports.checkout_create_invoice = async (result) => {
                 order_id, 
                 invoice_number,
                 discount_amount,
-                final_amount, 
-                issued_at
+                total, 
+                issued_at,
+                unique_num
             )
-            VALUES ($1, $2, $3, $4, $5)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id, invoice_number `,
             [
                 result.payload.idOrder,
                 invoice_number,
                 result.payload.discount,
                 result.payload.total,
-                issued_at // jatuh tempo
+                issued_at, // jatuh tempo
+                result.payload.unique_num
             ]
         );
         result.payload.idInvoice = invoiceResult.rows[0].id;
@@ -345,8 +393,8 @@ exports.checkout_add_queue = async (result) => {
     }
 };
 
-exports.checkout_send_whatsapp = async ()=>{
-    try{
+exports.checkout_send_whatsapp = async () => {
+    try {
         const data = await db.query(
             `SELECT * FROM queue
             WHERE tipe = 'whatsapp'
@@ -358,20 +406,20 @@ exports.checkout_send_whatsapp = async ()=>{
             console.log("No whatsapp to send");
             return;
         }
-        const {send_whatsapp} = require("../whatsapp/whatsapp_service");
+        const { send_whatsapp } = require("../whatsapp/whatsapp_service");
         await send_whatsapp(data.rows[0].destination, data.rows[0].pesan);
         await db.query(
             `UPDATE queue SET status = 'sent' WHERE id = $1`,
             [data.rows[0].id]
         );
-    }catch(err){
-       throw new Error(err);
+    } catch (err) {
+        throw new Error(err);
     }
     return;
 }
 
-exports.checkout_send_email = async ()=>{
-    try{
+exports.checkout_send_email = async () => {
+    try {
         const data = await db.query(
             `SELECT * FROM queue
             WHERE tipe = 'email'
@@ -383,26 +431,26 @@ exports.checkout_send_email = async ()=>{
             console.log("No email to send");
             return;
         }
-        const {send_email} = require("../email/email_service");
+        const { send_email } = require("../email/email_service");
         await send_email(data.rows[0].destination, "Invoice berhasil dibuat", data.rows[0].pesan);
         console.log("Email sent");
         await db.query(
             `UPDATE queue SET status = 'sent' WHERE id = $1`,
             [data.rows[0].id]
         );
-    }catch(err){
+    } catch (err) {
         throw new Error(err);
     }
     return;
 }
 // ============= Commit ==============
-exports.createResponse =async (result) =>{
+exports.createResponse = async (result) => {
     let res = {
-        payload : result.payload,
-        code : result.code,
-        status : result.status,
-        message : result.message,
-        data : result
+        payload: result.payload,
+        code: result.code,
+        status: result.status,
+        message: result.message,
+        data: result
     }
     return res;
 }
@@ -415,11 +463,12 @@ exports.getInvoiceByNumber = async (invoice_number) => {
                 i.id AS invoice_id,
                 i.invoice_number,
                 i.discount_amount,
-                i.final_amount,
+                i.total,
                 i.issued_at,
+                i.unique_num,
                 o.id AS order_id,
                 o.amount,
-                o.total_price,
+                o.subtotal,
                 o.payment_method,
                 o.created_at AS order_date,
                 u.username,
@@ -436,7 +485,7 @@ exports.getInvoiceByNumber = async (invoice_number) => {
             WHERE i.invoice_number = $1
         `;
         const result = await db.query(query, [invoice_number]);
-        
+
         if (result.rows.length === 0) {
             return {
                 code: 404,

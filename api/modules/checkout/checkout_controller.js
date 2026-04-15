@@ -2,6 +2,7 @@ const {
     capturePayload,
     validatePayload,
     getPrice,
+    checkout_add_unique_num,
     countTotal,
     checkout_add_user,
     checkout_create_order,
@@ -25,6 +26,7 @@ exports.checkout = async (req, res) => {
         result = await capturePayload(req.body);
         result = await validatePayload(result);
         result = await getPrice(result); 
+        result = await checkout_add_unique_num(result);
         result = await countTotal(result); 
         await client.query("BEGIN");
         result = await checkout_add_user(result);
