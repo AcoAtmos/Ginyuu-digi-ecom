@@ -214,6 +214,15 @@ async function submitForm(){
         const result = await response.json();
         console.log("Checkout response:", result);
 
+        // Handle email already registered - redirect to login
+        if (result.status === 'failed' && result.message === 'EMAIL_ALREADY_REGISTERED') {
+            showToast('Email ini sudah terdaftar. Silakan login terlebih dahulu.', 'error');
+            setTimeout(() => {
+                window.location.href = '/page/login';
+            }, 2000);
+            return;
+        }
+
         if (result.status === 'success' && result.data && result.data.payload) {
             const invoiceNumber = result.data.payload.invoice_number;
             // Redirect to waiting payment page with invoice number
@@ -225,6 +234,51 @@ async function submitForm(){
         console.error("Checkout error:", err);
         alert('An error occurred during checkout. Please try again.');
     }
+}
+
+// ================== TOAST NOTIFICATION ==================
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()">×</button>
+    `;
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: ${type === 'error' ? '#e74c3c' : '#2ecc71'};
+        color: white;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 9999;
+        animation: slideIn 0.3s ease;
+        max-width: 350px;
+    `;
+    
+    const btn = toast.querySelector('button');
+    btn.style.cssText = `
+        background: none;
+        border: none;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        opacity: 0.8;
+    `;
+    btn.onmouseover = () => btn.style.opacity = '1';
+    btn.onmouseout = () => btn.style.opacity = '0.8';
+    
+    document.body.appendChild(toast);
+    
+    // Auto remove after 4 seconds
+    setTimeout(() => {
+        if (toast.parentElement) toast.remove();
+    }, 4000);
 }
 
 // ================== USER ==================

@@ -4,19 +4,6 @@ import { isCookieSet,getCookie, setCookie } from "./main/main.js";
 const products_map = {};
 let current_product = null;
 
-// ────────────────────────────────────────────────
-// DOM elements 
-// ────────────────────────────────────────────────
-const elements = {
-    gridNewArrival: document.getElementById('grid_new_arrival_container'),
-    gridTopSelling: document.getElementById('grid_top_selling_container'),
-    modal: document.getElementById('productModal'),
-    modalClose: document.getElementById('modalClose'),
-    orderNowBtn: document.getElementById('order_now_btn'),
-    scrollTop: document.getElementById('scrollTop'),
-    newsletterForm: document.getElementById('newsletterForm'),
-};
-
 //============= Initialization ========================
 
 document.addEventListener('DOMContentLoaded', initialize);
@@ -98,8 +85,10 @@ async function renderHomeProducts(data) {
         })
         .join('');
 
-    elements.gridNewArrival.innerHTML = newArrivalHTML;
-    elements.gridTopSelling.innerHTML = topSellingHTML;
+    const gridNewArrival = document.getElementById('grid_new_arrival_container');
+    const gridTopSelling = document.getElementById('grid_top_selling_container');
+    if (gridNewArrival) gridNewArrival.innerHTML = newArrivalHTML;
+    if (gridTopSelling) gridTopSelling.innerHTML = topSellingHTML;
 }
 
 function createProductCardHTML(item, isNew = false) {
@@ -234,36 +223,50 @@ function logout() {
 }
 
 function setupSearch() {
-    const searchContainer = document.querySelector('.search-container');
-    const searchInput = searchContainer.querySelector('input');
-    const searchButton = searchContainer.querySelector('button');
-
-    searchButton.addEventListener('click', () => {
-        searchContainer.classList.toggle('active');
-    });
+    try {
+        const searchContainer = document.querySelector('.search-wrapper');
+        if (!searchContainer) {
+            console.log('Search container not found');
+            return;
+        }
+        
+        const searchButton = searchContainer.querySelector('button');
+        if (searchButton) {
+            searchButton.addEventListener('click', () => {
+                searchContainer.classList.toggle('active');
+            });
+        }
+    } catch (err) {
+        console.error('setupSearch error:', err);
+    }
 }
 
 // ────────────────────────────────────────────────
 // event listeners
 // ────────────────────────────────────────────────
 function attachGlobalEventListeners() {
+    const modal = document.getElementById('productModal');
+    const modalClose = document.getElementById('modalClose');
+    const scrollTop = document.getElementById('scrollTop');
+    const newsletterForm = document.getElementById('newsletterForm');
+
     // Modal close
-    elements.modalClose?.addEventListener('click', closeModal);
+    modalClose?.addEventListener('click', closeModal);
     window.addEventListener('click', (e) => {
-        if (e.target === elements.modal) closeModal();
+        if (e.target === modal) closeModal();
     });
 
     // Scroll to top
     window.addEventListener('scroll', () => {
-        elements.scrollTop?.classList.toggle('visible', window.pageYOffset > 300);
+        scrollTop?.classList.toggle('visible', window.pageYOffset > 300);
     });
 
-    elements.scrollTop?.addEventListener('click', () => {
+    scrollTop?.addEventListener('click', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
     // Newsletter
-    elements.newsletterForm?.addEventListener('submit', (e) => {
+    newsletterForm?.addEventListener('submit', (e) => {
         e.preventDefault();
         const email = e.target.querySelector('input')?.value;
         if (email) {
@@ -293,9 +296,10 @@ function attachProductCardListeners() {
     });
 
     // Order now
-    elements.orderNowBtn?.addEventListener('click', () => {
+    const orderNowBtn = document.getElementById('order_now_btn');
+    orderNowBtn?.addEventListener('click', () => {
         if (current_product?.slug) {
-            window.location.href = `http://localhost:3100/page/checkout/${current_product.slug}`;
+            window.location.href = `/page/checkout/${current_product.slug}`;
         }
     });
 }
@@ -305,48 +309,63 @@ function attachProductCardListeners() {
 // ────────────────────────────────────────────────
 function openModal(item) {
     current_product = item;
+    const modal = document.getElementById('productModal');
+    if (!modal) return;
 
     // Image
-    const modalImage = document.querySelector('.modal-image');
-    if (modalImage) {
-        modalImage.innerHTML = `<img src="${item.gallery_images}" alt="${item.title}" style="width:100%;height:100%;object-fit:cover;">`;
+    const modalImageContainer = document.getElementById('modalImageContainer');
+    if (modalImageContainer) {
+        modalImageContainer.innerHTML = item.gallery_images 
+            ? `<img src="${item.gallery_images}" alt="${item.title}" style="width:100%;height:100%;object-fit:cover;">`
+            : '<span class="modal-image-icon">📱</span>';
     }
 
     // Text fields
-    const set = (id, val) => document.getElementById(id)?.setAttribute('textContent', val ?? '');
-    set("modalCategory", item.category || 'Product');
-    set("modalTitle", item.title);
-    set("modalDescription", item.description);
-    set("modalPrice", `${item.currency}.${item.discount_price}`);
+    const modalCategory = document.getElementById('modalCategory');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDescription = document.getElementById('modalDescription');
+    const modalPrice = document.getElementById('modalPrice');
+    const ratingText = document.getElementById('modalRatingText');
+    
+    if (modalCategory) modalCategory.textContent = item.category || 'Product';
+    if (modalTitle) modalTitle.textContent = item.title || 'Untitled';
+    if (modalDescription) modalDescription.textContent = item.description || 'No description available.';
+    
+    const price = item.discount_price || item.price;
+    if (modalPrice) modalPrice.textContent = `Rp ${parseInt(price).toLocaleString('id-ID')}`;
 
     // Rating
-    const ratingEl = document.querySelector('.modal-rating .rating-text');
-    if (ratingEl) {
+    if (ratingText) {
         const count = item.rating_count ?? 0;
-        ratingEl.textContent = `${item.rating_avg}/5 (${count} reviews)`;
+        ratingText.textContent = `${item.rating_avg || 0}/5 (${count} reviews)`;
     }
 
     // Price & discount visibility
     const originalPrice = document.getElementById('modalOriginalPrice');
-    const discountEl = document.querySelector('.modal-price .discount');
+    const discountEl = document.getElementById('modalDiscount');
 
     if (item.discount > 0) {
-        originalPrice.textContent = `${item.currency}.${item.price}`;
-        originalPrice.style.display = 'inline';
-        discountEl.textContent = `-${item.discount}%`;
-        discountEl.style.display = 'inline-block';
+        if (originalPrice) {
+            originalPrice.textContent = `Rp ${parseInt(item.price).toLocaleString('id-ID')}`;
+            originalPrice.style.display = 'inline';
+        }
+        if (discountEl) {
+            discountEl.textContent = `-${item.discount}%`;
+            discountEl.style.display = 'inline-block';
+        }
     } else {
-        originalPrice.style.display = 'none';
-        discountEl.style.display = 'none';
+        if (originalPrice) originalPrice.style.display = 'none';
+        if (discountEl) discountEl.style.display = 'none';
     }
 
     // Show
-    elements.modal.classList.add('active');
+    modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
 function closeModal() {
-    elements.modal.classList.remove('active');
+    const modal = document.getElementById('productModal');
+    if (modal) modal.classList.remove('active');
     document.body.style.overflow = 'auto';
     current_product = null;
 }

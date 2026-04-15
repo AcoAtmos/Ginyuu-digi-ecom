@@ -72,11 +72,11 @@ function displayInvoiceData(data) {
 
     // Total amount
     const totalEl = document.getElementById('total-amount');
-    if (totalEl) totalEl.textContent = `Rp. ${parseInt(data.final_amount).toLocaleString('id-ID')}`;
+    if (totalEl) totalEl.textContent = `Rp. ${parseInt(data.total).toLocaleString('id-ID')}`;
 
     // Transfer amount (for bank section)
     const transferAmountEl = document.getElementById('transfer-amount');
-    if (transferAmountEl) transferAmountEl.textContent = `Rp. ${parseInt(data.final_amount).toLocaleString('id-ID')}`;
+    if (transferAmountEl) transferAmountEl.textContent = `Rp. ${parseInt(data.total).toLocaleString('id-ID')}`;
 }
 
 // Show appropriate payment section
