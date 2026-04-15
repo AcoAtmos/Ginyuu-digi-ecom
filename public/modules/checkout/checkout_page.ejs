@@ -6,22 +6,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ginyuu - Checkout</title>
     <script>window.BE_URL = "<%= BE_URL || 'http://localhost:4100' %>";</script>
+    <link rel="stylesheet" href="/assets/css/layout.css">
     <link rel="stylesheet" href="/assets/css/checkout.css">
     <script type="module" src="/assets/js/checkout.js" defer></script>
+    <!-- icon -->
+    <link rel="icon" href="/assets/img/icon/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/icon/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icon/apple-touch-icon.png">
 </head>
 
-<body>
+<body class="checkout-page">
 
-    <div class="container">
-        <header>
-            <div class="logo">Ginyuu</div>
+    <!-- Simple Header -->
+    <header class="checkout-header">
+        <div class="checkout-header-inner">
+            <a href="/page/home" class="checkout-logo">GINYUU</a>
             <div class="steps">
                 <div class="step active">
                     <span class="number">✓</span>
-                    <span style="">Checkout</span>
+                    <span>Checkout</span>
                 </div>
             </div>
-        </header>
+        </div>
+    </header>
+
+    <div class="container">
 
         <div class="content">
             <div class="checkout-form">

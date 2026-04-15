@@ -3,19 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Manjuu — Create Account</title>
-  <script>window.BE_URL = "<%= BE_URL %>";</script>
+  <title>Ginyuu — Create Account</title>
+  <script>window.BE_URL = "<%= BE_URL || 'http://localhost:4100' %>";</script>
+  <link rel="stylesheet" href="/assets/css/layout.css">
   <link rel="stylesheet" href="/assets/css/register.css">
   <script src="/assets/js/register.js" defer></script>
-</head>
-<body>
- 
-<div class="container">
 
-  <div class="header">
-    <div class="logo">Manjuu</div>
-    <div class="tagline">Creative Digital Goods</div>
-  </div>
+  <link rel="icon" href="/assets/img/icon/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/icon/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icon/apple-touch-icon.png">
+</head>
+<body class="auth-page">
+ 
+  <!-- Simple Header for Auth Pages -->
+  <header class="auth-header">
+    <a href="/page/home" class="auth-logo">GINYUU</a>
+  </header>
+
+<div class="container">
 
   <div class="form-container">
 
