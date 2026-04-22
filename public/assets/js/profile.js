@@ -22,24 +22,14 @@
 
 // ==============onload==================
 import {
-    check_login
-} from "/common/view/main.js";
+    isCookieSet,
+    getCookie
+} from "/assets/js/main/main.js"; 
 document.addEventListener("DOMContentLoaded", function() {
-    check_login();
-    const avatarContainer = document.querySelector(".avatar-container");
-    const user = JSON.parse(localStorage.getItem("user"));
-    // image user
-    let img = document.createElement("img");
-    img.src = "../assets/img/profile/" + user.image_url;
-    img.alt = "avatar";
-    img.classList.add("avatar");
-    avatarContainer.appendChild(img);
-    // name user
-    const name = document.querySelector(".profile-name");
-    name.textContent = user.username;
-    // bio user
-    if (user.bio) {
-        const bio = document.querySelector(".profile-bio");
-        bio.textContent = user.bio;
+    // check login
+    if(!isCookieSet('token')){
+        window.location.href = "/page/login";
     }
+    console.log("login profile berhasil", getCookie('token'));
+    
 });

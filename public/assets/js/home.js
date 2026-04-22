@@ -53,8 +53,9 @@ async function checkLogin() {
                 'Authorization': `Bearer ${token}`
             }
         });
-
+        console.log("cek token", res);
         const result = await res.json();
+        console.log("cek token", result);
         return !!result; // assuming truthy = valid
     } catch (err) {
         console.error('Token verification failed:', err);
@@ -89,6 +90,7 @@ async function renderHomeProducts(data) {
     const gridTopSelling = document.getElementById('grid_top_selling_container');
     if (gridNewArrival) gridNewArrival.innerHTML = newArrivalHTML;
     if (gridTopSelling) gridTopSelling.innerHTML = topSellingHTML;
+    console.log("new arrival :", products_map)
 }
 
 function createProductCardHTML(item, isNew = false) {
@@ -110,8 +112,8 @@ function createProductCardHTML(item, isNew = false) {
                     <span class="rating-text">${item.rating_avg}</span>
                 </div>
                 <div class="product-price">
-                    <span class="current-price">${item.currency}.${item.discount_price}</span>
                     <span class="original-price">${item.currency}.${item.price}</span>
+                    <span class="current-price">${item.currency}.${item.discount_price}</span>
                     <span class="discount">-${item.discount}%</span>
                 </div>
             </div>
