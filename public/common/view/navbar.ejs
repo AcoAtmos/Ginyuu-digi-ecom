@@ -1,18 +1,18 @@
 <!-- ============================================
-     UNIFIED NAVBAR - Used across all pages
+     UNIFIED NAVBAR - Travel Theme Dark Mode
      ============================================ -->
 
 <header class="main-header">
     <div class="header-container">
         <!-- Logo -->
-        <a href="/page/home" class="logo">GINYUU</a>
+        <a href="/page/home" class="logo">GINY<span>UU</span></a>
 
-        <!-- Navigation (desktop) -->
+        <!-- Navigation (desktop) - Dynamic based on page -->
         <nav class="main-nav">
-            <a href="/page/home" class="nav-link">Home</a>
-            <a href="/page/browsAll" class="nav-link">Products</a>
-            <a href="#categories" class="nav-link">Categories</a>
-            <a href="#reviews" class="nav-link">Reviews</a>
+            <a href="/page/home" class="nav-link" data-nav="home">Home</a>
+            <a href="/page/browsAll" class="nav-link" data-nav="products">Products</a>
+            <a href="#categories" class="nav-link" data-nav="categories">Categories</a>
+            <a href="#reviews" class="nav-link" data-nav="reviews">Reviews</a>
         </nav>
 
         <!-- Actions -->
@@ -21,7 +21,7 @@
             <div class="search-wrapper">
                 <input type="text" id="headerSearch" placeholder="Search products..." class="search-input">
                 <button class="search-btn" title="Search">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="11" cy="11" r="8"/>
                         <path d="m21 21-4.35-4.35"/>
                     </svg>
@@ -30,29 +30,31 @@
 
             <!-- Cart -->
             <button class="icon-btn cart-btn" title="Cart">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"/>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <path d="M16 10a4 4 0 0 1-8 0"/>
                 </svg>
-                <span class="cart-badge" id="cartBadge">0</span>
+                <!-- <span class="cart-badge" id="cartBadge">0</span> -->
             </button>
 
             <!-- Profile Dropdown -->
             <div class="profile-dropdown" id="profileDropdown">
                 <button class="profile-btn" id="profileBtn" title="Account">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                         <circle cx="12" cy="7" r="4"/>
                     </svg>
                 </button>
-                <div class="dropdown-menu" id="profileMenu">
-                    <!-- Dynamic content via JS -->
-                </div>
+                <div class="dropdown-menu" id="profileMenu"></div>
             </div>
 
             <!-- Mobile Menu Toggle -->
             <button class="mobile-menu-btn" id="mobileMenuBtn">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 12h18M3 6h18M3 18h18"/>
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
                 </svg>
             </button>
         </div>
@@ -64,10 +66,10 @@
     <div class="mobile-menu">
         <button class="mobile-menu-close" id="mobileMenuClose">×</button>
         <nav class="mobile-nav">
-            <a href="/page/home">Home</a>
-            <a href="/page/browsAll">Products</a>
-            <a href="#categories">Categories</a>
-            <a href="#reviews">Reviews</a>
+            <a href="/page/home" class="mobile-nav-home" data-mobile="home">Home</a>
+            <a href="/page/browsAll" class="mobile-nav-products" data-mobile="products">Products</a>
+            <a href="#categories" class="mobile-nav-categories" data-mobile="categories">Categories</a>
+            <a href="#reviews" class="mobile-nav-reviews" data-mobile="reviews">Reviews</a>
             <div class="mobile-divider"></div>
             <a href="/page/login" id="mobileLoginLink">Login</a>
             <a href="/page/register" id="mobileRegisterLink">Register</a>
@@ -77,578 +79,6 @@
     </div>
 </div>
 
-<!-- Profile Dropdown Menu - Default for logged out users -->
-<template id="profileMenuTemplateLoggedOut">
-    <a href="/page/login">Login</a>
-    <a href="/page/register">Register</a>
-</template>
-<template id="profileMenuTemplateLoggedIn">
-    <a href="/page/profile">My Profile</a>
-    <a href="#orders">My Orders</a>
-    <div class="divider"></div>
-    <a href="#" id="logoutBtn">Logout</a>
-</template>
-
-<style>
-/* ============================================
-   LAYOUT & NAVBAR STYLES
-   ============================================ */
-
-:root {
-    --primary-color: #667eea;
-    --secondary-color: #764ba2;
-    --gradient: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    --white: #ffffff;
-    --gray-100: #f7fafc;
-    --gray-200: #e2e8f0;
-    --gray-300: #cbd5e0;
-    --gray-600: #4a5568;
-    --gray-700: #2d3748;
-    --gray-900: #1a202c;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
-    --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
-}
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background: var(--gray-100);
-    min-height: 100vh;
-}
-
-/* Header */
-.main-header {
-    position: sticky;
-    top: 0;
-    background: var(--white);
-    border-bottom: 1px solid var(--gray-200);
-    z-index: 1000;
-    box-shadow: var(--shadow-sm);
-}
-
-.header-container {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 1rem 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-}
-
-.logo {
-    font-family: 'Sora', sans-serif;
-    font-size: 1.6rem;
-    font-weight: 800;
-    background: var(--gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    text-decoration: none;
-    letter-spacing: -0.5px;
-}
-
-/* Navigation */
-.main-nav {
-    display: flex;
-    gap: 2rem;
-    align-items: center;
-}
-
-.nav-link {
-    text-decoration: none;
-    color: var(--gray-600);
-    font-weight: 500;
-    font-size: 0.95rem;
-    padding: 0.5rem 0;
-    position: relative;
-    transition: color 0.3s ease;
-}
-
-.nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 2px;
-    background: var(--gradient);
-    transition: width 0.3s ease;
-}
-
-.nav-link:hover {
-    color: var(--primary-color);
-}
-
-.nav-link:hover::after,
-.nav-link.active::after {
-    width: 100%;
-}
-
-/* Actions */
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-/* Search */
-.search-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.search-input {
-    width: 0;
-    padding: 0.5rem;
-    border: none;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-    opacity: 0;
-}
-
-.search-wrapper:hover .search-input,
-.search-input:focus {
-    width: 180px;
-    padding: 0.5rem 1rem;
-    opacity: 1;
-    outline: 1px solid var(--gray-300);
-}
-
-.search-btn {
-    background: none;
-    border: none;
-    color: var(--gray-600);
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.search-btn:hover {
-    color: var(--primary-color);
-    background: var(--gray-100);
-}
-
-/* Icon Buttons */
-.icon-btn {
-    background: var(--white);
-    color: var(--gray-700);
-    border: none;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    position: relative;
-}
-
-.icon-btn:hover {
-    background: var(--gradient);
-    color: var(--white);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-}
-
-.cart-badge {
-    position: absolute;
-    top: -4px;
-    right: -4px;
-    background: #e74c3c;
-    color: white;
-    font-size: 0.7rem;
-    font-weight: 600;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Profile Dropdown */
-.profile-dropdown {
-    position: relative;
-}
-
-.profile-btn {
-    background: var(--white);
-    color: var(--gray-700);
-    border: 2px solid var(--gray-200);
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    overflow: hidden;
-}
-
-.profile-btn:hover {
-    border-color: var(--primary-color);
-}
-
-.profile-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-}
-
-.dropdown-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: 12px;
-    box-shadow: var(--shadow-lg);
-    min-width: 180px;
-    display: none;
-    overflow: hidden;
-}
-
-.dropdown-menu.active {
-    display: block;
-    animation: dropdownFadeIn 0.2s ease;
-}
-
-@keyframes dropdownFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-5px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.dropdown-menu a {
-    display: block;
-    padding: 0.75rem 1rem;
-    color: var(--gray-700);
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: all 0.2s ease;
-}
-
-.dropdown-menu a:hover {
-    background: var(--gray-100);
-    color: var(--primary-color);
-}
-
-.dropdown-menu a:first-child {
-    border-radius: 12px 12px 0 0;
-}
-
-.dropdown-menu a:last-child {
-    border-radius: 0 0 12px 12px;
-}
-
-.dropdown-menu .divider {
-    height: 1px;
-    background: var(--gray-200);
-    margin: 0.25rem 0;
-}
-
-/* Mobile Menu Button */
-.mobile-menu-btn {
-    display: none;
-    background: none;
-    border: none;
-    color: var(--gray-700);
-    cursor: pointer;
-    padding: 0.5rem;
-    width: 40px;
-    height: 40px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-}
-
-.mobile-menu-btn:hover {
-    background: var(--gray-100);
-}
-
-.mobile-menu-btn svg {
-    width: 24px;
-    height: 24px;
-}
-
-/* Mobile Menu Overlay */
-.mobile-menu-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 2000;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.mobile-menu-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-.mobile-menu {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 280px;
-    max-width: 85%;
-    height: 100%;
-    background: var(--white);
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    padding: 1.5rem;
-    overflow-y: auto;
-    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
-}
-
-.mobile-menu-close {
-    background: none;
-    border: none;
-    font-size: 1.75rem;
-    color: var(--gray-600);
-    cursor: pointer;
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.3s ease;
-}
-
-.mobile-menu-close:hover {
-    background: var(--gray-100);
-    color: var(--gray-900);
-}
-    background: none;
-    border: none;
-    font-size: 2rem;
-    color: var(--gray-600);
-    cursor: pointer;
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-}
-
-.mobile-nav {
-    margin-top: 3.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.mobile-nav a {
-    display: block;
-    padding: 0.875rem 1rem;
-    color: var(--gray-700);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 1rem;
-    border-radius: 8px;
-    transition: all 0.2s ease;
-}
-
-.mobile-nav a:hover {
-    background: var(--gray-100);
-    color: var(--primary-color);
-}
-
-.mobile-divider {
-    height: 1px;
-    background: var(--gray-200);
-    margin: 0.5rem 0;
-}
-
-/* Page Content Container */
-.page-content {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-
-/* ============================================
-   RESPONSIVE - TABLET 1024px
-   ============================================ */
-@media (max-width: 1024px) {
-    .header-container {
-        padding: 1rem 1.5rem;
-    }
-    
-    .logo {
-        font-size: 1.4rem;
-    }
-    
-    .main-nav {
-        gap: 1.5rem;
-    }
-    
-    .nav-link {
-        font-size: 0.9rem;
-    }
-    
-    .search-wrapper:hover .search-input,
-    .search-input:focus {
-        width: 150px;
-    }
-}
-
-/* ============================================
-   RESPONSIVE - MOBILE 769px
-   ============================================ */
-@media (max-width: 769px) {
-    .header-container {
-        padding: 0.75rem 1rem;
-        height: 60px;
-    }
-    
-    .logo {
-        font-size: 1.3rem;
-    }
-    
-    .main-nav {
-        display: none;
-    }
-    
-    .search-wrapper {
-        display: none;
-    }
-    
-    .header-actions {
-        gap: 0.5rem;
-    }
-    
-    .mobile-menu-btn {
-        display: flex;
-    }
-    
-    .mobile-menu-overlay {
-        display: block;
-    }
-    
-    .page-content {
-        padding: 1rem;
-    }
-    
-    .icon-btn {
-        width: 40px;
-        height: 40px;
-    }
-    
-    .profile-btn {
-        width: 40px;
-        height: 40px;
-    }
-}
-
-/* ============================================
-   RESPONSIVE - MOBILE 425px
-   ============================================ */
-@media (max-width: 425px) {
-    .header-container {
-        padding: 0.625rem 0.75rem;
-        height: 56px;
-    }
-    
-    .logo {
-        font-size: 1.2rem;
-    }
-    
-    .header-actions {
-        gap: 0.375rem;
-    }
-    
-    .icon-btn {
-        width: 36px;
-        height: 36px;
-    }
-    
-    .profile-btn {
-        width: 36px;
-        height: 36px;
-    }
-    
-    .cart-badge {
-        width: 16px;
-        height: 16px;
-        font-size: 0.65rem;
-    }
-    
-    .mobile-menu-btn {
-        padding: 0.375rem;
-    }
-    
-    .mobile-menu-btn svg {
-        width: 22px;
-        height: 22px;
-    }
-    
-    .mobile-menu {
-        width: 85%;
-    }
-    
-    .mobile-nav {
-        margin-top: 3rem;
-    }
-    
-    .mobile-nav a {
-        padding: 0.75rem 1rem;
-        font-size: 0.95rem;
-    }
-}
-
-/* ============================================
-   RESPONSIVE - MOBILE <375px
-   ============================================ */
-@media (max-width: 375px) {
-    .header-container {
-        padding: 0.5rem 0.5rem;
-        height: 52px;
-    }
-    
-    .logo {
-        font-size: 1.1rem;
-    }
-    
-    .icon-btn {
-        width: 34px;
-        height: 34px;
-    }
-    
-    .profile-btn {
-        width: 34px;
-        height: 34px;
-    }
-    
-    .header-actions {
-        gap: 0.25rem;
-    }
-}
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', async function() {
     const profileBtn = document.getElementById('profileBtn');
@@ -656,8 +86,41 @@ document.addEventListener('DOMContentLoaded', async function() {
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileOverlay = document.getElementById('mobileOverlay');
     const mobileMenuClose = document.getElementById('mobileMenuClose');
+
+    // ============================================
+    // Dynamic Navbar - Show/Hide based on page
+    // ============================================
+    const pageData = document.body.dataset.page || 'default';
     
-    // Helper: Get cookie
+    // Desktop nav links
+    document.querySelectorAll('.main-nav .nav-link[data-nav]').forEach(link => {
+        const navType = link.dataset.nav;
+        if (navType === 'categories' || navType === 'reviews') {
+            if (pageData !== 'home') {
+                link.style.display = 'none';
+            }
+        }
+    });
+    
+    // Mobile nav links
+    document.querySelectorAll('.mobile-nav a[data-mobile]').forEach(link => {
+        const navType = link.dataset.mobile;
+        if (navType === 'categories' || navType === 'reviews') {
+            if (pageData !== 'home') {
+                link.style.display = 'none';
+            }
+        }
+    });
+    
+    // Hide divider if Categories/Reviews are hidden on mobile
+    if (pageData !== 'home') {
+        const mobileNav = document.querySelector('.mobile-nav');
+        const divider = mobileNav?.querySelector('.mobile-divider');
+        if (divider) {
+            divider.style.marginTop = '0.75rem';
+        }
+    }
+
     function getCookie(name) {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
@@ -665,14 +128,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         return '';
     }
     
-    // Helper: Set cookie
     function setCookie(name, value, days) {
         const expires = new Date();
         expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
         document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
     }
     
-    // Check login status
     const token = getCookie('token');
     let isLoggedIn = false;
     
@@ -697,14 +158,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     }
     
-    // Initialize UI with default logged-out state if not logged in
     if (!isLoggedIn) {
         updateProfileUI(null, false);
     }
     
-    // Update UI based on login status
     function updateProfileUI(user, loggedIn) {
-        // Desktop menu
         if (loggedIn && user) {
             profileMenu.innerHTML = `
                 <a href="/page/profile">My Profile</a>
@@ -713,9 +171,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 <a href="#" id="logoutBtn">Logout</a>
             `;
             
-            // Add profile image if available
             if (user.image_url) {
-                profileBtn.innerHTML = `<img src="/assets/img/profile/${user.image_url}" class="profile-img" alt="Profile">`;
+                profileBtn.innerHTML = `<img src="/assets/img/profile/${user.image_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Profile">`;
             }
         } else {
             profileMenu.innerHTML = `
@@ -724,26 +181,24 @@ document.addEventListener('DOMContentLoaded', async function() {
             `;
         }
         
-        // Mobile menu
         const mobileLoginLink = document.getElementById('mobileLoginLink');
         const mobileRegisterLink = document.getElementById('mobileRegisterLink');
         const mobileProfileLink = document.getElementById('mobileProfileLink');
         const mobileLogoutLink = document.getElementById('mobileLogoutLink');
         
         if (loggedIn) {
-            mobileLoginLink.style.display = 'none';
-            mobileRegisterLink.style.display = 'none';
-            mobileProfileLink.style.display = 'block';
-            mobileLogoutLink.style.display = 'block';
+            if (mobileLoginLink) mobileLoginLink.style.display = 'none';
+            if (mobileRegisterLink) mobileRegisterLink.style.display = 'none';
+            if (mobileProfileLink) mobileProfileLink.style.display = 'block';
+            if (mobileLogoutLink) mobileLogoutLink.style.display = 'block';
         } else {
-            mobileLoginLink.style.display = 'block';
-            mobileRegisterLink.style.display = 'block';
-            mobileProfileLink.style.display = 'none';
-            mobileLogoutLink.style.display = 'none';
+            if (mobileLoginLink) mobileLoginLink.style.display = 'block';
+            if (mobileRegisterLink) mobileRegisterLink.style.display = 'block';
+            if (mobileProfileLink) mobileProfileLink.style.display = 'none';
+            if (mobileLogoutLink) mobileLogoutLink.style.display = 'none';
         }
     }
     
-    // Profile dropdown toggle
     if (profileBtn && profileMenu) {
         profileBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -759,7 +214,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         });
         
-        // Close dropdown when clicking on a link inside it
         profileMenu.addEventListener('click', function(e) {
             if (e.target.tagName === 'A') {
                 profileMenu.classList.remove('active');
@@ -767,7 +221,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
     
-    // Logout handler
+    // logout
     document.addEventListener('click', function(e) {
         if (e.target.id === 'logoutBtn') {
             e.preventDefault();
@@ -775,9 +229,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             localStorage.removeItem('user');
             window.location.href = '/page/home';
         }
+        if (e.target.id === 'mobileLogoutLink') {
+            e.preventDefault();
+            setCookie('token', '', 0);
+            localStorage.removeItem('user');
+            window.location.href = '/page/home';
+        }
     });
     
-    // Mobile menu
     if (mobileMenuBtn && mobileOverlay) {
         mobileMenuBtn.addEventListener('click', function() {
             mobileOverlay.classList.add('active');
@@ -799,15 +258,5 @@ document.addEventListener('DOMContentLoaded', async function() {
         mobileOverlay.classList.remove('active');
         document.body.style.overflow = '';
     }
-    
-    // Mobile logout
-    document.addEventListener('click', function(e) {
-        if (e.target.id === 'mobileLogoutLink') {
-            e.preventDefault();
-            setCookie('token', '', 0);
-            localStorage.removeItem('user');
-            window.location.href = '/page/home';
-        }
-    });
 });
 </script>
