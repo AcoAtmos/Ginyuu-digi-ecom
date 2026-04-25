@@ -4,49 +4,48 @@
     <meta charset="UTF-8"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ginyuu - Waiting for Payment</title>
-    <link rel="stylesheet" href="/assets/css/layout.css">
-    <link rel="stylesheet" href="/assets/css/waiting_payment.css">
     <script>window.BE_URL = "<%= BE_URL || 'http://localhost:4100' %>";</script>
+    <link rel="stylesheet" href="/assets/css/shared.css">
+    <link rel="stylesheet" href="/assets/css/waiting_payment.css">
     <script src="/assets/js/waiting_payment.js" defer></script>
-    <!-- icon -->
     <link rel="icon" href="/assets/img/icon/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/icon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/icon/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icon/apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
-    <!-- Simple Header -->
-    <header class="checkout-header">
-        <div class="checkout-header-inner">
-            <a href="/page/home" class="checkout-logo">GINYUU</a>
-            <a href="/page/checkout/<%= typeof slug !== 'undefined' ? slug : '' %>" class="back-link">← Back to Checkout</a>
+<body data-page="waiting_payment">
+    <header class="main-header" style="position: relative; background: rgba(10, 10, 15, 0.95);">
+        <div class="header-container">
+            <a href="/page/home" class="logo">GINY<span>UU</span></a>
+            <a href="/page/checkout/<%= typeof slug !== 'undefined' ? slug : '' %>" class="back-link" style="color: rgba(255,255,255,0.7);">← Back to Checkout</a>
         </div>
     </header>
 
-    <div class="container">
+    <div class="container" style="padding-top: 2rem; max-width: 600px;">
         <div class="status-icon">
-            <div class="clock-icon">⏰</div>
+            <div class="clock-icon"></div>
         </div>
 
         <h1>Waiting for Payment</h1>
         <p class="subtitle">Please complete your payment to activate your subscription</p>
 
-        <div class="payment-method-badge" id="payment-badge">QRIS Payment</div>
+        <div class="payment-method-badge" id="payment-badge"></div>
 
         <div class="timer-section">
             <div class="timer-label">Payment expires in</div>
             <div class="timer" id="countdown">15:00</div>
         </div>
 
-        <!-- QRIS Payment Section -->
         <div class="qr-section" id="qris-section">
             <div class="qr-code">📱</div>
             <p class="qr-instruction">Scan this QR code with your mobile banking or e-wallet app</p>
         </div>
 
-        <!-- Bank Transfer Section -->
         <div class="bank-section" id="bank-section">
-            <h3 style="color: #2d3748; margin-bottom: 16px;">Transfer to Bank Account</h3>
+            <h3>Transfer to Bank Account</h3>
             <div class="bank-info">
                 <div class="bank-detail">
                     <span class="bank-label">Bank Name</span>
@@ -63,20 +62,19 @@
                     <span class="bank-label">Account Name</span>
                     <span class="bank-value">PT Manjuu Indonesia</span>
                 </div>
-                <div class="bank-detail" style="border-top: 2px solid #e2e8f0; padding-top: 16px; margin-top: 12px;">
+                <div class="bank-detail" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; margin-top: 0.75rem;">
                     <span class="bank-label">Transfer Amount</span>
                     <div>
-                        <span class="bank-value" style="color: #667eea;" id="transfer-amount">RP. 700,000</span>
+                        <span class="bank-value" style="color: #60a5fa;" id="transfer-amount">RP. 700,000</span>
                         <button class="copy-btn" onclick="copyText('transfer-amount')">Copy</button>
                     </div>
                 </div>
             </div>
-            <p style="color: #718096; font-size: 13px; margin-top: 12px;">⚠️ Please transfer the exact amount shown above</p>
+            <p class="warning-text">⚠️ Please transfer the exact amount shown above</p>
         </div>
 
-        <!-- E-Wallet Section -->
         <div class="ewallet-section" id="ewallet-section">
-            <h3 style="color: #2d3748; margin-bottom: 8px;">Select Your E-Wallet</h3>
+            <h3>Select Your E-Wallet</h3>
             <div class="ewallet-options">
                 <div class="ewallet-card" onclick="selectEwallet('gopay')">
                     <div class="ewallet-icon">💚</div>
@@ -94,19 +92,11 @@
                     <div class="ewallet-icon">🧡</div>
                     <div class="ewallet-name">ShopeePay</div>
                 </div>
-                <div class="ewallet-card" onclick="selectEwallet('linkaja')">
-                    <div class="ewallet-icon">❤️</div>
-                    <div class="ewallet-name">LinkAja</div>
-                </div>
-                <div class="ewallet-card" onclick="selectEwallet('jenius')">
-                    <div class="ewallet-icon">💛</div>
-                    <div class="ewallet-name">Jenius</div>
-                </div>
             </div>
             <div class="ewallet-number" id="ewallet-number-box" style="display: none;">
                 <div class="ewallet-number-label">Send payment to:</div>
                 <div class="ewallet-number-value" id="ewallet-number">0812-3456-7890</div>
-                <button class="copy-btn" onclick="copyText('ewallet-number')" style="margin-top: 12px;">Copy Number</button>
+                <button class="copy-btn" onclick="copyText('ewallet-number')">Copy Number</button>
             </div>
         </div>
 
@@ -114,6 +104,10 @@
             <div class="detail-row">
                 <span class="detail-label">Invoice Number</span>
                 <span class="detail-value" id="invoice-number">-</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Payment Method</span>
+                <span class="detail-value" id="payment-method">-</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Buyer</span>
