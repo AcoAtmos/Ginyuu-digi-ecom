@@ -5,129 +5,197 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Ginyuu — Create Account</title>
   <script>window.BE_URL = "<%= BE_URL || 'http://localhost:4100' %>";</script>
-  <link rel="stylesheet" href="/assets/css/layout.css">
+  <link rel="stylesheet" href="/assets/css/navbar.css">
   <link rel="stylesheet" href="/assets/css/register.css">
   <script src="/assets/js/register.js" defer></script>
-
+  
   <link rel="icon" href="/assets/img/icon/favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/icon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/icon/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icon/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/icon/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/icon/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icon/apple-touch-icon.png">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="auth-page">
- 
-  <!-- Simple Header for Auth Pages -->
-  <header class="auth-header">
-    <a href="/page/home" class="auth-logo">GINYUU</a>
-  </header>
 
-<div class="container">
-
-  <div class="form-container">
-
-    <h1>Create your account</h1>
-    <div class="subtitle">Join thousands of creators building better digital products</div>
-
-    <form id="registerForm" novalidate>
-
-      <div class="form-group">
-        <label for="username">Full Name</label>
-        <input 
-          type="text" 
-          id="username" 
-          placeholder="Aco Designer" 
-          required 
-          minlength="2"
-        >
-        <div class="error-message" id="usernameError">Please enter your full name</div>
+<body data-page="register">
+  <div class="auth-container">
+    <!-- Left Hero Section -->
+    <div class="auth-hero">
+      <div class="hero-bg"></div>
+      <div class="hero-overlay"></div>
+      <div class="hero-gradient"></div>
+      
+      <!-- Navigation -->
+      <nav class="hero-nav">
+        <a href="/page/home" class="nav-logo">GINY<span>UU</span></a>
+        <div class="nav-menu">
+          <ul class="nav-links">
+            <li><a href="#">Destinations</a></li>
+            <li><a href="#">Packages</a></li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+          <div class="nav-search">
+            <span class="nav-search-icon">🔍</span>
+            <input type="text" placeholder="Search destinations...">
+          </div>
+        </div>
+      </nav>
+      
+      <!-- Hero Content -->
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-icon">✈️</span>
+          <span class="hero-badge-text">Start Your Adventure</span>
+        </div>
+        
+        <h1 class="hero-title">
+          Unleash the <span class="highlight">traveler</span> inside you
+        </h1>
+        
+        <p class="hero-description">
+          Join thousands of explorers discovering the world's most amazing destinations. Create your account and start your journey today.
+        </p>
+        
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-number">500+</div>
+            <div class="hero-stat-label">Destinations</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number">50K+</div>
+            <div class="hero-stat-label">Happy Travelers</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-number">4.9</div>
+            <div class="hero-stat-label">Rating</div>
+          </div>
+        </div>
+        
+        <div class="hero-cta">
+          <a href="/page/home" class="hero-btn hero-btn-primary">Explore Now →</a>
+          <a href="#" class="hero-btn hero-btn-secondary">View Packages</a>
+        </div>
       </div>
-
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input 
-          type="email" 
-          id="email" 
-          placeholder="aco@example.com" 
-          required 
-          autocomplete="email"
-        >
-        <div class="error-message" id="emailError">Please enter a valid email</div>
-      </div>
-
-      <div class="form-group">
-        <label for="phone">Phone</label>
-        <input 
-          type="text" 
-          id="phone" 
-          placeholder="08123456789" 
-          required 
-          autocomplete="phone"
-        >
-        <div class="error-message" id="phoneError">Please enter a valid phone</div>
-      </div>
-
-      <div class="form-group password-toggle">
-        <label for="password">Password</label>
-        <input 
-          type="password" 
-          id="password" 
-          placeholder="••••••••" 
-          required 
-          minlength="8"
-        >
-        <button type="button" class="toggle-btn" id="togglePassword">👁️</button>
-        <div class="error-message" id="passwordError">Password must be at least 8 characters</div>
-      </div>
-
-      <div class="form-group password-toggle">
-        <label for="confirmPassword">Confirm Password</label>
-        <input 
-          type="password" 
-          id="confirmPassword" 
-          placeholder="••••••••" 
-          required 
-          minlength="8"
-        >
-        <button type="button" class="toggle-btn" id="toggleConfirmPassword">👁️</button>
-        <div class="error-message" id="confirmPasswordError">Password must be at least 8 characters</div>
-      </div>
-
-      <div class="checkbox-group">
-        <input type="checkbox" id="terms" required>
-        <label for="terms">
-          I agree to the <a href="#" style="color:#6366f1; text-decoration:none;">Terms of Service</a> and 
-          <a href="#" style="color:#6366f1; text-decoration:none;">Privacy Policy</a>
-        </label>
-      </div>
-
-      <button type="submit" class="btn-register" id="registerBtn">
-        Create Account
-      </button>
-
-    </form>
-
-    <div class="divider">
-      <span>or sign up with</span>
     </div>
-
-    <div class="social-buttons">
-      <button type="button" class="social-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#EA4335" d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.44-3.39-7.44-7.57s3.345-7.57 7.44-7.57c2.33 0 3.89.955 4.785 1.78l3.254-3.13C18.12 1.365 15.48 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.87 11.52-11.74 0-.79-.085-1.39-.185-1.99H12.24z"/></svg>
-        Google
-      </button>
-      <button type="button" class="social-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#24292e" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.467-1.332-5.467-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-        GitHub
-      </button>
+    
+    <!-- Right Form Section -->
+    <div class="auth-form-section">
+      <div class="auth-form-wrapper">
+        <div class="auth-form-card">
+          <div class="auth-form-header">
+            <h1>Create account</h1>
+            <p>Join the community of world explorers</p>
+          </div>
+          
+          <form class="auth-form" id="registerForm" novalidate>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="username">Full Name</label>
+                <div class="form-input-wrapper">
+                  <span class="form-input-icon">👤</span>
+                  <input 
+                    type="text" 
+                    id="username" 
+                    placeholder="John Doe" 
+                    required 
+                    minlength="2"
+                  >
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label for="phone">Phone</label>
+                <div class="form-input-wrapper">
+                  <span class="form-input-icon">📱</span>
+                  <input 
+                    type="tel" 
+                    id="phone" 
+                    placeholder="08123456789" 
+                    required 
+                    autocomplete="tel"
+                  >
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="email">Email</label>
+              <div class="form-input-wrapper">
+                <span class="form-input-icon">📧</span>
+                <input 
+                  type="email" 
+                  id="email" 
+                  placeholder="john@example.com" 
+                  required 
+                  autocomplete="email"
+                >
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="password">Password</label>
+              <div class="form-input-wrapper">
+                <span class="form-input-icon">🔒</span>
+                <input 
+                  type="password" 
+                  id="password" 
+                  placeholder="••••••••" 
+                  required 
+                  minlength="8"
+                >
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="confirmPassword">Confirm Password</label>
+              <div class="form-input-wrapper">
+                <span class="form-input-icon">🔑</span>
+                <input 
+                  type="password" 
+                  id="confirmPassword" 
+                  placeholder="••••••••" 
+                  required 
+                  minlength="8"
+                >
+              </div>
+            </div>
+            
+            <div class="auth-checkbox-group">
+              <input type="checkbox" id="terms" required>
+              <label for="terms">
+                I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+              </label>
+            </div>
+            
+            <button type="submit" class="auth-submit-btn" id="registerBtn">
+              Create Account
+            </button>
+          </form>
+          
+          <div class="auth-divider">
+            <span>or sign up with</span>
+          </div>
+          
+          <div class="auth-social-buttons">
+            <button type="button" class="auth-social-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#EA4335" d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.44-3.39-7.44-7.57s3.345-7.57 7.44-7.57c2.33 0 3.89.955 4.785 1.78l3.254-3.13C18.12 1.365 15.48 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.87 11.52-11.74 0-.79-.085-1.39-.185-1.99H12.24z"/></svg>
+              Google
+            </button>
+            <button type="button" class="auth-social-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#ffffff" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.467-1.332-5.467-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+              GitHub
+            </button>
+          </div>
+          
+          <div class="auth-link">
+            Already have an account? <a href="/page/login">Sign in</a>
+          </div>
+        </div>
+      </div>
     </div>
-
-    <div class="login-link">
-      Already have an account? <a href="/page/login">Sign in</a>
-    </div>
-
   </div>
-
-</div>
-
 </body>
 </html>
