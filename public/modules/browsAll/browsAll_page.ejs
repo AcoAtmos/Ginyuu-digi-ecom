@@ -5,18 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ginyuu - Browse All Products</title>
     <script>window.BE_URL = "<%= BE_URL || 'http://localhost:4100' %>";</script>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/layout.css">
-    <link rel="stylesheet" href="/assets/css/browsAll.css">
-    <script type="module" src="/assets/js/browsAll.js"></script>
+<link rel="stylesheet" href="/assets/css/navbar.css">
+  <link rel="stylesheet" href="/assets/css/shared.css">
+  <link rel="stylesheet" href="/assets/css/browsAll.css">
+    <script type="module" src="/assets/js/browsAll.js" defer></script>
     <!-- icon -->
     <link rel="icon" href="/assets/img/icon/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/icon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/icon/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icon/apple-touch-icon.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
 </head>
-<body>
-    <!-- Unified Navbar -->
+<body data-page="browsAll">
     <%- include('../../common/view/navbar.ejs') %>
 
     <!-- Breadcrumb -->
@@ -39,31 +42,19 @@
                 <div class="filter-options">
                     <div class="filter-option">
                         <input type="checkbox" id="cat-ui" value="UI Kit" class="category-filter">
-                        <label for="cat-ui">
-                            <span>UI Kits</span>
-                            <span class="filter-count">28</span>
-                        </label>
+                        <label for="cat-ui">UI Kits <span class="filter-count">28</span></label>
                     </div>
                     <div class="filter-option">
                         <input type="checkbox" id="cat-template" value="Template" class="category-filter">
-                        <label for="cat-template">
-                            <span>Templates</span>
-                            <span class="filter-count">18</span>
-                        </label>
+                        <label for="cat-template">Templates <span class="filter-count">18</span></label>
                     </div>
                     <div class="filter-option">
                         <input type="checkbox" id="cat-illustration" value="Illustration" class="category-filter">
-                        <label for="cat-illustration">
-                            <span>Illustrations</span>
-                            <span class="filter-count">15</span>
-                        </label>
+                        <label for="cat-illustration">Illustrations <span class="filter-count">15</span></label>
                     </div>
                     <div class="filter-option">
                         <input type="checkbox" id="cat-icon" value="Icon" class="category-filter">
-                        <label for="cat-icon">
-                            <span>Icons</span>
-                            <span class="filter-count">22</span>
-                        </label>
+                        <label for="cat-icon">Icons <span class="filter-count">22</span></label>
                     </div>
                 </div>
             </div>
@@ -71,46 +62,20 @@
             <!-- Price Filter -->
             <div class="filter-section">
                 <div class="filter-header">
-                    <h3>Price</h3>
+                    <h3>Price Range</h3>
                     <button class="filter-clear" data-clear="price">Clear</button>
                 </div>
-                <div class="price-range">
-                    <div class="price-inputs">
-                        <div class="price-input">
-                            <label>Min</label>
-                            <input type="number" id="minPrice" value="0" min="0" max="500">
-                        </div>
-                        <div class="price-input">
-                            <label>Max</label>
-                            <input type="number" id="maxPrice" value="500" min="0" max="500">
-                        </div>
+                <div class="price-inputs">
+                    <div class="price-input">
+                        <label>Min</label>
+                        <input type="number" id="minPrice" placeholder="0" min="0">
                     </div>
-                    <div class="price-slider">
-                        <div class="price-slider-range" id="priceRange"></div>
-                        <input type="range" id="minPriceSlider" min="0" max="500" value="0">
-                        <input type="range" id="maxPriceSlider" min="0" max="500" value="500">
+                    <div class="price-input">
+                        <label>Max</label>
+                        <input type="number" id="maxPrice" placeholder="500+" min="0">
                     </div>
                 </div>
             </div>
-
-            <!-- Color Filter -->
-            <!-- <div class="filter-section">
-                <div class="filter-header">
-                    <h3>Colors</h3>
-                    <button class="filter-clear" data-clear="color">Clear</button>
-                </div>
-                <div class="color-options">
-                    <div class="color-option" data-color="red" style="background: #ef4444;"></div>
-                    <div class="color-option" data-color="orange" style="background: #f97316;"></div>
-                    <div class="color-option" data-color="yellow" style="background: #eab308;"></div>
-                    <div class="color-option" data-color="green" style="background: #22c55e;"></div>
-                    <div class="color-option" data-color="blue" style="background: #3b82f6;"></div>
-                    <div class="color-option" data-color="indigo" style="background: #6366f1;"></div>
-                    <div class="color-option" data-color="purple" style="background: #a855f7;"></div>
-                    <div class="color-option" data-color="pink" style="background: #ec4899;"></div>
-                    <div class="color-option" data-color="black" style="background: #000000;"></div>
-                </div>
-            </div> -->
 
             <!-- Rating Filter -->
             <div class="filter-section">
@@ -121,21 +86,15 @@
                 <div class="filter-options">
                     <div class="filter-option">
                         <input type="radio" id="rating-5" name="rating" value="5" class="rating-filter">
-                        <label for="rating-5">
-                            <span>★★★★★</span>
-                        </label>
+                        <label for="rating-5">★★★★★ <small>& up</small></label>
                     </div>
                     <div class="filter-option">
                         <input type="radio" id="rating-4" name="rating" value="4" class="rating-filter">
-                        <label for="rating-4">
-                            <span>★★★★☆ & up</span>
-                        </label>
+                        <label for="rating-4">★★★★☆ <small>& up</small></label>
                     </div>
                     <div class="filter-option">
                         <input type="radio" id="rating-3" name="rating" value="3" class="rating-filter">
-                        <label for="rating-3">
-                            <span>★★★☆☆ & up</span>
-                        </label>
+                        <label for="rating-3">★★★☆☆ <small>& up</small></label>
                     </div>
                 </div>
             </div>
@@ -148,22 +107,44 @@
             <div class="products-header">
                 <div>
                     <h1>Browse All Products</h1>
-                    <p class="products-count">Showing <span id="productCount">83</span> products</p>
+                    <p class="products-count">Showing <span id="productCount">0</span> products</p>
                 </div>
                 <div class="sort-filter">
-                    <button class="filter-mobile-btn" id="filterMobileBtn">🔍 Filters</button>
+                    <button class="filter-mobile-btn" id="filterMobileBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>
+                        </svg>
+                        Filters
+                    </button>
                     <select class="sort-select" id="sortSelect">
                         <option value="featured">Most Popular</option>
-                        <option value="price-low">Price: Low to High</option>
-                        <option value="price-high">Price: High to Low</option>
+                        <option value="price-low">Price: Low → High</option>
+                        <option value="price-high">Price: High → Low</option>
                         <option value="rating">Highest Rated</option>
                         <option value="newest">Newest First</option>
                     </select>
                 </div>
             </div>
 
-            <div class="product-grid" id="productGrid">
-                <!-- Products will be dynamically inserted here -->
+            <div class="product-grid" id="productGrid"></div>
+
+            <!-- Pagination -->
+            <div class="pagination-wrapper" id="paginationWrapper">
+                <div class="pagination">
+                    <button class="pagination-btn pagination-prev" id="prevBtn" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 18l-6-6 6-6"/>
+                        </svg>
+                        Prev
+                    </button>
+                    <div class="pagination-numbers" id="paginationNumbers"></div>
+                    <button class="pagination-btn pagination-next" id="nextBtn">
+                        Next
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18l6-6-6-6"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <!-- Empty State -->
@@ -181,92 +162,21 @@
     <div class="filter-mobile" id="filterMobile">
         <div class="filter-mobile-header">
             <h2>Filters</h2>
-            <button class="filter-close" id="filterClose">✕</button>
+            <button class="filter-close" id="filterClose">×</button>
         </div>
-        
-        <!-- Same filters as sidebar will be cloned here via JS -->
         <div id="mobileFiltersContent"></div>
     </div>
-
-    <!-- Newsletter -->
-    <div class="newsletter">
-        <div class="newsletter-content">
-            <h2>STAY UP TO DATE ABOUT OUR LATEST OFFERS</h2>
-            <p>Subscribe to get special offers and exclusive deals.</p>
-            <form class="newsletter-form">
-                <input type="email" placeholder="Enter your email address" required>
-                <button type="submit">Subscribe</button>
-            </form>
-        </div>
-    </div>
-
+    
     <!-- Footer -->
-    <footer>
-        <div class="footer-container">
-            <div class="footer-brand">
-                <h3>Ginyuu</h3>
-                <p>Your premier destination for high-quality digital design assets.</p>
-                <div class="social-links">
-                    <div class="social-link">𝕏</div>
-                    <div class="social-link">📘</div>
-                    <div class="social-link">📷</div>
-                    <div class="social-link">💼</div>
-                </div>
-            </div>
-            
-            <div class="footer-column">
-                <h4>COMPANY</h4>
-                <ul>
-                    <li><a href="#">About</a></li>
-                    <li><a href="#">Features</a></li>
-                    <li><a href="#">Works</a></li>
-                    <li><a href="#">Career</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-column">
-                <h4>HELP</h4>
-                <ul>
-                    <li><a href="#">Customer Support</a></li>
-                    <li><a href="#">Delivery Details</a></li>
-                    <li><a href="#">Terms & Conditions</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-column">
-                <h4>FAQ</h4>
-                <ul>
-                    <li><a href="#">Account</a></li>
-                    <li><a href="#">Manage Deliveries</a></li>
-                    <li><a href="#">Orders</a></li>
-                    <li><a href="#">Payments</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-column">
-                <h4>RESOURCES</h4>
-                <ul>
-                    <li><a href="#">Free eBooks</a></li>
-                    <li><a href="#">Development Tutorial</a></li>
-                    <li><a href="#">How to - Blog</a></li>
-                    <li><a href="#">Youtube Playlist</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="footer-bottom">
-            <div>Ginyuu © 2024. All Rights Reserved.</div>
-        </div>
-    </footer>
+    <%- include('../../common/view/footer.ejs') %>
 
     <!-- Product Modal -->
     <div class="modal" id="productModal">
         <div class="modal-content">
-            <button class="modal-close" id="modalClose">✕</button>
+            <button class="modal-close" id="modalClose">×</button>
             <div class="modal-body">
                 <div class="modal-image" id="modalImageContainer">
-                    <span class="modal-image-icon">📱</span>
+                    <span class="product-icon">📱</span>
                 </div>
                 <div class="modal-details">
                     <span class="modal-category" id="modalCategory">Product</span>
