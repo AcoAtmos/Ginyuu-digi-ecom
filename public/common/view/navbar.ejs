@@ -120,50 +120,28 @@ document.addEventListener('DOMContentLoaded', async function() {
             divider.style.marginTop = '0.75rem';
         }
     }
-
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-        return '';
-    }
     
-    function setCookie(name, value, days) {
-        const expires = new Date();
-        expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
-        document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
-    }
-    
-    const token = getCookie('token');
-    let isLoggedIn = false;
-    
-    if (token) {
+    // Check if logged in using HttpOnly cookies
+    async function checkLogin() {
         try {
-            const res = await fetch(`${window.BE_URL}/api/auth/verify_token`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
+            const res = await fetch(`${window.BE_URL}/api/auth/me`, {
+                credentials: "include"
             });
             const data = await res.json();
-            isLoggedIn = data.status === 'success';
-            
-            if (isLoggedIn) {
-                const user = JSON.parse(localStorage.getItem('user') || '{}');
-                updateProfileUI(user, true);
-            }
+            return data.status === "success" ? data.data : null;
         } catch (err) {
             console.log('Token verification failed');
+            return null;
         }
     }
     
-    if (!isLoggedIn) {
-        updateProfileUI(null, false);
-    }
+    const user = await checkLogin();
+    updateProfileUI(user);
     
-    function updateProfileUI(user, loggedIn) {
-        if (loggedIn && user) {
+    function updateProfileUI(user) {
+        const isLoggedIn = !!user;
+        
+        if (isLoggedIn) {
             profileMenu.innerHTML = `
                 <a href="/page/profile">My Profile</a>
                 <a href="#orders">My Orders</a>
@@ -186,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const mobileProfileLink = document.getElementById('mobileProfileLink');
         const mobileLogoutLink = document.getElementById('mobileLogoutLink');
         
-        if (loggedIn) {
+        if (isLoggedIn) {
             if (mobileLoginLink) mobileLoginLink.style.display = 'none';
             if (mobileRegisterLink) mobileRegisterLink.style.display = 'none';
             if (mobileProfileLink) mobileProfileLink.style.display = 'block';
@@ -222,18 +200,26 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     // logout
+    async function logout() {
+        try {
+            await fetch(`${window.BE_URL}/api/auth/logout`, {
+                method: "POST",
+                credentials: "include"
+            });
+        } catch (err) {
+            console.log('Logout API call failed');
+        }
+        window.location.href = '/page/home';
+    }
+    
     document.addEventListener('click', function(e) {
         if (e.target.id === 'logoutBtn') {
             e.preventDefault();
-            setCookie('token', '', 0);
-            localStorage.removeItem('user');
-            window.location.href = '/page/home';
+            logout();
         }
         if (e.target.id === 'mobileLogoutLink') {
             e.preventDefault();
-            setCookie('token', '', 0);
-            localStorage.removeItem('user');
-            window.location.href = '/page/home';
+            logout();
         }
     });
     
