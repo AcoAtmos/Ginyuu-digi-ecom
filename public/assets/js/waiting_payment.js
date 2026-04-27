@@ -34,18 +34,22 @@ async function fetchInvoiceData() {
 function displayInvoiceData(data) {
     if (!data) return;
 
-    // Payment method badge
-    const paymentBadge = document.getElementById('payment-badge');
-    const methodLabels = {
-        'qris': 'QRIS Payment',
-        'bank': 'Bank Transfer',
-        'ewallet': 'E-Wallet'
-    };
-    paymentBadge.textContent = methodLabels[paymentMethod] || 'QRIS Payment';
+    // // Payment method badge
+    // const paymentBadge = document.getElementById('payment-badge');
+    // const methodLabels = {
+    //     'qris': 'QRIS Payment',
+    //     'bank': 'Bank Transfer',
+    //     'ewallet': 'E-Wallet'
+    // };
+    // paymentBadge.textContent = data.payment_method || '';
 
     // Invoice Number
     const invoiceNumEl = document.getElementById('invoice-number');
     if (invoiceNumEl) invoiceNumEl.textContent = data.invoice_number || '-';
+
+    // Payment Method
+    const paymentMethodEl = document.getElementById('payment-method');
+    if (paymentMethodEl) paymentMethodEl.textContent = data.payment_method || '-';
 
     // Buyer Name
     const buyerNameEl = document.getElementById('buyer-name');
