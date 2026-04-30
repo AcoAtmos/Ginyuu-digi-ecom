@@ -4,11 +4,11 @@
   const registerBtn = document.getElementById('registerBtn');
 
   // Show/hide password
-  togglePassword.addEventListener('click', () => {
-    const type = passwordInput.type === 'password' ? 'text' : 'password';
-    passwordInput.type = type;
-    togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
-  });
+  // togglePassword.addEventListener('click', () => {
+  //   const type = passwordInput.type === 'password' ? 'text' : 'password';
+  //   passwordInput.type = type;
+  //   togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+  // });
 
   // Basic client-side validation
   form.addEventListener('submit', async (e) => {
