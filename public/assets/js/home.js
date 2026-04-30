@@ -42,21 +42,15 @@ async function fetchHomeProducts() {
 }
 
 async function checkLogin() {
-    const token = getCookie('token');
-    if (!token) return false;
-
     try {
         const res = await fetch(`${window.BE_URL}/api/auth/verify_token`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
+            credentials: 'include'
         });
         console.log("cek token", res);
         const result = await res.json();
         console.log("cek token", result);
-        return !!result; // assuming truthy = valid
+        return result.status === "success";
     } catch (err) {
         console.error('Token verification failed:', err);
         return false;
@@ -125,22 +119,30 @@ function createProductCardHTML(item, isNew = false) {
 // profile & navigation
 // ────────────────────────────────────────────────
 async function setupProfile() {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (!user?.image_url) return;
+    try {
+        const res = await fetch(`${window.BE_URL}/api/auth/me`, {
+            credentials: "include"
+        });
+        const data = await res.json();
+        if (data.status !== "success" || !data.data) return;
+        
+        const user = data.data;
+        const profileEl = document.getElementById('profile-img');
+        const profileLink = document.getElementById('profile-dropdown');
 
-    const profileEl = document.getElementById('profile-img');
-    const profileLink = document.getElementById('profile-dropdown');
+        if (profileEl && user.image_url) {
+            profileEl.innerHTML = `
+                <img class="profile-img" src="../../assets/img/profile/${user.image_url}" alt="Profile">
+            `;
+        }
 
-    if (profileEl) {
-        profileEl.innerHTML = `
-            <img class="profile-img" src="../../assets/img/profile/${user.image_url}" alt="Profile">
-        `;
-    }
-
-    if (profileLink) {
-        profileLink.setAttribute('data-menu', 'profile');
-        profileLink.href = '#';
-        profileLink.classList.add('dropdown-toggle');
+        if (profileLink) {
+            profileLink.setAttribute('data-menu', 'profile');
+            profileLink.href = '#';
+            profileLink.classList.add('dropdown-toggle');
+        }
+    } catch (err) {
+        console.error('Error fetching user:', err);
     }
 }
 
@@ -219,7 +221,7 @@ function createDropdownMenu() {
 }
 
 function logout() {
-    setCookie('token', '', 1);
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     localStorage.removeItem('user');
     window.location.href = '/page/home';
 }
