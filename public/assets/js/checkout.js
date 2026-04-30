@@ -14,18 +14,11 @@ const phone = document.getElementById('phone');
 
 // ================== LOAD DATA ==================
 document.addEventListener("DOMContentLoaded", async () => {
-    // Check user (cek token)
-    const token = getCookie('token');
-    // console.log(token);
-    if (!token){
+    const isValid = await hit_api_verify_token();
+    if(!isValid){
         emptyUserForm();
     }else{
-        const isValid = await hit_api_verify_token(token);
-        if(!isValid){
-            emptyUserForm();
-        }else{
-            fillUserform();
-        }
+        fillUserform();
     }
 
     // get products
@@ -86,16 +79,10 @@ async function hit_api_check_whatsapp() {
 
 async function hit_api_verify_token() {
     try {
-        const token = getCookie('token');
-        if (!token) return null;
-        
-        const result = await fetch (`${window.BE_URL}/api/auth/verify_token`, {
+        const result = await fetch(`${window.BE_URL}/api/auth/verify_token`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        })
+            credentials: 'include'
+        });
         const json = await result.json();
         console.log(json);
         
@@ -139,8 +126,7 @@ async function validateAndSubmit(event) {
     // 2. Password (only for new users)
     const pass = passwordEl ? passwordEl.value : '';
     const confirmPass = confirmPassEl ? confirmPassEl.value : '';
-    const token = getCookie('token');
-    const isExistingUser = token && await hit_api_verify_token(token);
+    const isExistingUser = await hit_api_verify_token();
     
     if (!isExistingUser) {
         if (!pass) {
@@ -186,7 +172,21 @@ async function validateAndSubmit(event) {
 }
 
 async function submitForm(){
-    const paymentMethod = document.querySelector('input[name="payment_method"]:checked')?.value;
+    let paymentMethod = '';
+    
+    // Get payment method directly from select fields
+    const bankName = document.getElementById('bank-name')?.value;
+    const ewalletName = document.getElementById('ewallet-name')?.value;
+    
+    if (bankName) {
+        paymentMethod = bankName;
+    } else if (ewalletName) {
+        paymentMethod = ewalletName;
+    } else {
+        // Fallback to radio value if no select value
+        const paymentMethodRadio = document.querySelector('input[name="payment_method"]:checked');
+        paymentMethod = paymentMethodRadio?.value || '';
+    }
     
     const payload = {
         username: document.getElementById('username')?.value.trim() || '',
@@ -283,12 +283,24 @@ function showToast(message, type = 'info') {
 
 // ================== USER ==================
 async function fillUserform(){
-    const user = JSON.parse(localStorage.getItem('user'));
-    username.value = user.username;
-    // password.value = user.password;
-    // confirmPass.value = user.password;
-    email.value = user.email;
-    phone.value = user.phone;
+    try {
+        const res = await fetch(`${window.BE_URL}/api/auth/me`, {
+            credentials: "include"
+        });
+        const data = await res.json();
+        if (data.status !== "success" || !data.data) {
+            emptyUserForm();
+            return;
+        }
+        const user = data.data;
+        username.value = user.username || "";
+        email.value = user.email || "";
+        phone.value = user.phone || "";
+    } catch (err) {
+        console.error("Error fetching user:", err);
+        emptyUserForm();
+        return;
+    }
 
     // disable input
     username.disabled = true;
