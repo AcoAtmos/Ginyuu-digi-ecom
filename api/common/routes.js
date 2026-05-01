@@ -6,8 +6,12 @@ const auth = require("../modules/auth/auth_controller");
 const whatsapp = require("../modules/whatsapp/whatsapp_controller");
 const product = require("../modules/product/product_controller");
 const checkout = require("../modules/checkout/checkout_controller");
+
 // middleware
-const { authMiddleware } = require("../modules/auth/auth_middleware");
+const { authMiddleware, adminMiddleware } = require("../modules/auth/auth_middleware");
+
+// user
+const user = require("../modules/user/member/member_controller");
 
 router.get("/", (req, res) => {
     res.status(200).send("API is running");
@@ -29,7 +33,18 @@ router.get("/check_whatsapp/:phone", whatsapp.check_whatsapp); // check whatsapp
 // ================ ROUTES AUTH ================
 router.post("/auth/register", auth.register); 
 router.post("/auth/login", auth.login);
-router.post("/auth/verify_token", authMiddleware, auth.verifyToken); // cek token dan validasi user
+router.post("/auth/verify_token",auth.verifyToken); // cek token dan validasi user
+router.get("/auth/me", authMiddleware, auth.getMe); // get current user
+router.post("/auth/logout", auth.logout); // logout
 
+// ================ USER ====================
+// profile - get my profile
+router.get("/profile/me", authMiddleware, user.get_my_profile);
+
+// purchase history - get my purchases (member)
+router.get("/purchases", authMiddleware, user.get_my_purchases);
+
+// ======== ADMIN ========
+router.get("/admin/purchases", authMiddleware, adminMiddleware, user.get_all_purchases); 
 
 module.exports = router;
