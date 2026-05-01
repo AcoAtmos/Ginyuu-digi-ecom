@@ -34,20 +34,13 @@ exports.login = async (body) =>{
             throw new Error("Invalid password");
         }
 
-        // generate token
-        const token = jwt.sign({
-            id: user.id,
-            email : user.email
-        }, process.env.JWT_SECRET, {expiresIn: "24h"});
-
         return {
-            user : {
-                username : user.username,
-                email : user.email,
-                phone : user.phone,
-                image_url : user.image_url
-            },
-            token : token
+            id : user.id,
+            username : user.username,
+            role : user.role || 'MEMBER',
+            email : user.email,
+            phone : user.phone,
+            image_url : user.image_url
         };
     }catch(err){
         throw new Error(err);
