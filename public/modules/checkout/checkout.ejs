@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout — DIGISTORE</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0a0a0a;
+  --bg2:      #111111;
+  --bg3:      #1a1a1a;
+  --bg4:      #222222;
+  --border:   #2a2a2a;
+  --border2:  #333333;
+  --border3:  #444444;
+  --text:     #f0f0f0;
+  --text2:    #999999;
+  --text3:    #555555;
+  --accent:   #ffffff;
+  --danger:   #ff4444;
+  --success:  #44dd88;
+  --radius:   14px;
+  --radius-sm:8px;
+  --navbar-h: 64px;
+  --shadow:   0 12px 40px rgba(0,0,0,.7);
+  --shadow-sm:0 2px 12px rgba(0,0,0,.4);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* ─── NAVBAR ─── */
+.navbar {
+  position: sticky; top: 0; z-index: 100;
+  height: var(--navbar-h);
+  background: rgba(10,10,10,.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 28px;
+  gap: 16px;
+}
+.nav-back {
+  display: flex; align-items: center; gap: 8px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text2); font-family: inherit; font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  transition: background .15s, color .15s;
+}
+.nav-back:hover { background: var(--bg3); color: var(--text); }
+.nav-brand {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800; font-size: 18px;
+  color: var(--text); text-decoration: none;
+  letter-spacing: -.5px;
+}
+.nav-brand span { color: var(--text3); }
+.nav-spacer { flex: 1; }
+.nav-secure {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text3);
+  background: var(--bg3); border: 1px solid var(--border);
+  padding: 6px 12px; border-radius: 999px;
+}
+.nav-secure svg { color: var(--success); }
+
+/* ─── PROGRESS BAR ─── */
+.progress-wrap {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+}
+.progress-steps {
+  display: flex; align-items: center;
+  max-width: 900px; margin: 0 auto;
+  padding: 16px 0;
+  gap: 0;
+}
+.progress-step {
+  display: flex; align-items: center; gap: 10px;
+  flex: 1;
+}
+.step-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: var(--text3);
+  flex-shrink: 0;
+  transition: all .3s;
+}
+.step-label { font-size: 13px; color: var(--text3); font-weight: 500; transition: color .3s; white-space: nowrap; }
+.progress-step.active .step-num { background: #fff; color: #000; border-color: #fff; }
+.progress-step.active .step-label { color: var(--text); }
+.progress-step.done .step-num { background: var(--success); border-color: var(--success); color: #000; }
+.progress-step.done .step-label { color: var(--text2); }
+.progress-line {
+  flex: 1; height: 1px;
+  background: var(--border);
+  margin: 0 12px;
+  transition: background .3s;
+}
+.progress-line.done { background: var(--success); }
+
+/* ─── LAYOUT ─── */
+.checkout-layout {
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 36px 24px 60px;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ─── CARD ─── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  animation: fadeUp .4s ease both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card + .card { margin-top: 20px; }
+
+.card-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; gap: 10px;
+}
+.card-title-num {
+  width: 24px; height: 24px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 50%;
+  font-size: 11px; font-weight: 700; color: var(--text2);
+  display: flex; align-items: center; justify-content: center;
+}
+.card-body { padding: 24px; }
+
+/* ─── LOGGED-IN BANNER ─── */
+.logged-banner {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(68,221,136,.06);
+  border: 1px solid rgba(68,221,136,.2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 13px; color: var(--text2);
+}
+.logged-banner svg { color: var(--success); flex-shrink: 0; }
+.logged-banner strong { color: var(--text); }
+
+/* ─── FORM ─── */
+.form-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 14px; margin-bottom: 14px;
+}
+.form-row.single { grid-template-columns: 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-label {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--text3);
+}
+.form-label .req { color: var(--danger); margin-left: 2px; }
+
+.input-wrap { position: relative; }
+.form-input {
+  width: 100%;
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--text); font-family: inherit; font-size: 14px;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color .2s, background .2s, box-shadow .2s;
+}
+.form-input:focus {
+  border-color: #666;
+  box-shadow: 0 0 0 3px rgba(255,255,255,.04);
+}
+.form-input::placeholder { color: var(--text3); }
+.form-input:disabled {
+  background: var(--bg3);
+  color: var(--text2);
+  cursor: not-allowed;
+  opacity: .75;
+  border-color: var(--border);
+}
+.form-input.error { border-color: var(--danger); }
+.form-input.success { border-color: var(--success); }
+
+.input-icon {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--text3); display: flex; align-items: center;
+  pointer-events: none;
+}
+.input-icon.clickable { pointer-events: all; cursor: pointer; }
+.input-icon.clickable:hover { color: var(--text2); }
+
+.form-hint { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.form-error { font-size: 11px; color: var(--danger); margin-top: 4px; display: none; }
+.form-error.show { display: block; }
+
+.locked-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--bg4); border: 1px solid var(--border);
+  color: var(--text3); font-size: 10px; font-weight: 600;
+  letter-spacing: .5px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px;
+}
+
+/* ─── PASSWORD STRENGTH ─── */
+.strength-bar {
+  display: flex; gap: 4px; margin-top: 6px;
+}
+.strength-seg {
+  flex: 1; height: 3px;
+  background: var(--border2);
+  border-radius: 999px;
+  transition: background .3s;
+}
+.strength-seg.weak   { background: var(--danger); }
+.strength-seg.medium { background: #f5a623; }
+.strength-seg.strong { background: var(--success); }
+.strength-label { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+/* ─── PAYMENT METHOD ─── */
+.payment-methods {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 10px; margin-bottom: 20px;
+}
+.pm-btn {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 8px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 16px 10px;
+  cursor: pointer; transition: all .2s;
+  font-family: inherit;
+}
+.pm-btn:hover { border-color: var(--border3); background: var(--bg4); }
+.pm-btn.selected {
+  background: rgba(255,255,255,.06);
+  border-color: #fff;
+  box-shadow: 0 0 0 1px #fff inset;
+}
+.pm-icon { font-size: 24px; line-height: 1; }
+.pm-label {
+  font-size: 12px; font-weight: 600; color: var(--text2);
+  transition: color .2s;
+}
+.pm-btn.selected .pm-label { color: var(--text); }
+
+/* ─── PAYMENT SUB OPTIONS ─── */
+.payment-sub {
+  display: none;
+  animation: fadeUp .25s ease;
+}
+.payment-sub.show { display: block; }
+
+.sub-title {
+  font-size: 11px; font-weight: 600; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--text3);
+  margin-bottom: 10px;
+}
+.sub-options { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.sub-option {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  cursor: pointer; transition: all .15s;
+  min-width: 130px;
+}
+.sub-option:hover { border-color: var(--border3); }
+.sub-option.selected {
+  border-color: #fff;
+  background: rgba(255,255,255,.05);
+}
+.sub-option input[type="radio"] { display: none; }
+.sub-opt-emoji { font-size: 20px; line-height: 1; }
+.sub-opt-text { }
+.sub-opt-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.sub-opt-desc { font-size: 11px; color: var(--text3); }
+.sub-option .check-ring {
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--border2);
+  border-radius: 50%; margin-left: auto;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all .15s;
+}
+.sub-option.selected .check-ring {
+  border-color: #fff; background: #fff;
+}
+.sub-option.selected .check-ring::after {
+  content: '';
+  width: 6px; height: 6px;
+  background: #000; border-radius: 50%;
+}
+
+/* ─── DIVIDER ─── */
+.section-divider {
+  height: 1px; background: var(--border);
+  margin: 24px 0;
+}
+
+/* ─── ORDER SUMMARY (RIGHT COLUMN) ─── */
+.summary-card { position: sticky; top: calc(var(--navbar-h) + 20px); }
+
+.order-items { }
+.order-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.order-item:last-child { border-bottom: none; }
+.order-item-icon {
+  width: 44px; height: 44px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.order-item-info { flex: 1; min-width: 0; }
+.order-item-name {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.order-item-cat { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+.order-item-price { font-size: 14px; font-weight: 700; color: var(--text); flex-shrink: 0; font-family: 'Syne', sans-serif; }
+
+.price-rows { margin: 4px 0 16px; }
+.price-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0;
+  font-size: 14px;
+}
+.price-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+.price-row .label { color: var(--text2); }
+.price-row .value { color: var(--text); font-weight: 500; }
+.price-row.discount .value { color: var(--success); }
+.price-row.total {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 800;
+  border-top: 1px solid var(--border2) !important;
+  padding-top: 16px; margin-top: 4px;
+}
+.price-row.total .label { color: var(--text); }
+.price-row.total .value { color: var(--text); }
+
+.promo-wrap {
+  display: flex; gap: 8px; margin: 16px 0;
+}
+.promo-input {
+  flex: 1;
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--text); font-family: inherit; font-size: 13px;
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  outline: none; transition: border-color .2s;
+}
+.promo-input:focus { border-color: #555; }
+.promo-input::placeholder { color: var(--text3); }
+.btn-promo {
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--text2); font-family: inherit; font-size: 13px; font-weight: 600;
+  border-radius: var(--radius-sm); padding: 10px 16px;
+  cursor: pointer; transition: all .15s;
+  white-space: nowrap;
+}
+.btn-promo:hover { border-color: #555; color: var(--text); }
+.promo-success {
+  display: none; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--success); margin-top: 4px;
+}
+.promo-success.show { display: flex; }
+
+/* ─── SUBMIT BUTTON ─── */
+.btn-place-order {
+  width: 100%;
+  padding: 16px;
+  background: #fff; color: #000;
+  border: none; border-radius: 999px;
+  font-family: 'Syne', sans-serif;
+  font-size: 16px; font-weight: 800;
+  cursor: pointer; letter-spacing: -.3px;
+  position: relative; overflow: hidden;
+  transition: opacity .15s, transform .15s;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.btn-place-order:hover { opacity: .9; transform: translateY(-1px); }
+.btn-place-order:active { transform: scale(.98); }
+.btn-place-order:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+.btn-place-order .spinner {
+  width: 18px; height: 18px;
+  border: 2.5px solid rgba(0,0,0,.2);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  display: none;
+}
+.btn-place-order.loading .btn-text { opacity: 0; }
+.btn-place-order.loading .spinner { display: block; position: absolute; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.secure-note {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 12px; color: var(--text3);
+  margin-top: 12px; text-align: center;
+}
+
+/* ─── SUCCESS STATE ─── */
+.success-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.85);
+  backdrop-filter: blur(12px);
+  z-index: 999;
+  align-items: center; justify-content: center;
+}
+.success-overlay.show { display: flex; }
+.success-box {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 24px; padding: 48px 40px;
+  max-width: 440px; width: 90%;
+  text-align: center;
+  animation: fadeUp .4s ease;
+}
+.success-icon {
+  width: 72px; height: 72px;
+  background: rgba(68,221,136,.12);
+  border: 1px solid rgba(68,221,136,.3);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 20px;
+  font-size: 30px;
+}
+.success-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px; font-weight: 800;
+  color: var(--text); margin-bottom: 8px;
+}
+.success-subtitle { font-size: 14px; color: var(--text2); margin-bottom: 28px; line-height: 1.7; }
+.success-order-id {
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 12px 20px;
+  font-size: 13px; color: var(--text2);
+  margin-bottom: 28px;
+}
+.success-order-id span {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px; font-weight: 700; color: var(--text);
+  display: block; margin-top: 4px;
+}
+
+/* ─── REQUEST BODY PREVIEW ─── */
+.req-body-wrap {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-top: 20px;
+}
+.req-body-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.req-body-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text3); }
+.req-method { font-size: 11px; font-weight: 700; color: var(--success); }
+.req-body-pre {
+  padding: 14px 16px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px; line-height: 1.7; color: var(--text2);
+  overflow-x: auto;
+  max-height: 280px; overflow-y: auto;
+  white-space: pre;
+}
+.json-key { color: #7dd3fc; }
+.json-str { color: #86efac; }
+.json-num { color: #fda4af; }
+.json-bool { color: #c4b5fd; }
+.json-null { color: var(--text3); }
+
+/* ─── TOAST ─── */
+.toast-container {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px;
+  align-items: center; pointer-events: none;
+}
+.toast {
+  background: var(--bg2); border: 1px solid var(--border2);
+  color: var(--text); font-size: 14px;
+  padding: 10px 20px; border-radius: 999px;
+  box-shadow: var(--shadow);
+  display: flex; align-items: center; gap: 8px;
+  animation: toastIn .3s ease; pointer-events: all;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px) scale(.95); }
+  to   { opacity: 1; transform: none; }
+}
+.toast.hide { animation: toastOut .3s ease forwards; }
+@keyframes toastOut { to { opacity: 0; transform: translateY(8px) scale(.95); } }
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 820px) {
+  .checkout-layout {
+    grid-template-columns: 1fr;
+    padding: 20px 16px 48px;
+  }
+  .summary-card { position: static; order: -1; }
+  .progress-steps { gap: 0; }
+  .step-label { display: none; }
+  .navbar { padding: 0 16px; }
+}
+@media (max-width: 480px) {
+  .form-row { grid-template-columns: 1fr; }
+  .payment-methods { grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .pm-btn { padding: 14px 6px; }
+  .pm-icon { font-size: 20px; }
+  .pm-label { font-size: 11px; }
+  .sub-options { }
+  .sub-option { min-width: 0; flex: 1; }
+  .progress-wrap { padding: 0 16px; }
+  .card-body { padding: 18px; }
+  .success-box { padding: 32px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ NAVBAR ═══════ -->
+<nav class="navbar">
+  <button class="nav-back" onclick="history.back()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    Kembali
+  </button>
+
+  <a href="index.html" class="nav-brand">DIGI<span>STORE</span></a>
+  <div class="nav-spacer"></div>
+  <div class="nav-secure">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+    Pembayaran Aman
+  </div>
+</nav>
+
+<!-- ═══════ PROGRESS ═══════ -->
+<div class="progress-wrap">
+  <div class="progress-steps">
+    <div class="progress-step done" id="step1">
+      <div class="step-num">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <span class="step-label">Keranjang</span>
+    </div>
+    <div class="progress-line done"></div>
+    <div class="progress-step active" id="step2">
+      <div class="step-num">2</div>
+      <span class="step-label">Checkout</span>
+    </div>
+    <div class="progress-line"></div>
+    <div class="progress-step" id="step3">
+      <div class="step-num">3</div>
+      <span class="step-label">Konfirmasi</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ MAIN LAYOUT ═══════ -->
+<div class="checkout-layout">
+
+  <!-- ══════ LEFT: FORM ══════ -->
+  <div class="form-col">
+
+    <!-- SECTION 1: INFO -->
+    <div class="card" style="animation-delay:.05s">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-num">1</div>
+          Informasi Akun
+        </div>
+        <div id="loginStatusBadge"></div>
+      </div>
+      <div class="card-body">
+
+        <!-- Logged-in banner -->
+        <div class="logged-banner" id="loggedBanner" style="display:none">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span>Login sebagai <strong id="loggedName"></strong>. Data Anda terisi otomatis.</span>
+        </div>
+
+        <!-- Name Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nama Depan <span class="req">*</span></label>
+            <div class="input-wrap">
+              <input type="text" class="form-input" id="firstName" placeholder="John" autocomplete="given-name">
+              <div class="input-icon" id="firstNameLock" style="display:none">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+            </div>
+            <span class="form-error" id="firstNameErr">Nama depan wajib diisi</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nama Belakang <span class="req">*</span></label>
+            <div class="input-wrap">
+              <input type="text" class="form-input" id="lastName" placeholder="Doe" autocomplete="family-name">
+              <div class="input-icon" id="lastNameLock" style="display:none">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+            </div>
+            <span class="form-error" id="lastNameErr">Nama belakang wajib diisi</span>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-row single" style="margin-bottom:14px">
+          <div class="form-group">
+            <label class="form-label">Email <span class="req">*</span></label>
+            <div class="input-wrap">
+              <input type="email" class="form-input" id="email" placeholder="nama@email.com" autocomplete="email">
+              <div class="input-icon" id="emailLock" style="display:none">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </div>
+            </div>
+            <span class="form-error" id="emailErr">Email tidak valid</span>
+          </div>
+        </div>
+
+        <!-- Password (guest only) -->
+        <div id="passwordSection">
+          <div class="section-divider" style="margin:20px 0 18px"></div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:16px;display:flex;align-items:center;gap:6px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Buat akun untuk menyimpan riwayat pembelian Anda
+          </div>
+
+          <div class="form-row single" style="margin-bottom:14px">
+            <div class="form-group">
+              <label class="form-label">Password <span class="req">*</span></label>
+              <div class="input-wrap">
+                <input type="password" class="form-input" id="password" placeholder="Min. 8 karakter" autocomplete="new-password" oninput="checkStrength(this.value)">
+                <div class="input-icon clickable" onclick="togglePass('password', this)">
+                  <svg id="eyePass" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+              </div>
+              <div class="strength-bar" id="strengthBar">
+                <div class="strength-seg" id="seg1"></div>
+                <div class="strength-seg" id="seg2"></div>
+                <div class="strength-seg" id="seg3"></div>
+                <div class="strength-seg" id="seg4"></div>
+              </div>
+              <div class="strength-label" id="strengthLabel"></div>
+              <span class="form-error" id="passwordErr">Password minimal 8 karakter</span>
+            </div>
+          </div>
+
+          <div class="form-row single" style="margin-bottom:0">
+            <div class="form-group">
+              <label class="form-label">Konfirmasi Password <span class="req">*</span></label>
+              <div class="input-wrap">
+                <input type="password" class="form-input" id="confirmPassword" placeholder="Ulangi password" autocomplete="new-password">
+                <div class="input-icon clickable" onclick="togglePass('confirmPassword', this)">
+                  <svg id="eyeConfirm" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </div>
+              </div>
+              <span class="form-error" id="confirmPasswordErr">Password tidak cocok</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION 2: PAYMENT -->
+    <div class="card" style="animation-delay:.12s">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-num">2</div>
+          Metode Pembayaran
+        </div>
+      </div>
+      <div class="card-body">
+
+        <!-- 3 method buttons -->
+        <div class="payment-methods">
+          <button class="pm-btn" onclick="selectPayment('bank')">
+            <span class="pm-icon">🏦</span>
+            <span class="pm-label">Transfer Bank</span>
+          </button>
+          <button class="pm-btn" onclick="selectPayment('ewallet')">
+            <span class="pm-icon">📲</span>
+            <span class="pm-label">E-Wallet</span>
+          </button>
+          <button class="pm-btn" onclick="selectPayment('qris')">
+            <span class="pm-icon">⬛</span>
+            <span class="pm-label">QRIS</span>
+          </button>
+        </div>
+
+        <!-- BANK sub-options -->
+        <div class="payment-sub" id="sub-bank">
+          <div class="sub-title">Pilih Bank</div>
+          <div class="sub-options">
+            <label class="sub-option" onclick="selectSub(this,'BCA')">
+              <input type="radio" name="bank" value="BCA">
+              <span class="sub-opt-emoji">🔵</span>
+              <div class="sub-opt-text">
+                <div class="sub-opt-name">BCA</div>
+                <div class="sub-opt-desc">Virtual Account</div>
+              </div>
+              <div class="check-ring"></div>
+            </label>
+            <label class="sub-option" onclick="selectSub(this,'Mandiri')">
+              <input type="radio" name="bank" value="Mandiri">
+              <span class="sub-opt-emoji">🟡</span>
+              <div class="sub-opt-text">
+                <div class="sub-opt-name">Mandiri</div>
+                <div class="sub-opt-desc">Virtual Account</div>
+              </div>
+              <div class="check-ring"></div>
+            </label>
+            <label class="sub-option" onclick="selectSub(this,'BNI')">
+              <input type="radio" name="bank" value="BNI">
+              <span class="sub-opt-emoji">🟠</span>
+              <div class="sub-opt-text">
+                <div class="sub-opt-name">BNI</div>
+                <div class="sub-opt-desc">Virtual Account</div>
+              </div>
+              <div class="check-ring"></div>
+            </label>
+            <label class="sub-option" onclick="selectSub(this,'BRI')">
+              <input type="radio" name="bank" value="BRI">
+              <span class="sub-opt-emoji">🔵</span>
+              <div class="sub-opt-text">
+                <div class="sub-opt-name">BRI</div>
+                <div class="sub-opt-desc">Virtual Account</div>
+              </div>
+              <div class="check-ring"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- E-WALLET sub-options -->
+        <div class="payment-sub" id="sub-ewallet">
+          <div class="sub-title">Pilih E-Wallet</div>
+          <div class="sub-options">
+            <label class="sub-option" onclick="selectSub(this,'GoPay')">
+              <input type="radio" name="ewallet" value="GoPay">
+              <span class="sub-opt-emoji">🟢</span>
+              <div class="sub-opt-text">
+                <div class="sub-opt-name">GoPay</div>
+                <div class="sub-opt-desc">Gojek</div>
+              </div>
+              <div class="check-ring"></div>
+            </label>
+            <label class="sub-option" onclick="selectSub(this,'OVO')">
+              <input type="radio" name="ewallet" value="OVO">
+              <span class="sub-opt-emoji">🟣</span>
+              <div class="sub-opt-text">
+                <div class="sub-opt-name">OVO</div>
+                <div class="sub-opt-desc">Tokopedia</div>
+              </div>
+              <div class="check-ring"></div>
+            </label>
+            <label class="sub-option" onclick="selectSub(this,'DANA')">
+              <input type="radio" name="ewallet" value="DANA">
+              <span class="sub-opt-emoji">🔵</span>
+              <div class="sub-opt-text">
+                <div class="sub-opt-name">DANA</div>
+                <div class="sub-opt-desc">Dana.id</div>
+              </div>
+              <div class="check-ring"></div>
+            </label>
+            <label class="sub-option" onclick="selectSub(this,'ShopeePay')">
+              <input type="radio" name="ewallet" value="ShopeePay">
+              <span class="sub-opt-emoji">🟠</span>
+              <div class="sub-opt-text">
+                <div class="sub-opt-name">ShopeePay</div>
+                <div class="sub-opt-desc">Shopee</div>
+              </div>
+              <div class="check-ring"></div>
+            </label>
+          </div>
+        </div>
+
+        <!-- QRIS info -->
+        <div class="payment-sub" id="sub-qris">
+          <div style="
+            background: var(--bg3);
+            border: 1px dashed var(--border2);
+            border-radius: var(--radius);
+            padding: 24px;
+            text-align: center;
+          ">
+            <div style="font-size: 48px; margin-bottom: 10px;">⬛</div>
+            <div style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 6px;">QRIS Universal</div>
+            <div style="font-size: 13px; color: var(--text2); line-height: 1.6;">Scan QR Code dengan aplikasi e-wallet apapun. GoPay, OVO, DANA, ShopeePay, dan lainnya.</div>
+            <div style="margin-top:12px;font-size:11px;color:var(--text3)">QR Code akan ditampilkan setelah konfirmasi pesanan</div>
+          </div>
+        </div>
+
+        <span class="form-error" id="paymentErr" style="display:none;margin-top:8px;font-size:12px;">
+          Pilih metode pembayaran terlebih dahulu
+        </span>
+
+      </div>
+    </div>
+
+    <!-- REQ BODY PREVIEW -->
+    <div class="card" style="animation-delay:.18s">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-num" style="font-size:9px;">{ }</div>
+          Request Body Preview
+        </div>
+        <span class="req-method">POST /api/checkout</span>
+      </div>
+      <div class="card-body" style="padding:0">
+        <div class="req-body-wrap" style="margin:0;border:none;border-radius:0">
+          <div class="req-body-pre" id="reqBodyPre">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end form-col -->
+
+  <!-- ══════ RIGHT: SUMMARY ══════ -->
+  <div class="summary-col">
+
+    <div class="card summary-card" style="animation-delay:.08s">
+      <div class="card-header">
+        <div class="card-title">Ringkasan Pesanan</div>
+        <span style="font-size:13px;color:var(--text3)" id="itemCount">0 produk</span>
+      </div>
+      <div class="card-body">
+
+        <div class="order-items" id="orderItems"></div>
+
+        <!-- Promo -->
+        <div class="promo-wrap">
+          <input type="text" class="promo-input" id="promoInput" placeholder="Kode promo…" oninput="updateReqBody()">
+          <button class="btn-promo" onclick="applyPromo()">Terapkan</button>
+        </div>
+        <div class="promo-success" id="promoSuccess">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          Promo DIGI20 berhasil! Hemat 20%
+        </div>
+
+        <!-- Price breakdown -->
+        <div class="price-rows" id="priceRows"></div>
+
+        <!-- Submit -->
+        <button class="btn-place-order" id="placeOrderBtn" onclick="submitOrder()">
+          <span class="btn-text">Bayar Sekarang</span>
+          <div class="spinner"></div>
+        </button>
+        <div class="secure-note">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          Transaksi dienkripsi & dilindungi SSL
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- end summary-col -->
+</div>
+
+<!-- ═══════ SUCCESS ═══════ -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-box">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Pesanan Berhasil!</div>
+    <div class="success-subtitle">Terima kasih telah berbelanja di DigiStore. Produk digital akan dikirim ke email Anda dalam beberapa menit.</div>
+    <div class="success-order-id">
+      Nomor Pesanan
+      <span id="orderIdDisplay">#DS-000000</span>
+    </div>
+    <button class="btn-place-order" style="max-width:220px;margin:0 auto 12px;" onclick="window.location='index.html'">
+      <span class="btn-text">Kembali Belanja</span>
+    </button>
+    <div style="font-size:13px;color:var(--text3);cursor:pointer" onclick="document.getElementById('successOverlay').classList.remove('show')">Lihat detail pesanan →</div>
+  </div>
+</div>
+
+<!-- ═══════ TOAST ═══════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ════════════════════════════════════════════════
+// SIMULATE: data dari landing page (cart + user)
+// ════════════════════════════════════════════════
+const CART_ITEMS = [
+  { id: 3, name: 'Full-Stack Web Dev 2025', category: 'course', emoji: '💻', price: 299000 },
+  { id: 5, name: 'Framer Landing Page Kit', category: 'template', emoji: '🚀', price: 199000 },
+  { id: 6, name: 'AI Prompt Engineering', category: 'ebook', emoji: '🤖', price: 59000 },
+];
+
+// Simulasi user login state — ubah ke null untuk guest mode
+// null = guest | { name, email } = logged in
+let CURRENT_USER = null;
+/* Contoh logged-in:
+let CURRENT_USER = { name: 'Budi Santoso', email: 'budi@example.com' };
+*/
+
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let selectedPayment = null;
+let selectedSub = null;
+let promoApplied = false;
+let promoDiscount = 0;
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderOrderSummary();
+  initUserState();
+  updateReqBody();
+
+  // Live req body update on any input
+  document.querySelectorAll('.form-input').forEach(inp => {
+    inp.addEventListener('input', updateReqBody);
+  });
+});
+
+// ════════════════════════════════════════════════
+// USER STATE
+// ════════════════════════════════════════════════
+function initUserState() {
+  const pwSection = document.getElementById('passwordSection');
+  const loggedBanner = document.getElementById('loggedBanner');
+  const loginStatusBadge = document.getElementById('loginStatusBadge');
+  const loggedName = document.getElementById('loggedName');
+
+  const fields = ['firstName','lastName','email'];
+  const locks  = ['firstNameLock','lastNameLock','emailLock'];
+
+  if (CURRENT_USER) {
+    // — LOGGED IN —
+    const parts = CURRENT_USER.name.trim().split(' ');
+    const first = parts[0];
+    const last  = parts.slice(1).join(' ') || '-';
+
+    document.getElementById('firstName').value = first;
+    document.getElementById('lastName').value  = last;
+    document.getElementById('email').value     = CURRENT_USER.email;
+
+    // Disable & lock fields
+    fields.forEach((f, i) => {
+      const el = document.getElementById(f);
+      el.disabled = true;
+      el.classList.add('success');
+      document.getElementById(locks[i]).style.display = 'flex';
+    });
+
+    // Hide password section
+    pwSection.style.display = 'none';
+
+    // Show banner
+    loggedBanner.style.display = 'flex';
+    loggedName.textContent = CURRENT_USER.name;
+
+    // Badge
+    loginStatusBadge.innerHTML = `<span class="locked-badge">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      Terisi otomatis
+    </span>`;
+
+  } else {
+    // — GUEST —
+    pwSection.style.display = '';
+    loggedBanner.style.display = 'none';
+
+    loginStatusBadge.innerHTML = `<span class="locked-badge" style="color:var(--text3);border-color:var(--border)">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      Tamu
+    </span>`;
+  }
+
+  updateReqBody();
+}
+
+// Toggle user state (untuk demo / testing)
+function toggleLoginDemo() {
+  if (CURRENT_USER) {
+    CURRENT_USER = null;
+  } else {
+    CURRENT_USER = { name: 'Budi Santoso', email: 'budi@example.com' };
+  }
+  // Reset inputs
+  ['firstName','lastName','email'].forEach(f => {
+    const el = document.getElementById(f);
+    el.value = '';
+    el.disabled = false;
+    el.classList.remove('success');
+  });
+  ['firstNameLock','lastNameLock','emailLock'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  initUserState();
+  showToast(CURRENT_USER ? `👋 Login sebagai ${CURRENT_USER.name}` : '👤 Mode tamu aktif');
+}
+
+// ════════════════════════════════════════════════
+// ORDER SUMMARY
+// ════════════════════════════════════════════════
+function renderOrderSummary() {
+  const container = document.getElementById('orderItems');
+  const countEl   = document.getElementById('itemCount');
+  countEl.textContent = `${CART_ITEMS.length} produk`;
+
+  container.innerHTML = CART_ITEMS.map(item => `
+    <div class="order-item">
+      <div class="order-item-icon">${item.emoji}</div>
+      <div class="order-item-info">
+        <div class="order-item-name">${item.name}</div>
+        <div class="order-item-cat">${item.category}</div>
+      </div>
+      <div class="order-item-price">${formatRp(item.price)}</div>
+    </div>`).join('');
+
+  renderPriceRows();
+}
+
+function renderPriceRows() {
+  const subtotal  = CART_ITEMS.reduce((s, i) => s + i.price, 0);
+  const adminFee  = 2000;
+  const discount  = promoApplied ? Math.round(subtotal * 0.2) : 0;
+  const total     = subtotal + adminFee - discount;
+
+  document.getElementById('priceRows').innerHTML = `
+    <div class="price-row">
+      <span class="label">Subtotal</span>
+      <span class="value">${formatRp(subtotal)}</span>
+    </div>
+    <div class="price-row">
+      <span class="label">Biaya Admin</span>
+      <span class="value">${formatRp(adminFee)}</span>
+    </div>
+    ${discount ? `<div class="price-row discount">
+      <span class="label">Diskon Promo</span>
+      <span class="value">- ${formatRp(discount)}</span>
+    </div>` : ''}
+    <div class="price-row total">
+      <span class="label">Total</span>
+      <span class="value">${formatRp(total)}</span>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════
+// PAYMENT
+// ════════════════════════════════════════════════
+function selectPayment(method) {
+  selectedPayment = method;
+  selectedSub = null;
+
+  // Update button UI
+  document.querySelectorAll('.pm-btn').forEach((b, i) => {
+    const methods = ['bank','ewallet','qris'];
+    b.classList.toggle('selected', methods[i] === method);
+  });
+
+  // Show/hide sub panels
+  ['bank','ewallet','qris'].forEach(m => {
+    const el = document.getElementById('sub-' + m);
+    el.classList.toggle('show', m === method);
+    if (m !== method) {
+      // Clear selection
+      el.querySelectorAll('.sub-option').forEach(o => o.classList.remove('selected'));
+    }
+  });
+
+  // Clear sub if qris (no sub needed)
+  if (method === 'qris') selectedSub = 'QRIS';
+
+  document.getElementById('paymentErr').style.display = 'none';
+  updateReqBody();
+}
+
+function selectSub(el, value) {
+  selectedSub = value;
+  const container = el.closest('.sub-options');
+  container.querySelectorAll('.sub-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  updateReqBody();
+}
+
+// ════════════════════════════════════════════════
+// PROMO
+// ════════════════════════════════════════════════
+const VALID_PROMOS = ['DIGI20', 'DIGISTORE', 'HEMAT20'];
+
+function applyPromo() {
+  const val = document.getElementById('promoInput').value.toUpperCase().trim();
+  const successEl = document.getElementById('promoSuccess');
+
+  if (VALID_PROMOS.includes(val)) {
+    promoApplied = true;
+    successEl.classList.add('show');
+    showToast('🎉 Kode promo berhasil diterapkan!');
+  } else {
+    promoApplied = false;
+    successEl.classList.remove('show');
+    if (val) showToast('❌ Kode promo tidak valid');
+  }
+  renderPriceRows();
+  updateReqBody();
+}
+
+// ════════════════════════════════════════════════
+// VALIDATION
+// ════════════════════════════════════════════════
+function validateForm() {
+  let valid = true;
+
+  const fName = document.getElementById('firstName').value.trim();
+  const lName = document.getElementById('lastName').value.trim();
+  const email = document.getElementById('email').value.trim();
+
+  showErr('firstNameErr',  !fName);
+  showErr('lastNameErr',   !lName);
+  showErr('emailErr',      !validateEmail(email));
+
+  if (!fName || !lName || !validateEmail(email)) valid = false;
+
+  if (!CURRENT_USER) {
+    const pass    = document.getElementById('password').value;
+    const confirm = document.getElementById('confirmPassword').value;
+    showErr('passwordErr',        pass.length < 8);
+    showErr('confirmPasswordErr', pass !== confirm || !confirm);
+    if (pass.length < 8 || pass !== confirm) valid = false;
+  }
+
+  if (!selectedPayment) {
+    document.getElementById('paymentErr').style.display = 'block';
+    valid = false;
+  }
+
+  if ((selectedPayment === 'bank' || selectedPayment === 'ewallet') && !selectedSub) {
+    showToast('⚠️ Pilih bank atau e-wallet Anda');
+    valid = false;
+  }
+
+  return valid;
+}
+
+function showErr(id, show) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('show', show);
+}
+
+function validateEmail(e) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
+
+// ════════════════════════════════════════════════
+// REQUEST BODY
+// ════════════════════════════════════════════════
+function buildRequestBody() {
+  const subtotal = CART_ITEMS.reduce((s, i) => s + i.price, 0);
+  const adminFee = 2000;
+  const discount = promoApplied ? Math.round(subtotal * 0.2) : 0;
+  const total    = subtotal + adminFee - discount;
+
+  const body = {
+    customer: {
+      first_name:     document.getElementById('firstName').value.trim() || null,
+      last_name:      document.getElementById('lastName').value.trim()  || null,
+      email:          document.getElementById('email').value.trim()     || null,
+      is_registered:  !!CURRENT_USER,
+    },
+    order: {
+      items: CART_ITEMS.map(i => ({
+        product_id:   i.id,
+        product_name: i.name,
+        category:     i.category,
+        price:        i.price,
+        qty:          1,
+      })),
+      subtotal,
+      admin_fee:   adminFee,
+      discount,
+      total,
+      promo_code:  promoApplied ? document.getElementById('promoInput').value.toUpperCase().trim() : null,
+    },
+    payment: {
+      method:     selectedPayment || null,
+      provider:   selectedSub     || null,
+    },
+    meta: {
+      source:     'web',
+      timestamp:  new Date().toISOString(),
+      user_agent: navigator.userAgent.substring(0, 60) + '...',
+    },
+  };
+
+  // Kalau guest, sertakan password (hashed di backend)
+  if (!CURRENT_USER) {
+    body.customer.password        = document.getElementById('password').value ? '••••••••' : null;
+    body.customer.confirm_password = document.getElementById('confirmPassword').value ? '••••••••' : null;
+  }
+
+  return body;
+}
+
+function updateReqBody() {
+  const body = buildRequestBody();
+  document.getElementById('reqBodyPre').innerHTML = syntaxHighlight(JSON.stringify(body, null, 2));
+}
+
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      (match) => {
+        let cls = 'json-num';
+        if (/^"/.test(match)) {
+          cls = /:$/.test(match) ? 'json-key' : 'json-str';
+        } else if (/true|false/.test(match)) {
+          cls = 'json-bool';
+        } else if (/null/.test(match)) {
+          cls = 'json-null';
+        }
+        return `<span class="${cls}">${match}</span>`;
+      }
+    );
+}
+
+// ════════════════════════════════════════════════
+// SUBMIT
+// ════════════════════════════════════════════════
+function submitOrder() {
+  if (!validateForm()) {
+    showToast('⚠️ Mohon lengkapi data terlebih dahulu');
+    // Scroll to first error
+    const firstErr = document.querySelector('.form-error.show, .form-input.error');
+    if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  const btn = document.getElementById('placeOrderBtn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  const reqBody = buildRequestBody();
+
+  // Simulate API call
+  console.log('📦 Request Body sent to backend:', JSON.stringify(reqBody, null, 2));
+
+  setTimeout(() => {
+    btn.classList.remove('loading');
+    btn.disabled = false;
+
+    const orderId = '#DS-' + Math.random().toString(36).substr(2,6).toUpperCase();
+    document.getElementById('orderIdDisplay').textContent = orderId;
+    document.getElementById('successOverlay').classList.add('show');
+
+    // Mark progress step done
+    document.getElementById('step2').className = 'progress-step done';
+    document.getElementById('step2').querySelector('.step-num').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>`;
+    document.getElementById('step3').className = 'progress-step active';
+    document.querySelector('.progress-line:last-of-type').classList.add('done');
+
+  }, 1800);
+}
+
+// ════════════════════════════════════════════════
+// PASSWORD STRENGTH
+// ════════════════════════════════════════════════
+function checkStrength(val) {
+  const segs  = [1,2,3,4].map(n => document.getElementById('seg' + n));
+  const label = document.getElementById('strengthLabel');
+  let score = 0;
+  if (val.length >= 8)                      score++;
+  if (/[A-Z]/.test(val))                    score++;
+  if (/[0-9]/.test(val))                    score++;
+  if (/[^A-Za-z0-9]/.test(val))             score++;
+
+  const cls   = score <= 1 ? 'weak' : score <= 2 ? 'medium' : 'strong';
+  const label_ = score === 0 ? '' : score <= 1 ? '🔴 Lemah' : score <= 2 ? '🟡 Sedang' : score <= 3 ? '🟢 Kuat' : '🟢 Sangat Kuat';
+
+  segs.forEach((s, i) => {
+    s.className = 'strength-seg';
+    if (i < score) s.classList.add(cls);
+  });
+  label.textContent = label_;
+  updateReqBody();
+}
+
+// ════════════════════════════════════════════════
+// TOGGLE PASSWORD VISIBILITY
+// ════════════════════════════════════════════════
+function togglePass(inputId, iconWrap) {
+  const input = document.getElementById(inputId);
+  const isPass = input.type === 'password';
+  input.type = isPass ? 'text' : 'password';
+  iconWrap.innerHTML = isPass
+    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`
+    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+}
+
+// ════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════
+function formatRp(num) {
+  return 'Rp ' + num.toLocaleString('id-ID');
+}
+
+function showToast(msg) {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast'; t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.classList.add('hide'); setTimeout(() => t.remove(), 300); }, 2800);
+}
+
+// ════════════════════════════════════════════════
+// DEV HELPER — tombol toggle login di console
+// Jalankan di console browser: toggleLoginDemo()
+// ════════════════════════════════════════════════
+window.toggleLoginDemo = toggleLoginDemo;
+</script>
+</body>
+</html>

@@ -37,7 +37,7 @@ app.use(
     express.static(path.join(__dirname, "common"))
 );
 
-app.use("/page", routes);
+app.use("/", routes);
 
 app.listen(process.env.PORT, ()=>{
     console.log(`server berjalan pada port ${process.env.PORT}`);
