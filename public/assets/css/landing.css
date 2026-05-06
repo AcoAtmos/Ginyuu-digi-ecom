@@ -342,6 +342,18 @@
   .product-footer {
     display: flex; align-items: center; justify-content: space-between;
   }
+  .product-cart-btn {
+    background: var(--primary); color: #fff; border: none;
+    width: 32px; height: 32px; border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .product-cart-btn:hover {
+    background: var(--primary-dark, #5f3dc4); transform: scale(1.05);
+  }
+  .product-cart-btn:active {
+    transform: scale(0.95);
+  }
   .product-price {
     font-family: 'Syne', sans-serif;
     font-size: 16px; font-weight: 700; color: var(--text);
