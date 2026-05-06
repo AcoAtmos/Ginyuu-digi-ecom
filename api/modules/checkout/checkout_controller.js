@@ -1,18 +1,19 @@
+const jwt = require("jsonwebtoken");
 const {
     capturePayload,
     validatePayload,
-    getPrice,
+    getPrices,
+    applyPromo,
     checkout_add_unique_num,
     countTotal,
     checkout_add_user,
     checkout_create_order,
     checkout_create_invoice,
+    checkout_clear_cart,
     checkout_add_queue,
-    createResponse,
-    getInvoiceByNumber
-} =require('./checkout_service');
-const {db} = require("../../common/helper");
-
+    createResponse
+} = require('./checkout_service');
+const { db } = require("../../common/helper");
 
 exports.checkout = async (req, res) => {
     const client = await db.connect();
@@ -23,30 +24,64 @@ exports.checkout = async (req, res) => {
     };
 
     try {
-        result = await capturePayload(req.body);
+        // Optional auth: try to get user from token, but don't block guests
+        let loggedInUserId = null;
+        let loggedInUser = null;
+        const token = req.cookies?.token;
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                loggedInUserId = decoded.id;
+                const userResult = await db.query("SELECT id, username, email, phone FROM users WHERE id = $1", [loggedInUserId]);
+                if (userResult.rows.length > 0) {
+                    loggedInUser = userResult.rows[0];
+                }
+            } catch (err) {
+                // Token invalid — treat as guest
+            }
+        }
+
+        // Merge logged-in user info into request body
+        const body = { ...req.body };
+        if (loggedInUser) {
+            body.loggedInUserId = loggedInUser.id;
+            body.username = loggedInUser.username;
+            body.email = loggedInUser.email;
+        }
+
+        result = await capturePayload(body);
         result = await validatePayload(result);
-        result = await getPrice(result); 
+        result = await getPrices(result);
+        result = await applyPromo(result);
         result = await checkout_add_unique_num(result);
-        result = await countTotal(result); 
+        result = await countTotal(result);
+
         await client.query("BEGIN");
         result = await checkout_add_user(result);
         result = await checkout_create_order(result);
         result = await checkout_create_invoice(result);
+        result = await checkout_clear_cart(result);
         result = await checkout_add_queue(result);
         await client.query("COMMIT");
         result = await createResponse(result);
+
         res.status(result.code).json({
             code: result.code,
             status: result.status,
             message: result.message,
-            data: result.data
+            data: {
+                invoice_number: result.payload.invoice_number,
+                total: result.payload.total,
+                payment_method: result.payload.payment_method,
+                expires_at: result.payload.expires_at
+            }
         });
-    }catch(err){
+    } catch (err) {
         await client.query("ROLLBACK");
-        console.log(err);
-        res.status(result.code).json({
-            code: result.code,
-            status: result.status ,
+        console.error('Checkout error:', err);
+        res.status(result.code || 500).json({
+            code: result.code || 500,
+            status: result.status || "failed",
             message: result.message,
             debug_error: err.toString(),
             stack: err.stack
@@ -54,12 +89,11 @@ exports.checkout = async (req, res) => {
     } finally {
         client.release();
     }
+};
 
-}
+exports.cancelOrder = async (req, res) => {
+    const { invoice_number } = req.body;
 
-exports.getInvoice = async (req, res) => {
-    const { invoice_number } = req.params;
-    
     if (!invoice_number) {
         return res.status(400).json({
             code: 400,
@@ -68,6 +102,64 @@ exports.getInvoice = async (req, res) => {
         });
     }
 
-    const result = await getInvoiceByNumber(invoice_number);
-    res.status(result.code).json(result);
+    const client = await db.connect();
+    try {
+        await client.query("BEGIN");
+
+        // Check invoice exists and is still pending
+        const invoiceResult = await client.query(
+            "SELECT id, order_id, status FROM invoices WHERE invoice_number = $1",
+            [invoice_number]
+        );
+
+        if (invoiceResult.rows.length === 0) {
+            await client.query("ROLLBACK");
+            return res.status(404).json({
+                code: 404,
+                status: "failed",
+                message: "Invoice not found"
+            });
+        }
+
+        const invoice = invoiceResult.rows[0];
+
+        if (invoice.status !== 'pending') {
+            await client.query("ROLLBACK");
+            return res.status(400).json({
+                code: 400,
+                status: "failed",
+                message: `Cannot cancel order with status '${invoice.status}'`
+            });
+        }
+
+        // Update invoice to cancelled
+        await client.query(
+            "UPDATE invoices SET status = 'cancelled' WHERE id = $1",
+            [invoice.id]
+        );
+
+        // Update order to cancelled
+        await client.query(
+            "UPDATE orders SET status = 'cancelled' WHERE id = $1",
+            [invoice.order_id]
+        );
+
+        await client.query("COMMIT");
+
+        res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "Order cancelled successfully"
+        });
+    } catch (err) {
+        await client.query("ROLLBACK");
+        console.error('Cancel order error:', err);
+        res.status(500).json({
+            code: 500,
+            status: "failed",
+            message: "Failed to cancel order"
+        });
+    } finally {
+        client.release();
+    }
 };

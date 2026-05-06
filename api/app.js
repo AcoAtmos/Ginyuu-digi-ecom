@@ -1,10 +1,11 @@
 // Set up environment variables
 const express = require("express"); // package
+const path = require("path");
 const app = express();
 const dotenv = require("dotenv");
 dotenv.config();
-const path = require("path");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const routes = require("./common/routes"); 
 
 // Set up middleware
@@ -13,21 +14,21 @@ app.use(cors({
     credentials: true
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 // Set up worker
-// workker 10s
 const {
-    checkout_send_whatsapp,
+    // checkout_send_whatsapp,
     checkout_send_email
 } = require("./modules/checkout/checkout_service");
-const worker10 = async()=>{
+const worker = async()=>{
     setInterval(async() => {
         console.log('10 seconds have passed');
-        await checkout_send_whatsapp();
+        // await checkout_send_whatsapp();
         await checkout_send_email();
     }, 10000);
 } 
-// worker10();
+// worker();
 // Set up routes
 app.use("/api", routes);
 

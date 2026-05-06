@@ -77,7 +77,7 @@ exports.login = async (req, res) => {
 exports.verifyToken = async (req, res) => {
     const token = req.cookies?.token;
     if(token){
-        console.log("token", token);
+        // console.log("token", token);
         jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
             if (err){
                 return res.status(403).json({
@@ -94,11 +94,11 @@ exports.verifyToken = async (req, res) => {
             });
         });
     } else {
-        console.log("token not found");
-        return res.status(401).json({
-            code: 401,
-            status: "error",
-            message: "Token not found"
+        return res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "No token found",
+            data: null
         });
     }
 };

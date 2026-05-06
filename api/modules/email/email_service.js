@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 const { ImapFlow } = require("imapflow");
+const { db } = require("../../common/helper");
 
 // send main using nodemailer
 exports.send_email = async (to, subject, html) => {
@@ -10,14 +11,14 @@ exports.send_email = async (to, subject, html) => {
             host: "smtp.gmail.com",
             port: 465,
             secure: true,
-            user: process.env.EMAIL_SENDER,
+            user: process.env.EMAIL_SENDER, 
             pass: process.env.EMAIL_PASSWORD
         }
     });
 
     const info = await transporter.sendMail({
         from: `"Billing Digital" <${process.env.EMAIL_SENDER}>`,
-        to: to,
+        to: to, 
         subject: subject,
         html: html
     });
@@ -49,9 +50,9 @@ let isIdleRunning = false; // check idle berjalan atau tidak
 let idleLock = null; // lock untuk mencegah idle berjalan bersamaan
 
 // start inbox idle
-async function startInboxIdle() {
+exports.checkEmail = async () => {
   // buat massage log
-    const log = 'email.js > startInboxIdle';
+    const log = 'email.js > checkEmail';
     // check idle berjalan atau tidak
     if (isIdleRunning) {
         console.log('[' + log + '] already running');
@@ -139,7 +140,7 @@ async function startInboxIdle() {
                                     [msg.uid.toString()]
                                 );
 
-                                if (existingCheck[0].length > 0) {
+                                if (existingCheck.rows.length > 0) {
                                   // kalau ada 
                                     console.log('[' + log + '] already exists, skipping');
                                     continue;
@@ -172,16 +173,26 @@ async function startInboxIdle() {
                                         const threeDaysAgo = new Date();
                                         threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
                                         
+                                        // mengambil data invoice berdasarkan nominal dan tanggal pembuatan invoice, 3 hari yang lalu
                                         const orders = await db.query(
-                                            `SELECT id, pelanggan_id FROM invoice 
-                                             WHERE total_invoice=$1 AND created_at>=$2 AND status_payment='unpaid' 
-                                             ORDER BY created_at DESC LIMIT 1`,
+                                            `SELECT 
+                                                i.id AS invoice_id, 
+                                                i.order_id,
+                                                o.user_id 
+                                            FROM invoices i
+                                            INNER JOIN orders o ON o.id = i.order_id
+                                            WHERE i.total=$1 
+                                              AND i.issued_at>=$2 
+                                              AND i.status_payment='unpaid' 
+                                            ORDER BY i.issued_at DESC 
+                                            LIMIT 1`,
                                             [nominal, threeDaysAgo.toISOString()]
                                         );
 
-                                        if (orders[0].length > 0) {
-                                            const orderId = orders[0][0].id;
-                                            const pelangganId = orders[0][0].pelanggan_id;
+                                        if (orders.rows.length > 0) {
+                                            const invoiceId = orders.rows[0].invoice_id;
+                                            const orderId = orders.rows[0].order_id;
+                                            const pelangganId = orders.rows[0].user_id;
                                             
                                             await db.query(
                                                 `UPDATE orders SET status_order='completed' WHERE id=$1`,
@@ -189,23 +200,22 @@ async function startInboxIdle() {
                                             );
                                             
                                             await db.query(
-                                                `UPDATE invoice SET status_payment='paid' 
-                                                 WHERE id IN (SELECT invoice_id FROM invoice_orders WHERE order_id=$1)`,
-                                                [orderId]
+                                                `UPDATE invoices SET status_payment='paid' WHERE id=$1`,
+                                                [invoiceId]
                                             );
                                             
-                                            console.log('[' + log + '] order ' + orderId + ' marked as completed, invoice marked as paid for nominal ' + nominal);
+                                            console.log('[' + log + '] order ' + orderId + ' marked as completed, invoice ' + invoiceId + ' marked as paid for nominal ' + nominal);
                                             
                                             const userRows = await db.query(
-                                                `SELECT user_nicename, user_phone, user_email FROM users WHERE id=$1`,
+                                                `SELECT username, phone, email FROM users WHERE id=$1`,
                                                 [pelangganId]
                                             );
 
-                                            if (userRows[0].length > 0) {
-                                                const user = userRows[0][0];
-                                                const userName = String(user.user_nicename || '');
-                                                const userPhone = String(user.user_phone || '');
-                                                const userEmail = String(user.user_email || '');
+                                            if (userRows.rows.length > 0) {
+                                                const user = userRows.rows[0];
+                                                const userName = String(user.username || '');
+                                                const userPhone = String(user.phone || '');
+                                                const userEmail = String(user.email || '');
                                                 const memberUrl = process.env.BASE_URL_MEMBER || 'http://member.billing.local';
                                                 
                                                 const waBody = 'Halo ' + userName + ', pembayaran Anda telah berhasil! ✅\n\nBerikut langkah selanjutnya:\nSilakan masuk ke portal member area ' + memberUrl + ' dengan akun Anda untuk mendapatkan layanan atau produk yang dibeli.\n\nTerima kasih telah bertransaksi bersama kami!';
@@ -225,7 +235,7 @@ async function startInboxIdle() {
                                                 
                                                 try {
                                                     if (userEmail) {
-                                                        await sendEmailTask(userEmail, emailSubject, emailBody);
+                                                        await exports.send_email(userEmail, emailSubject, emailBody);
                                                         console.log('[' + log + '] Email sent to ' + userEmail);
                                                     }
                                                 } catch (emailErr) {

@@ -24,7 +24,7 @@ exports.getProductHome = async () => {
 };
 // for product page
 exports.getProduct = async () => {
-    const query = "SELECT * FROM products";
+    const query = "SELECT * FROM product";
     const results = await helper.db.query(query);
     return results.rows;
 };
@@ -32,11 +32,18 @@ exports.getProduct = async () => {
 // for category
 exports.getProductCategory = async (page, limit) => {
     const query = "SELECT * FROM products ORDER BY id ASC LIMIT $1 OFFSET $2";
+    const countQuery = "SELECT COUNT(*) AS total FROM products";
     try{
-        const results = await helper.db.query(query, [limit, (page - 1) * limit]);
-        return results.rows;
+        const [results, countResult] = await Promise.all([
+            helper.db.query(query, [limit, (page - 1) * limit]),
+            helper.db.query(countQuery)
+        ]);
+        return {
+            rows: results.rows,
+            totalCount: parseInt(countResult.rows[0].total)
+        };
     }catch(error){
         console.log(error); 
-        return [];
+        return { rows: [], totalCount: 0 };
     }
 };

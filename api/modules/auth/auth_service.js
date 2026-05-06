@@ -4,11 +4,11 @@ const bcrypt = require('bcrypt');
 
 // normal register
 exports.register = async (body) =>{
-    const {username, email, password, phone, terms} = body;
-    const query = `INSERT INTO users (username, email, password, phone, terms) VALUES ($1, $2, $3, $4, $5)`;
+    const {username, email, password, terms} = body;
+    const query = `INSERT INTO users (username, email, password, terms) VALUES ($1, $2, $3, $4)`;
     const hashedPassword = await bcrypt.hash(password, 10);
     try{
-        await db.query(query, [username, email, hashedPassword, phone, terms]);
+        await db.query(query, [username, email, hashedPassword, terms]);
         return;
     }catch(err){
         throw new Error(err);
