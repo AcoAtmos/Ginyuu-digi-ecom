@@ -7,7 +7,8 @@ import {
   showToast,
   Login, 
   register,
-  logout 
+  logout,
+  checkAuthStatus
 } from '../../common/main/main.js';
 
 
@@ -23,7 +24,6 @@ const NOTIFICATIONS = [
   { id: 5, icon: '🔔', title: 'Produk wishlist tersedia kembali', time: '2 hari lalu', read: true },
 ];
 
-let cartItems = [];
 let currentProduct = null;
 let currentUser = null;
 let activeCategory = 'all';
@@ -40,7 +40,8 @@ function stopPropagations() {
 // Fetch latest notifications from API (if available) 
 async function loadNotifications() {
   try {
-    const res = await fetch('/api/notifications', { credentials: 'include' });
+    const res = await fetch('http://localhost:4100/api/notifications', { credentials: 'include' });
+    if (res.status === 404) return;
     if (res.ok) {
       const data = await res.json();
       if (Array.isArray(data?.data)) {
@@ -83,7 +84,6 @@ async function fetchProducts(category = 'all') {
     // HANDLE STRUKTUR RESPONSE (AMAN)
     const data = json.data || json;
     PRODUCTS_DATA = data;
-    console.log(data);
     // kalau API kamu { data: [...] } → pakai json.data
     // kalau langsung array → pakai json
 
@@ -121,17 +121,16 @@ async function fetchProducts(category = 'all') {
     //  RENDER
     grid.innerHTML = results.map((p, i) => `
       <div class="product-card"
-           onclick="openProductModal(${p.id})"
            style="animation-delay:${i * 50}ms">
 
-        <div class="product-thumb">
-          <span class="product-thumb-emoji"><img src="${'📦'}" alt=""></span>
+        <div class="product-thumb" onclick="openProductModal(${p.id})">
+          <span class="product-thumb-emoji">📦</span>
           ${p.badge ? `<span class="product-badge">${p.badge}</span>` : ''}
         </div>
 
         <div class="product-info">
           <div class="product-category">${p.category}</div>
-          <div class="product-name">${p.name}</div>
+          <div class="product-name" onclick="openProductModal(${p.id})">${p.name}</div>
           <div class="product-desc">${p.desc || ''}</div>
 
           <div class="product-footer">
@@ -140,21 +139,25 @@ async function fetchProducts(category = 'all') {
               <span class="product-price">${formatRp(p.price)}</span>
             </div>
 
-            <div class="product-rating">
-              ⭐ ${p.rating || 0}
-              <span>(${p.reviews || 0})</span>
-            </div>
+            <button class="product-cart-btn" onclick="event.stopPropagation(); addToCart(${p.id})">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
     `).join('');
 
   } catch (err) {
-    console.error(err);
+    console.warn('Failed to fetch products — backend may not be running');
 
     grid.innerHTML = `
-      <div style="grid-column:1/-1;text-align:center;padding:60px;color:red;">
-        Failed to fetch products, please check your connection 
+      <div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3);">
+        <div style="font-size:40px;">⚠️</div>
+        <div>Failed to load products</div>
+        <div style="font-size:12px;margin-top:8px;">Please ensure the API server is running</div>
       </div>
     `;
   }
@@ -195,15 +198,13 @@ document.getElementById('modalAddCart').onclick = () => {
   if (!currentProduct) return;
   addToCart(currentProduct);
   closeProductModal();
-  showToast('✓ Produk ditambahkan ke keranjang');
 };
 
-document.getElementById('modalBuyNow').onclick = () => {
+document.getElementById('modalBuyNow').onclick = async () => {
   if (!currentProduct) return;
-  addToCart(currentProduct);
+  await addToCart(currentProduct);
   closeProductModal();
-  openCart();
-  showToast('✓ Siap checkout!');
+  window.location.href = '/checkout';
 };
 
 // ════════════════════════════════════════════
@@ -214,6 +215,7 @@ function openCart() {
   document.getElementById('cartOverlay').classList.add('show');
   document.body.style.overflow = 'hidden';
   renderCart();
+  updateCartBadge();
 }
 function closeCart() {
   document.getElementById('cartSidebar').classList.remove('show');
@@ -225,35 +227,50 @@ document.getElementById('cartBtn').onclick = openCart;
 document.getElementById('cartClose').onclick = closeCart;
 document.getElementById('cartOverlay').onclick = closeCart;
 
-function addToCart(product) {
-  const existing = cartItems.find(i => i.id === product.id);
-  if (!existing) cartItems.push({ ...product, qty: 1 });
+// ════════════════════════════════════════════
+// CART INTEGRATION
+// ════════════════════════════════════════════
+
+async function addToCart(product) {
+  const id = product?.id || product;
+  if (!id) return;
+
+  const result = await Cart.add(id);
+  
+  if (result?.status === 'duplicate') {
+    showToast('⚠️ This product is already in your cart');
+  } else if (result?.status === 'success') {
+    showToast('✓ Produk ditambahkan ke keranjang');
+  }
+  
   updateCartBadge();
   renderCart();
 }
 
-function removeFromCart(id) {
-  cartItems = cartItems.filter(i => i.id !== id);
+async function removeFromCart(id) {
+  await Cart.remove(id);
   updateCartBadge();
   renderCart();
 }
 
-function updateCartBadge() {
+async function updateCartBadge() {
+  const items = await Cart.getAll();
   const badge = document.getElementById('cartBadge');
-  if (cartItems.length > 0) {
-    badge.textContent = cartItems.length;
+  if (items.length > 0) {
+    badge.textContent = items.length;
     badge.style.display = 'flex';
   } else {
     badge.style.display = 'none';
   }
 }
 
-function renderCart() {
+async function renderCart() {
+  const items = await Cart.getAll();
   const body = document.getElementById('cartBody');
   const totalEl = document.getElementById('cartTotal');
   const checkoutBtn = document.getElementById('checkoutBtn');
 
-  if (cartItems.length === 0) {
+  if (items.length === 0) {
     body.innerHTML = `<div class="cart-empty">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
@@ -267,28 +284,37 @@ function renderCart() {
     return;
   }
 
-  body.innerHTML = cartItems.map(item => `
-    <div class="cart-item">
-      <div class="cart-item-icon">${'📦'}</div>
-      <div class="cart-item-info">
-        <div class="cart-item-name">${item.name}</div>
-        <div class="cart-item-price">${formatRp(item.price)}</div>
-      </div>
-      <button class="cart-item-remove" onclick="removeFromCart(${item.id})">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-    </div>`).join('');
+  body.innerHTML = items.map(item => {
+    const product = PRODUCTS_DATA.find(p => p.id == item.id);
+    const name = product ? product.name : (item.name || 'Product');
+    const price = product ? product.price : (item.price || 0);
+    return `
+      <div class="cart-item">
+        <div class="cart-item-icon">${'📦'}</div>
+        <div class="cart-item-info">
+          <div class="cart-item-name">${name}</div>
+          <div class="cart-item-price">${formatRp(price)}</div>
+        </div>
+        <button class="cart-item-remove" onclick="removeFromCart(${item.id})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>`;
+  }).join('');
 
-  const total = cartItems.reduce((s, i) => s + i.price, 0);
+  const total = items.reduce((sum, item) => {
+    const product = PRODUCTS_DATA.find(p => p.id == item.id);
+    const price = product ? product.price : (item.price || 0);
+    return sum + price;
+  }, 0);
   totalEl.textContent = formatRp(total);
   checkoutBtn.disabled = false;
 }
 
 document.getElementById('checkoutBtn').onclick = () => {
-  showToast('🚀 Redirecting to checkout page…');
   closeCart();
+  window.location.href = '/checkout';
 };
 
 // ════════════════════════════════════════════
@@ -410,6 +436,12 @@ async function handleLogin() {
     localStorage['username'] = result.data.user.username;
     localStorage['email'] = result.data.user.email;
     currentUser = { name: localStorage['username'], email: localStorage['email'] };
+    
+    Cart.setLoggedIn(true);
+    await Cart.sync(); // Sync guest cart to backend
+    await updateCartBadge();
+    await renderCart(); // Show the synced cart
+    
     closeAuthModal();
     renderProfileDropdown();
     showToast(`👋 Welcome, ${currentUser.name}!`);
@@ -433,6 +465,11 @@ async function handleRegister() {
       localStorage['username'] = result.data.user.username;
       localStorage['email'] = result.data.user.email;
       currentUser = { name: localStorage['username'], email: localStorage['email'] };
+      
+      Cart.setLoggedIn(true);
+      await Cart.sync(); // Sync guest cart to backend
+      await updateCartBadge();
+      await renderCart();
     }
     renderProfileDropdown();
     showToast(result.message);
@@ -445,9 +482,39 @@ async function handleRegister() {
 async function handleLogout() {
   await logout();
   currentUser = null;
+  Cart.setLoggedIn(false);
   closeAllDropdowns();
   renderProfileDropdown();
-  showToast('👋 Successfully logged out');
+  updateCartBadge();
+}
+
+/**
+ * Handle auto-logout when token expires during browsing.
+ * Clears all state and switches to guest mode.
+ */
+function handleSessionExpired() {
+  currentUser = null;
+  Cart.setLoggedIn(false);
+  localStorage.removeItem("username");
+  localStorage.removeItem("email");
+  closeAllDropdowns();
+  renderProfileDropdown();
+  updateCartBadge();
+  showToast('⚠️ Session expired, please login again');
+}
+
+/**
+ * Wrapper for authenticated fetch calls.
+ * Auto-triggers session expiry handling on 401/403.
+ */
+async function authFetch(url, options = {}) {
+  options.credentials = options.credentials || 'include';
+  const res = await fetch(url, options);
+  if (res.status === 401 || res.status === 403) {
+    handleSessionExpired();
+    return null;
+  }
+  return res;
 }
 
 // ════════════════════════════════════════════
@@ -562,12 +629,29 @@ function animateCount(el, target, suffix = '') {
 // ════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   fetchProducts('all');
-  renderProfileDropdown();
-  // Load notifications from API if available, else use sample data
   loadNotifications();
 
+  // Set up global cart event handlers
+  Cart.onDuplicate(() => {
+    showToast('⚠️ This product is already in your cart');
+  });
+
+  // Check if user is still authenticated (auto-clears localStorage if token expired)
+  try {
+    const user = await checkAuthStatus();
+    if (user) {
+      currentUser = { name: user.username, email: user.email };
+      Cart.setLoggedIn(true);
+      Cart.onSessionExpired(handleSessionExpired);
+    }
+  } catch (err) {
+    // Backend not reachable — stay as guest
+  }
+
+  renderProfileDropdown();
+  updateCartBadge();
 
   // Animate stats
   setTimeout(() => {
@@ -588,4 +672,6 @@ window.handleLogout = handleLogout;
 window.openAuthModal = openAuthModal;
 window.markRead = markRead;
 window.removeFromCart = removeFromCart;
+window.addToCart = addToCart;
+window.handleSessionExpired = handleSessionExpired;
 
