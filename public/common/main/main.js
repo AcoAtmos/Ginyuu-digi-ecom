@@ -89,6 +89,7 @@ async function Login(email, password) {
             headers: {
                 "Content-Type": "application/json",
             },
+            credentials: 'include',
             body: JSON.stringify({
                 email,
                 password,
@@ -97,7 +98,6 @@ async function Login(email, password) {
         if (response.ok) {
             const data = await response.json();
             if (data.status === "success") {
-                setCookie("token", data.token, 7);
                 return { status: "success", message: "Login successful", data: data.data }; 
             } else {
                 return { status: "error", message: data.message };
@@ -150,6 +150,7 @@ async function register(username, email, password, confirmPass, terms) {
             headers: {
                 "Content-Type": "application/json",
             },
+            credentials: 'include',
             body: JSON.stringify({
                 username,
                 email, 
@@ -160,7 +161,6 @@ async function register(username, email, password, confirmPass, terms) {
         if (response.ok) {
             const data = await response.json();
             if (data.status === "success") {
-                setCookie("token", data.token, 7);
                 return { status: "success", message: "Register successful" };  
             } else {
                 return { status: "error", message: data.message };
@@ -176,17 +176,55 @@ async function register(username, email, password, confirmPass, terms) {
 }
 
 async function logout() {
+    try {
+        await fetch("http://localhost:4100/api/auth/logout", {
+            method: "POST",
+            credentials: 'include',
+        });
+    } catch (err) {
+        console.error("Logout API call failed:", err);
+    }
     deleteCookie("token");
     localStorage.removeItem("username");
     localStorage.removeItem("email");
     showToast("Logout successful");
-    window.location.href = "/index.html";
+    window.location.href = "/";
 }
+// ════════════════════════════════════════════
+// AUTH CHECK & AUTO LOGOUT
+// ════════════════════════════════════════════
+
+/**
+ * Verify if user is still authenticated.
+ * Returns user data if valid, null if expired/guest.
+ * Automatically clears localStorage on expiry.
+ */
+async function checkAuthStatus() {
+    try {
+        const res = await fetch("http://localhost:4100/api/auth/verify_token", {
+            method: "POST",
+            credentials: 'include',
+        });
+        if (res.ok) {
+            const json = await res.json();
+            if (json.data?.user) {
+                return json.data.user;
+            }
+        }
+    } catch (err) {
+        // Connection refused or network error — user is guest
+    }
+    localStorage.removeItem("username");
+    localStorage.removeItem("email");
+    return null;
+}
+
 export {
     isCookieSet,
     setCookie,
     getCookie,
     deleteCookie,
+    checkAuthStatus,
     Login,
     logout,
     register,
