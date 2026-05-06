@@ -1,422 +1,352 @@
-//====================== main.js =======================
-import { isCookieSet, getCookie } from "./main/main.js";
-// ================== GLOBAL STATE ==================
-let discount = 0; //example discount
-let qty = 1;
-let currentProduct = null;
-let currentSlug = window.location.pathname.split("/")[3];
+// ════════════════════════════════════════════
+// CHECKOUT PAGE - Real API Integration
+// ════════════════════════════════════════════
 
-const username = document.getElementById('username');
-const password = document.getElementById('password');
-const confirmPass = document.getElementById('confirm-password');
-const email = document.getElementById('email');
-const phone = document.getElementById('phone');
+import { checkAuthStatus, showToast, logout } from '../../common/main/main.js';
 
-// ================== LOAD DATA ==================
-document.addEventListener("DOMContentLoaded", async () => {
-    const isValid = await hit_api_verify_token();
-    if(!isValid){
-        emptyUserForm();
-    }else{
-        fillUserform();
-    }
+const BE_URL = 'http://localhost:4100';
 
-    // get products
-    const product = await hit_api_getproduct(currentSlug);
-    // set product
-    if(product){
-        currentProduct = product;
-        cartProduct(product);
-        countTotal(product, qty);
-    }
-    
-    // Add submit event to form
-    const payBtn = document.getElementById('pay-btn');
-    if (payBtn) {
-        payBtn.addEventListener('click', validateAndSubmit);
-    }
+let cartItems = [];
+let isLoggedIn = false;
+let currentUser = null;
+let selectedPayment = null;
+let promoApplied = null;
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  const user = await checkAuthStatus();
+  if (user) {
+    isLoggedIn = true;
+    currentUser = user;
+    setupLoggedInUI();
+    Cart.setLoggedIn(true);
+  } else {
+    setupGuestUI();
+    Cart.setLoggedIn(false);
+  }
+
+  await loadCartItems();
+  setupPaymentUI();
+  setupPromoInput();
+  setupSubmitButton();
+
+  // Password strength checker
+  const passInput = document.getElementById('password');
+  if (passInput) {
+    passInput.addEventListener('input', (e) => checkStrength(e.target.value));
+  }
 });
 
-// ================== API ==================
-async function hit_api_getproduct(slug) {
+// ════════════════════════════════════════════
+// AUTH UI
+// ════════════════════════════════════════════
+function setupLoggedInUI() {
+  document.getElementById('loggedBanner').style.display = 'flex';
+  document.getElementById('loggedName').textContent = currentUser.username;
+  document.querySelectorAll('.guest-only').forEach(el => el.style.display = 'none');
+  document.getElementById('passwordSection').style.display = 'none';
+  document.querySelectorAll('.logged-only').forEach(el => el.style.display = 'block');
+}
+
+function setupGuestUI() {
+  document.querySelectorAll('.guest-only').forEach(el => el.style.display = 'block');
+  document.getElementById('passwordSection').style.display = 'block';
+  document.querySelectorAll('.logged-only').forEach(el => el.style.display = 'none');
+}
+
+// ════════════════════════════════════════════
+// CART
+// ════════════════════════════════════════════
+async function loadCartItems() {
+  cartItems = await Cart.getAll();
+
+  if (cartItems.length === 0) {
+    showToast('⚠️ Keranjang kosong, silahkan tambah produk dulu');
+    setTimeout(() => { window.location.href = '/'; }, 2000);
+    return;
+  }
+
+  // For guest: fetch all products and match by id
+  if (!isLoggedIn) {
     try {
-        const res = await fetch(`${window.BE_URL}/api/get_product/${slug}`);
+      const res = await fetch(`${BE_URL}/api/product`);
+      if (res.ok) {
         const json = await res.json();
-        return json.data;
-    } catch (err) {
-        console.error(err);
-        return null;
+        const products = json.data || [];
+        const enriched = cartItems
+          .map(item => {
+            const p = products.find(pr => pr.id == item.id);
+            return p ? {
+              id: p.id,
+              name: p.name,
+              price: p.price,
+              slug: p.slug,
+              category: p.category,
+              preview: p.preview,
+              discount: p.discount
+            } : null;
+          })
+          .filter(Boolean);
+        cartItems = enriched;
+      }
+    } catch (e) {
+      console.error('Failed to load products:', e);
     }
+  }
+
+  if (cartItems.length === 0) {
+    showToast('⚠️ Produk tidak ditemukan');
+    setTimeout(() => { window.location.href = '/'; }, 2000);
+    return;
+  }
+
+  renderCartItems();
+  updateSummary();
 }
 
-async function hit_api_check_whatsapp() {
-    const phoneError = document.getElementById("phone-error");
-    try {
-        const phone = document.getElementById("phone").value;
-        if (!phone) return null;
-        
-        const phone_number = parseInt(phone);
-        const result = await fetch (`${window.BE_URL}/api/check_whatsapp/${phone_number}`)
-        const json = await result.json();
-        console.log(json);
-        
-        if(json.status === "success"){
-            phoneError.style.display = "block";
-            phoneError.textContent = "Number is on whatsapp";
-            phoneError.style.color = "green";
-            return true;
-        }else{
-            phoneError.style.display = "block";
-            phoneError.textContent = "Number is not on whatsapp";
-            phoneError.style.color = "red";
-            return false;
-        }
-    }catch (error){
-        console.error(error)
-        return false;
-    }
+function renderCartItems() {
+  const container = document.getElementById('orderItems');
+  document.getElementById('itemCount').textContent = `${cartItems.length} produk`;
+
+  container.innerHTML = cartItems.map(item => `
+    <div class="order-item">
+      <div class="order-item-icon">📦</div>
+      <div class="order-item-info">
+        <div class="order-item-name">${item.name}</div>
+        <div class="order-item-price">${formatRp(item.price || 0)}</div>
+      </div>
+    </div>
+  `).join('');
 }
 
-async function hit_api_verify_token() {
-    try {
-        const result = await fetch(`${window.BE_URL}/api/auth/verify_token`, {
-            method: 'POST',
-            credentials: 'include'
-        });
-        const json = await result.json();
-        console.log(json);
-        
-        if(json.status === "success"){
-            return true;
-        }else{
-            return false;
-        }
-    }catch (error){
-        console.error(error)
-        return false;
-    }
+function updateSummary() {
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0), 0);
+  const discount = promoApplied ? Math.floor(subtotal * promoApplied.discount_pct) : 0;
+  const total = subtotal - discount;
+
+  let html = `
+    <div class="price-row">
+      <span>Subtotal</span>
+      <span>${formatRp(subtotal)}</span>
+    </div>`;
+
+  if (discount > 0) {
+    html += `
+      <div class="price-row discount">
+        <span>Diskon (${promoApplied.code})</span>
+        <span>-${formatRp(discount)}</span>
+      </div>`;
+  }
+
+  html += `
+    <div class="price-row total">
+      <span>Total</span>
+      <span>${formatRp(total)}</span>
+    </div>`;
+
+  document.getElementById('priceRows').innerHTML = html;
 }
-async function hit_api_submit() {
-        try {
-                const res = await fetch(`${window.BE_URL}/api/submit/`);
-                const json = await res.json();
-                console.log(json);
-                return json.data;
-            } catch (err) {
-                    console.error(err);
-                    return null;
-                }
-            }
 
-// ================== VALIDATION & SUBMISSION ================== 
-async function validateAndSubmit(event) {
-    event.preventDefault();
-    const alerts = [];
+// ════════════════════════════════════════════
+// PAYMENT
+// ════════════════════════════════════════════
+function setupPaymentUI() {
+  document.querySelectorAll('.pm-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pm-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.querySelectorAll('.payment-sub').forEach(sub => sub.style.display = 'none');
 
-    const usernameEl = document.getElementById('username');
-    const emailEl = document.getElementById('email');
-    const passwordEl = document.getElementById('password');
-    const confirmPassEl = document.getElementById('confirm-password');
-    const phoneEl = document.getElementById('phone');
+      selectedPayment = btn.dataset.method;
+      document.getElementById(`sub-${selectedPayment}`).style.display = 'block';
+    });
+  });
 
-    // 1. User Details
-    if (!usernameEl || !usernameEl.value.trim()) alerts.push("Username is required.");
-    if (!emailEl || !emailEl.value.trim()) alerts.push("Email is required.");
+  document.querySelectorAll('.sub-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const parent = opt.closest('.payment-sub');
+      parent.querySelectorAll('.sub-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+      opt.querySelector('input').checked = true;
+      selectedPayment = opt.querySelector('input').value;
+    });
+  });
+}
 
-    // 2. Password (only for new users)
-    const pass = passwordEl ? passwordEl.value : '';
-    const confirmPass = confirmPassEl ? confirmPassEl.value : '';
-    const isExistingUser = await hit_api_verify_token();
-    
-    if (!isExistingUser) {
-        if (!pass) {
-            alerts.push("Password is required for new users.");
-        } else if (pass !== confirmPass) {
-            alerts.push("Passwords do not match.");
-        }
-    }
+// ════════════════════════════════════════════
+// PROMO
+// ════════════════════════════════════════════
+function setupPromoInput() {
+  document.getElementById('promoInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') applyPromo();
+  });
+}
 
-    // 3. Phone & WhatsApp
-    const phoneVal = phoneEl ? phoneEl.value : '';
-    if (!phoneVal) {
-        alerts.push("Phone number is required.");
-    }
+async function applyPromo() {
+  const code = document.getElementById('promoInput').value.trim();
+  if (!code) return;
 
-    // 4. Payment Method
-    const paymentMethod = document.querySelector('input[name="payment_method"]:checked');
-    if (!paymentMethod) {
-        alerts.push("Please select a payment method.");
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0), 0);
+
+  try {
+    const res = await fetch(`${BE_URL}/api/promo/validate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, subtotal })
+    });
+    const json = await res.json();
+
+    if (json.status === 'success') {
+      promoApplied = json.data;
+      document.getElementById('promoSuccess').style.display = 'flex';
+      document.getElementById('promoSuccess').textContent = json.message;
+      updateSummary();
+      showToast(`✅ ${json.message}`);
     } else {
-        const method = paymentMethod.value;
-        if (method === 'bank') {
-            const bankName = document.getElementById('bank-name')?.value;
-            if (!bankName) alerts.push("Please select a bank.");
-        } else if (method === 'ewallet') {
-            const ewalletName = document.getElementById('ewallet-name')?.value;
-            if (!ewalletName) alerts.push("Please select an E-Wallet.");
-        }
+      promoApplied = null;
+      document.getElementById('promoSuccess').style.display = 'none';
+      updateSummary();
+      showToast(`❌ ${json.message}`, 'error');
     }
-                    
-    // 5. Terms
-    const termsEl = document.getElementById('terms');
-    if (termsEl && !termsEl.checked) alerts.push("You must agree to the Terms and Conditions.");
-                    
-    // Result
-    if (alerts.length > 0) {
-        alert(alerts.join("\n"));
-        return;
-    }
-
-    // Submit form
-    await submitForm();
+  } catch (err) {
+    showToast('❌ Gagal validasi promo code', 'error');
+  }
 }
 
-async function submitForm(){
-    let paymentMethod = '';
-    
-    // Get payment method directly from select fields
-    const bankName = document.getElementById('bank-name')?.value;
-    const ewalletName = document.getElementById('ewallet-name')?.value;
-    
-    if (bankName) {
-        paymentMethod = bankName;
-    } else if (ewalletName) {
-        paymentMethod = ewalletName;
+// ════════════════════════════════════════════
+// VALIDATION
+// ════════════════════════════════════════════
+function validateForm() {
+  const errors = [];
+
+  if (isLoggedIn) {
+    if (!document.getElementById('termsLoggedIn').checked) {
+      errors.push('Anda harus menyetujui Syarat dan Ketentuan');
+    }
+  } else {
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPass = document.getElementById('confirmPassword').value;
+    const terms = document.getElementById('terms').checked;
+
+    if (!username) errors.push('Username wajib diisi');
+    if (!email || !email.includes('@')) errors.push('Email tidak valid');
+    if (password.length < 8) errors.push('Password minimal 8 karakter');
+    if (password !== confirmPass) errors.push('Password tidak cocok');
+    if (!terms) errors.push('Anda harus menyetujui Syarat dan Ketentuan');
+  }
+
+  if (!selectedPayment) {
+    errors.push('Pilih metode pembayaran terlebih dahulu');
+  }
+
+  return errors;
+}
+
+// ════════════════════════════════════════════
+// SUBMIT
+// ════════════════════════════════════════════
+function setupSubmitButton() {
+  document.getElementById('placeOrderBtn').addEventListener('click', submitOrder);
+}
+
+async function submitOrder() {
+  const errors = validateForm();
+  if (errors.length > 0) {
+    showToast(`⚠️ ${errors[0]}`, 'error');
+    return;
+  }
+
+  const btn = document.getElementById('placeOrderBtn');
+  btn.disabled = true;
+  btn.querySelector('.btn-text').textContent = 'Processing...';
+  btn.querySelector('.spinner').style.display = 'block';
+
+  const payload = {
+    cart_items: cartItems.map(item => ({ id: item.id })),
+    payment_method: selectedPayment,
+    promo_code: promoApplied ? promoApplied.code : null,
+    terms: isLoggedIn ? document.getElementById('termsLoggedIn').checked : document.getElementById('terms').checked
+  };
+
+  if (!isLoggedIn) {
+    payload.username = document.getElementById('username').value.trim();
+    payload.email = document.getElementById('email').value.trim();
+    payload.password = document.getElementById('password').value;
+  }
+
+  try {
+    const res = await fetch(`${BE_URL}/api/checkout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+
+    if (result.status === 'failed' && result.message === 'EMAIL_ALREADY_REGISTERED') {
+      showToast('❌ Email ini sudah terdaftar. Silakan login terlebih dahulu.', 'error');
+      setTimeout(() => { window.location.href = '/login'; }, 2000);
+      return;
+    }
+
+    if (result.status === 'success') {
+      showToast('✅ Checkout berhasil!');
+      if (!isLoggedIn) Cart.clearLocal();
+      const invoiceNumber = result.data?.invoice_number;
+      if (invoiceNumber) {
+        window.location.href = `/checkout/waiting-payment?invoice=${encodeURIComponent(invoiceNumber)}`;
+      } else {
+        showToast('❌ Invoice tidak ditemukan', 'error');
+      }
     } else {
-        // Fallback to radio value if no select value
-        const paymentMethodRadio = document.querySelector('input[name="payment_method"]:checked');
-        paymentMethod = paymentMethodRadio?.value || '';
+      showToast(`❌ ${result.message}`, 'error');
     }
-    
-    const payload = {
-        username: document.getElementById('username')?.value.trim() || '',
-        email: document.getElementById('email')?.value.trim() || '',
-        password: document.getElementById('password')?.value || null,
-        phone: document.getElementById('phone')?.value.trim() || '',
-        payment_method: paymentMethod,
-        productId: currentProduct?.id,
-        amount: qty,
-        discount: discount,
-        terms: document.getElementById('terms')?.checked || true
-    };
-    
-    console.log("Submitting payload:", payload);
-
-    try {
-        const response = await fetch(`${window.BE_URL}/api/checkout`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
-        console.log("Checkout response:", result);
-
-        // Handle email already registered - redirect to login
-        if (result.status === 'failed' && result.message === 'EMAIL_ALREADY_REGISTERED') {
-            showToast('Email ini sudah terdaftar. Silakan login terlebih dahulu.', 'error');
-            setTimeout(() => {
-                window.location.href = '/page/login';
-            }, 2000);
-            return;
-        }
-
-        if (result.status === 'success' && result.data && result.data.payload) {
-            const invoiceNumber = result.data.payload.invoice_number;
-            // Redirect to waiting payment page with invoice number
-            window.location.href = `/page/checkout/waiting-payment?invoice=${invoiceNumber}`;
-        } else {
-            alert(result.message || 'Checkout failed. Please try again.');
-        }
-    } catch (err) {
-        console.error("Checkout error:", err);
-        alert('An error occurred during checkout. Please try again.');
-    }
+  } catch (err) {
+    console.error('Checkout error:', err);
+    showToast('❌ Terjadi kesalahan, silahkan coba lagi', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.querySelector('.btn-text').textContent = 'Bayar Sekarang';
+    btn.querySelector('.spinner').style.display = 'none';
+  }
 }
 
-// ================== TOAST NOTIFICATION ==================
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.innerHTML = `
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()">×</button>
-    `;
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: ${type === 'error' ? '#e74c3c' : '#2ecc71'};
-        color: white;
-        padding: 16px 24px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        z-index: 9999;
-        animation: slideIn 0.3s ease;
-        max-width: 350px;
-    `;
-    
-    const btn = toast.querySelector('button');
-    btn.style.cssText = `
-        background: none;
-        border: none;
-        color: white;
-        font-size: 20px;
-        cursor: pointer;
-        opacity: 0.8;
-    `;
-    btn.onmouseover = () => btn.style.opacity = '1';
-    btn.onmouseout = () => btn.style.opacity = '0.8';
-    
-    document.body.appendChild(toast);
-    
-    // Auto remove after 4 seconds
-    setTimeout(() => {
-        if (toast.parentElement) toast.remove();
-    }, 4000);
+// ════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════
+function formatRp(num) {
+  return 'Rp ' + num.toLocaleString('id-ID');
 }
 
-// ================== USER ==================
-async function fillUserform(){
-    try {
-        const res = await fetch(`${window.BE_URL}/api/auth/me`, {
-            credentials: "include"
-        });
-        const data = await res.json();
-        if (data.status !== "success" || !data.data) {
-            emptyUserForm();
-            return;
-        }
-        const user = data.data;
-        username.value = user.username || "";
-        email.value = user.email || "";
-        phone.value = user.phone || "";
-    } catch (err) {
-        console.error("Error fetching user:", err);
-        emptyUserForm();
-        return;
-    }
-
-    // disable input
-    username.disabled = true;
-    email.disabled = true;
-    phone.disabled = true;
-
-    // remove passowrd input
-    const paswordForm = document.querySelectorAll('.dataNeeded')
-    paswordForm.forEach((form) => {
-        form.remove();
-    })
-}
-async function emptyUserForm(){
-    if (username) username.value = "";
-    if (password) password.value = "";
-    if (confirmPass) confirmPass.value = "";
-    if (email) email.value = "";
-    if (phone) phone.value = "";
-}
-// ================== BONUS DISCOUNT LOGIC ==================
-// function checkBonusEligibility() {
-//     const selectedProduct = selectProduct.value;
-
-//     // reset
-//     bonusNotification.style.display = 'none';
-//     discountAppliedNotice.style.display = 'none';
-//     discount = 0;
-
-//     // eco1 → tawarkan upgrade
-//     if (selectedProduct === 'eco1') {
-//         bonusNotification.style.display = 'block';
-//     }
-
-//     // eco2 → tawarkan upgrade
-//     if (selectedProduct === 'eco2') {
-//         bonusNotification.style.display = 'block';
-//     }
-
-//     // eco3 → auto diskon
-//     if (selectedProduct === 'eco3') {
-//         discountAppliedNotice.style.display = 'block';
-//         discount = 0.3;
-//         countTotal();
-//     }
-// }
-
-// ================== REVIEW ==================
-function cartProduct(product) {
-    // review cart
-    const productItem = document.getElementById('product-item');
-    productItem.innerHTML = `
-        <div class="product-info">
-            <div class="product-name"> ${product.title} </div>
-        </div>
-        <div class="product-price">RP. ${product.price} </div>`
-    ;
+function togglePass(fieldId) {
+  const input = document.getElementById(fieldId);
+  input.type = input.type === 'password' ? 'text' : 'password';
 }
 
-function countTotal(product, qty) {
-    const subTotalEl = document.querySelector('#summary .subtotal span:last-child');
-    const discountEl = document.querySelector('#summary .discount span:last-child');
-    const totalEl = document.querySelector('#summary .total span:last-child');
+function checkStrength(password) {
+  let strength = 0;
+  if (password.length >= 8) strength++;
+  if (/[A-Z]/.test(password)) strength++;
+  if (/[0-9]/.test(password)) strength++;
+  if (/[^A-Za-z0-9]/.test(password)) strength++;
 
-    if (!product) {
-        subTotalEl.textContent = 'RP. 0';
-        discountEl.textContent = '-RP. 0';
-        totalEl.textContent = 'RP. 0';
-        return;
-    }
+  const colors = ['#ef4444', '#f59e0b', '#3b82f6', '#10b981'];
+  const labels = ['Weak', 'Fair', 'Good', 'Strong'];
 
-    const sub = product.price * qty;
-    const cut = sub * discount;
+  for (let i = 0; i < 4; i++) {
+    document.getElementById(`seg${i + 1}`).style.background =
+      i < strength ? colors[strength - 1] : 'var(--border)';
+  }
 
-    subTotalEl.textContent = `RP. ${sub.toLocaleString('id-ID')}`;
-    discountEl.textContent = `-RP. ${cut.toLocaleString('id-ID')}`;
-    totalEl.textContent = `RP. ${(sub - cut).toLocaleString('id-ID')}`;
+  document.getElementById('strengthLabel').textContent =
+    strength > 0 ? labels[strength - 1] : '';
 }
 
-// // ================== EVENTS ==================
-// upgradeBtn.addEventListener('click', () => {
-//     selectProduct.value = 'eco3';
-//     discount = 0.3;
-
-//     bonusNotification.style.display = 'none';
-//     discountAppliedNotice.style.display = 'block';
-
-//     updateReviewCart();
-//     countTotal();
-// });
-
-
-// // =========== PAYMENT METHOD TOGGLE ==========
-const paymentRadios = document.querySelectorAll('input[name="payment_method"]');
-const bankInput = document.getElementById('bank-input');
-const ewalletInput = document.getElementById('ewallet-input');
-
-function togglePaymentInputs() {
-    const method = document.querySelector('input[name="payment_method"]:checked')?.value;
-
-    // Reset both to hidden
-    if(bankInput) bankInput.style.display = 'none';
-    if(ewalletInput) ewalletInput.style.display = 'none';
-
-    if (method === 'bank' && bankInput) {
-        bankInput.style.display = 'flex';
-    } else if (method === 'ewallet' && ewalletInput) {
-        ewalletInput.style.display = 'flex';
-    }
-}
-
-paymentRadios.forEach(radio => {
-    radio.addEventListener('change', togglePaymentInputs);
-});
-
-// Initialize payment inputs state
-togglePaymentInputs();
-
-
-
+// Expose to global scope
+window.togglePass = togglePass;
+window.checkStrength = checkStrength;
+window.applyPromo = applyPromo;
