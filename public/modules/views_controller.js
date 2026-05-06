@@ -10,3 +10,7 @@ exports.checkout = async (req , res ) =>{
     res.render(path.join(__dirname ,"./checkout/checkout.ejs"));
 };
 
+// waiting for payment
+exports.waiting_for_payment = async (req , res ) =>{
+    res.render(path.join(__dirname ,"./waiting_for_payment/waiting_for_payment.ejs"));
+};
