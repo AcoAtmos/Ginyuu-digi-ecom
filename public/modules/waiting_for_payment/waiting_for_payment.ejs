@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Menunggu Pembayaran — DIGISTORE</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/waiting_for_payment.css">
+<script src="/assets/js/waiting_for_payment.js" defer type="module"></script>
+</head>
+<body>
+
+    <!-- ═══════ NAVBAR ═══════ -->
+    <nav class="navbar">
+    <a href="/" class="nav-brand">DIGI<span>STORE</span></a>
+    <div class="nav-spacer"></div>
+    <div class="nav-chip pending">
+        <div class="pulse-dot"></div>
+        Menunggu Pembayaran
+    </div>
+    <div class="nav-chip secure" style="margin-left:8px;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--success)">
+        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        SSL
+    </div>
+    </nav>
+
+    <!-- ═══════ PROGRESS ═══════ -->
+    <div class="progress-wrap">
+    <div class="progress-steps">
+        <div class="progress-step done">
+        <div class="step-num">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span class="step-label">Keranjang</span>
+        </div>
+        <div class="progress-line done"></div>
+        <div class="progress-step done">
+        <div class="step-num">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span class="step-label">Checkout</span>
+        </div>
+        <div class="progress-line warning"></div>
+        <div class="progress-step active">
+        <div class="step-num">⏳</div>
+        <span class="step-label">Pembayaran</span>
+        </div>
+        <div class="progress-line"></div>
+        <div class="progress-step">
+        <div class="step-num">4</div>
+        <span class="step-label">Selesai</span>
+        </div>
+    </div>
+    </div>
+
+    <!-- ═══════ MAIN LAYOUT ═══════ -->
+    <div class="page-layout">
+
+    <!-- ═════ LEFT COLUMN ═════ -->
+    <div class="left-col">
+
+        <!-- STATUS HERO -->
+        <div class="status-hero" style="animation-delay:.04s">
+        <div class="status-icon-wrap">
+            <div class="status-ring">
+            <div class="status-ring-inner">⏳</div>
+            </div>
+        </div>
+
+        <div class="status-label">
+            <div class="pulse-dot"></div>
+            Menunggu Pembayaran
+        </div>
+
+        <div class="status-title">Selesaikan Pembayaran Anda</div>
+        <div class="status-subtitle">
+            Pesanan Anda telah dibuat. Lakukan pembayaran sebelum waktu habis agar pesanan tidak dibatalkan otomatis.
+        </div>
+
+        <!-- COUNTDOWN -->
+        <div class="countdown-wrap">
+            <div class="cd-block">
+            <span class="cd-num" id="cdHour">00</span>
+            <span class="cd-label">Jam</span>
+            </div>
+            <div class="cd-sep">:</div>
+            <div class="cd-block">
+            <span class="cd-num" id="cdMin">23</span>
+            <span class="cd-label">Menit</span>
+            </div>
+            <div class="cd-sep">:</div>
+            <div class="cd-block">
+            <span class="cd-num" id="cdSec">59</span>
+            <span class="cd-label">Detik</span>
+            </div>
+        </div>
+
+        <div class="status-actions">
+            <button class="btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Konfirmasi Pembayaran
+            </button>
+            <button class="btn-outline">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="refreshIcon">
+                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+            Cek Status
+            </button>
+            <button class="btn-danger-outline" onclick="document.getElementById('cancelModal').classList.add('show')">
+            Batalkan Pesanan
+            </button>
+        </div>
+        </div>
+
+        <!-- PAYMENT DETAIL CARD -->
+        <div class="card" style="animation-delay:.1s;margin-top:20px;">
+        <div class="card-header">
+            <div class="card-title">
+            <span id="pmTitleIcon">🏦</span>
+            <span id="pmTitle">Detail Pembayaran</span>
+            </div>
+            <span id="pmProviderBadge" style="font-size:12px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);padding:4px 10px;border-radius:999px;font-weight:600;"></span>
+        </div>
+        <div class="card-body" id="paymentDetailBody">
+            <!-- rendered by JS -->
+        </div>
+        </div>
+
+        <!-- ORDER TIMELINE -->
+        <div class="card" style="animation-delay:.16s;margin-top:20px;">
+        <div class="card-header">
+            <div class="card-title">Riwayat Pesanan</div>
+        </div>
+        <div class="card-body">
+            <div class="timeline">
+            <div class="tl-item">
+                <div class="tl-dot done">✓</div>
+                <div class="tl-content">
+                <div class="tl-title">Pesanan Dibuat</div>
+                <div class="tl-time" id="tlOrderCreated">—</div>
+                </div>
+            </div>
+            <div class="tl-item">
+                <div class="tl-dot done">✓</div>
+                <div class="tl-content">
+                <div class="tl-title">Checkout Selesai</div>
+                <div class="tl-time" id="tlCheckoutDone">—</div>
+                </div>
+            </div>
+            <div class="tl-item">
+                <div class="tl-dot current">⏳</div>
+                <div class="tl-content">
+                <div class="tl-title">Menunggu Pembayaran</div>
+                <div class="tl-time">Sedang berjalan…</div>
+                </div>
+            </div>
+            <div class="tl-item pending">
+                <div class="tl-dot pending">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <div class="tl-content">
+                <div class="tl-title">Pembayaran Dikonfirmasi</div>
+                <div class="tl-time">Menunggu…</div>
+                </div>
+            </div>
+            <div class="tl-item pending">
+                <div class="tl-dot pending">📦</div>
+                <div class="tl-content">
+                <div class="tl-title">Produk Dikirim ke Email</div>
+                <div class="tl-time">Menunggu…</div>
+                </div>
+            </div>
+            </div>
+        </div>
+        </div>
+
+        <!-- HELP -->
+        <div class="card" style="animation-delay:.22s;margin-top:20px;">
+        <div class="card-header">
+            <div class="card-title">Butuh Bantuan?</div>
+        </div>
+        <div class="card-body" style="padding-top:8px;padding-bottom:8px;">
+            <div class="help-item">
+            <div class="help-icon">💬</div>
+            <div class="help-info">
+                <div class="help-title">Live Chat</div>
+                <div class="help-desc">Respon dalam 5 menit, 24/7</div>
+            </div>
+            <div class="help-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            </div>
+            <div class="help-item">
+            <div class="help-icon">📧</div>
+            <div class="help-info">
+                <div class="help-title">Email Support</div>
+                <div class="help-desc">support@digistore.id</div>
+            </div>
+            <div class="help-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            </div>
+            <div class="help-item">
+            <div class="help-icon">📖</div>
+            <div class="help-info">
+                <div class="help-title">FAQ Pembayaran</div>
+                <div class="help-desc">Pertanyaan yang sering diajukan</div>
+            </div>
+            <div class="help-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            </div>
+        </div>
+        </div>
+
+    </div><!-- end left-col -->
+
+    <!-- ═════ RIGHT COLUMN ═════ -->
+    <div class="right-col">
+        <div class="summary-sticky">
+
+        <!-- ORDER INFO -->
+        <div class="card" style="animation-delay:.08s">
+            <div class="card-header">
+            <div class="card-title">Ringkasan Pesanan</div>
+            <span style="font-size:12px;color:var(--text3);font-family:'Syne',sans-serif;font-weight:700;" id="orderIdBadge">#DS-K9X2F1</span>
+            </div>
+            <div class="card-body">
+            <div id="orderItemsList"></div>
+            <div id="priceBreakdown" style="margin-top:4px;"></div>
+            </div>
+        </div>
+
+        <!-- CUSTOMER INFO -->
+        <div class="card" style="animation-delay:.14s;margin-top:20px;">
+            <div class="card-header">
+            <div class="card-title">Info Pembeli</div>
+            </div>
+            <div class="card-body">
+            <div class="payment-method-row">
+                <div class="pm-left">
+                <div class="pm-icon-box">👤</div>
+                <div>
+                    <div class="pm-info-label">Nama</div>
+                    <div class="pm-info-value" id="custName">—</div>
+                </div>
+                </div>
+            </div>
+            <div class="payment-method-row">
+                <div class="pm-left">
+                <div class="pm-icon-box">✉️</div>
+                <div>
+                    <div class="pm-info-label">Email</div>
+                    <div class="pm-info-value" id="custEmail">—</div>
+                </div>
+                </div>
+            </div>
+            <div class="payment-method-row" style="border-bottom:none;">
+                <div class="pm-left">
+                <div class="pm-icon-box">📅</div>
+                <div>
+                    <div class="pm-info-label">Batas Bayar</div>
+                    <div class="pm-info-value" id="expireTime" style="color:var(--warning)">—</div>
+                </div>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        </div>
+    </div>
+
+    </div>
+
+    <!-- ═══════ CANCEL MODAL ═══════ -->
+    <div class="modal-overlay" id="cancelModal">
+    <div class="modal">
+        <div class="modal-icon">🗑️</div>
+        <div class="modal-title">Batalkan Pesanan?</div>
+        <div class="modal-desc">Pesanan <strong id="cancelOrderId" style="color:var(--text)"></strong> akan dibatalkan dan tidak dapat dikembalikan. Apakah Anda yakin?</div>
+        <div class="modal-actions">
+        <button class="btn-outline" onclick="document.getElementById('cancelModal').classList.remove('show')">Kembali</button>
+        <button class="btn-danger-outline" style="border-color:rgba(255,68,68,.3);color:var(--danger);" onclick="cancelOrder()">Ya, Batalkan</button>
+        </div>
+    </div>
+    </div>
+
+    <!-- ═══════ EXPIRED OVERLAY ═══════ -->
+    <div class="expired-overlay" id="expiredOverlay">
+    <div class="expired-box">
+        <div class="expired-icon">⏰</div>
+        <div class="expired-title">Waktu Habis!</div>
+        <div class="expired-desc">Batas waktu pembayaran telah berakhir. Pesanan Anda telah dibatalkan otomatis. Silakan buat pesanan baru.</div>
+        <button class="btn-primary" style="margin:0 auto;" onclick="window.location='/'">
+        Kembali Belanja
+        </button>
+        <div style="margin-top:12px;font-size:13px;color:var(--text3);cursor:pointer;" onclick="document.getElementById('expiredOverlay').classList.remove('show')">
+        Lihat detail →
+        </div>
+    </div>
+    </div>
+
+    <!-- ═══════ PAID SUCCESS ═══════ -->
+    <div class="expired-overlay" id="paidOverlay">
+    <div class="expired-box">
+        <div class="expired-icon" style="font-size:56px;">✅</div>
+        <div class="expired-title" style="color:var(--success)">Pembayaran Berhasil!</div>
+        <div class="expired-desc">Pembayaran Anda telah dikonfirmasi. Produk digital akan dikirim ke email Anda dalam 1–5 menit.</div>
+        <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 20px;font-size:12px;color:var(--text2);margin-bottom:24px;">
+        Nomor Pesanan
+        <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--text);display:block;margin-top:3px;" id="paidOrderId"></span>
+        </div>
+        <button class="btn-primary" style="margin:0 auto;" onclick="window.location='/'">
+        Kembali Belanja
+        </button>
+    </div>
+    </div>
+
+<!-- ═══════ TOAST ═══════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+</body>
+</html>
