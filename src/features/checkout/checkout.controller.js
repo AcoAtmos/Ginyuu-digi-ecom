@@ -12,19 +12,14 @@ const {
     checkout_clear_cart,
     checkout_add_queue,
     createResponse
-} = require('./checkout_service');
-const { db } = require("../../common/helper");
+} = require('./checkout.service');
+const { db } = require("../../config/database");
 
 exports.checkout = async (req, res) => {
     const client = await db.connect();
-    let result = { 
-        code: 500, 
-        status: "failed", 
-        message: "Internal Server Error" 
-    };
+    let result = { code: 500, status: "failed", message: "Internal Server Error" };
 
     try {
-        // Optional auth: try to get user from token, but don't block guests
         let loggedInUserId = null;
         let loggedInUser = null;
         const token = req.cookies?.token;
@@ -36,12 +31,9 @@ exports.checkout = async (req, res) => {
                 if (userResult.rows.length > 0) {
                     loggedInUser = userResult.rows[0];
                 }
-            } catch (err) {
-                // Token invalid — treat as guest
-            }
+            } catch (err) {}
         }
 
-        // Merge logged-in user info into request body
         const body = { ...req.body };
         if (loggedInUser) {
             body.loggedInUserId = loggedInUser.id;
@@ -93,72 +85,34 @@ exports.checkout = async (req, res) => {
 
 exports.cancelOrder = async (req, res) => {
     const { invoice_number } = req.body;
-
     if (!invoice_number) {
-        return res.status(400).json({
-            code: 400,
-            status: "failed",
-            message: "Invoice number is required"
-        });
+        return res.status(400).json({ code: 400, status: "failed", message: "Invoice number is required" });
     }
 
     const client = await db.connect();
     try {
         await client.query("BEGIN");
-
-        // Check invoice exists and is still pending
         const invoiceResult = await client.query(
             "SELECT id, order_id, status FROM invoices WHERE invoice_number = $1",
             [invoice_number]
         );
-
         if (invoiceResult.rows.length === 0) {
             await client.query("ROLLBACK");
-            return res.status(404).json({
-                code: 404,
-                status: "failed",
-                message: "Invoice not found"
-            });
+            return res.status(404).json({ code: 404, status: "failed", message: "Invoice not found" });
         }
-
         const invoice = invoiceResult.rows[0];
-
         if (invoice.status !== 'pending') {
             await client.query("ROLLBACK");
-            return res.status(400).json({
-                code: 400,
-                status: "failed",
-                message: `Cannot cancel order with status '${invoice.status}'`
-            });
+            return res.status(400).json({ code: 400, status: "failed", message: `Cannot cancel order with status '${invoice.status}'` });
         }
-
-        // Update invoice to cancelled
-        await client.query(
-            "UPDATE invoices SET status = 'cancelled' WHERE id = $1",
-            [invoice.id]
-        );
-
-        // Update order to cancelled
-        await client.query(
-            "UPDATE orders SET status = 'cancelled' WHERE id = $1",
-            [invoice.order_id]
-        );
-
+        await client.query("UPDATE invoices SET status = 'cancelled' WHERE id = $1", [invoice.id]);
+        await client.query("UPDATE orders SET status = 'cancelled' WHERE id = $1", [invoice.order_id]);
         await client.query("COMMIT");
-
-        res.status(200).json({
-            code: 200,
-            status: "success",
-            message: "Order cancelled successfully"
-        });
+        res.status(200).json({ code: 200, status: "success", message: "Order cancelled successfully" });
     } catch (err) {
         await client.query("ROLLBACK");
         console.error('Cancel order error:', err);
-        res.status(500).json({
-            code: 500,
-            status: "failed",
-            message: "Failed to cancel order"
-        });
+        res.status(500).json({ code: 500, status: "failed", message: "Failed to cancel order" });
     } finally {
         client.release();
     }
