@@ -1,6 +1,6 @@
 import { showToast } from '../../common/main/main.js';
 
-const BE_URL = 'http://localhost:4100';
+const BE_URL = '';
 
 let orderData = null;
 let countdownInterval = null;

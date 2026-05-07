@@ -4,7 +4,7 @@
 
 import { checkAuthStatus, showToast, logout } from '../../common/main/main.js';
 
-const BE_URL = 'http://localhost:4100';
+const BE_URL = '';
 
 let cartItems = [];
 let isLoggedIn = false;

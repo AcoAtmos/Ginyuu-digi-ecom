@@ -84,7 +84,7 @@ function deleteCookie(name, path = '/') {
 // ════════════════════════════════════════════
 async function Login(email, password) {
     try {
-        const response = await fetch("http://localhost:4100/api/auth/login", {
+        const response = await fetch("/api/auth/login", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -145,7 +145,7 @@ async function register(username, email, password, confirmPass, terms) {
   }
   
   try {
-        const response = await fetch("http://localhost:4100/api/auth/register", {
+        const response = await fetch("/api/auth/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -177,7 +177,7 @@ async function register(username, email, password, confirmPass, terms) {
 
 async function logout() {
     try {
-        await fetch("http://localhost:4100/api/auth/logout", {
+        await fetch("/api/auth/logout", {
             method: "POST",
             credentials: 'include',
         });
@@ -201,7 +201,7 @@ async function logout() {
  */
 async function checkAuthStatus() {
     try {
-        const res = await fetch("http://localhost:4100/api/auth/verify_token", {
+        const res = await fetch("/api/auth/verify_token", {
             method: "POST",
             credentials: 'include',
         });

@@ -40,7 +40,7 @@ function stopPropagations() {
 // Fetch latest notifications from API (if available) 
 async function loadNotifications() {
   try {
-    const res = await fetch('http://localhost:4100/api/notifications', { credentials: 'include' });
+    const res = await fetch('/api/notifications', { credentials: 'include' });
     if (res.status === 404) return;
     if (res.ok) {
       const data = await res.json();
@@ -74,7 +74,7 @@ async function fetchProducts(category = 'all') {
 
   try {
     //  FETCH DATA DARI API
-    const res = await fetch('http://localhost:4100/api/product');
+    const res = await fetch('/api/product');
     if (!res.ok) {
       throw new Error('Gagal fetch data');
     }

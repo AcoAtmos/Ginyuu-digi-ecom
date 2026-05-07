@@ -4,7 +4,7 @@
    ════════════════════════════════════════════ */
  
 const CART_KEY = 'ginyuu_guest_cart';
-const BASE_URL = window.BE_URL || 'http://localhost:4100';
+const BASE_URL = '';
 
 window.Cart = {
     
