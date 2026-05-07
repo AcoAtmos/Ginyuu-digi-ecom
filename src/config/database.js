@@ -2,7 +2,6 @@ const {Pool} = require('pg');
 const dotenv = require("dotenv");
 dotenv.config();
 
- // create db connection
 let pool = new Pool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -18,6 +17,4 @@ pool.on('error', (err) => {
     process.exit(-1);
 });
 
-module.exports = {
-    db
-}
+module.exports = { db }

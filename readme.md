@@ -8,18 +8,12 @@ Full-stack e-commerce application for digital products with guest checkout, mult
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    Frontend (Port 3100)                  │
-│  Express + EJS Templates + Vanilla JS (ES Modules)       │
+│              Single Server (Port 4100)                   │
+│  Express + EJS Templates + Vanilla JS + API              │
 │  ┌─────────────┐  ┌─────────────┐  ┌──────────────────┐ │
 │  │ landing.ejs │  │checkout.ejs │  │ cart.js / main.js│ │
 │  │ landing.js  │  │ checkout.js │  │ (global Cart obj)│ │
 │  └─────────────┘  └─────────────┘  └──────────────────┘ │
-└────────────────────────┬────────────────────────────────┘
-                         │ HTTP / Fetch API
-                         ▼
-┌─────────────────────────────────────────────────────────┐
-│                    Backend API (Port 4100)               │
-│  Express + PostgreSQL + JWT Cookies                      │
 │  ┌─────────┐ ┌────────┐ ┌─────────┐ ┌───────┐ ┌───────┐│
 │  │  auth   │ │ cart   │ │checkout │ │ promo │ │payment││
 │  │service  │ │service │ │service  │ │service│ │service││
@@ -27,14 +21,14 @@ Full-stack e-commerce application for digital products with guest checkout, mult
 └────────────────────────┬────────────────────────────────┘
                          │
                          ▼
-              ┌──────────────────────┐
-              │   PostgreSQL Server   │
-              │  (users, product,     │
-              │   cart_items, orders, │
-              │   order_items,        │
-              │   invoices, promo_    │
-              │   codes, queue)       │
-              └──────────────────────┘
+               ┌──────────────────────┐
+               │   PostgreSQL Server   │
+               │  (users, product,     │
+               │   cart_items, orders, │
+               │   order_items,        │
+               │   invoices, promo_    │
+               │   codes, queue)       │
+               └──────────────────────┘
 ```
 
 ---
@@ -66,32 +60,21 @@ DB_USER=postgres
 DB_NAME=ginyuu
 DB_PASSWORD=your_password
 JWT_SECRET=your_secret_key
-FE_URL=http://localhost:3100
+FE_URL=http://localhost:4100
 ACCOUNT_NUMBER=1234567890
-```
-
-Edit `public/.env`:
-```env
-PORT=3100
-BE_URL=http://localhost:4100
 ```
 
 ### 3. Install Dependencies
 ```bash
 cd api && bun install
-cd ../public && bun install
 ```
 
-### 4. Run Servers
+### 4. Run Server
 ```bash
-# Terminal 1 — Backend
 cd api && bun --watch app.js
-
-# Terminal 2 — Frontend
-cd public && bun --watch app.js
 ```
 
-**Access:** Frontend → `http://localhost:3100` | API → `http://localhost:4100/api`
+**Access:** `http://localhost:4100`
 
 ---
 
@@ -597,7 +580,7 @@ ginyuu/
 | `DB_NAME` | Database name | `ginyuu` |
 | `DB_PASSWORD` | Database password | `1231436` |
 | `JWT_SECRET` | JWT signing key | `your_secret` |
-| `FE_URL` | Frontend URL (CORS) | `http://localhost:3100` |
+| `FE_URL` | Frontend URL (CORS) | `http://localhost:4100` |
 | `API_URL` | WhatsApp API base | `https://notifapi.com` |
 | `API_KEY` | WhatsApp API key | `f538a366...` |
 | `EMAIL_SENDER` | Gmail sender address | `user@gmail.com` |
@@ -605,12 +588,6 @@ ginyuu/
 | `ACCOUNT_NUMBER` | Bank account number | `1234567890` |
 | `IMAP_USER` | IMAP email (optional) | `user@gmail.com` |
 | `IMAP_PASS` | IMAP password (optional) | `app_password` |
-
-### Frontend (`public/.env`)
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `PORT` | Frontend server port | `3100` |
-| `BE_URL` | Backend API URL | `http://localhost:4100` |
 
 ---
 
@@ -652,11 +629,11 @@ Available on all pages via `cart.js` script tag.
 2. Create service in `api/modules/{name}/{name}_service.js`
 3. Import and register route in `api/common/routes.js`
 
-### Adding New Frontend Page
-1. Create EJS template in `public/modules/{name}/`
-2. Add render function in `public/modules/views_controller.js`
-3. Add route in `public/common/routes.js`
-4. Add static assets in `public/assets/js/` and `public/assets/css/`
+### Adding New Page
+1. Create EJS template in `api/views/{name}/`
+2. Add render function in `api/controllers/views_controller.js`
+3. Add route in `api/common/view_routes.js`
+4. Add static assets in `api/public/assets/js/` and `api/public/assets/css/`
 
 ### Database Changes
 - Run setup scripts: `node setup_{name}.js`
