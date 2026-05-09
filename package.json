@@ -14,9 +14,11 @@
     "pg": "^8.18.0"
   },
   "scripts": {
-    "dev": "node src/app.js",
-    "start": "node src/app.js",
-    "setup-cart": "node scripts/setup_cart_table.js",
-    "setup-orders": "node scripts/setup_order_tables.js"
+    "dev": "bun --watch src/app.js",
+    "start": "bun src/app.js",
+    "setup-cart": "bun scripts/setup_cart_table.js",
+    "setup-orders": "bun scripts/setup_order_tables.js",
+    "setup-notifications": "node scripts/setup_notifications_table.js",
+"setup-indexes": "node scripts/setup_product_indexes.js"
   }
-}
+} 
