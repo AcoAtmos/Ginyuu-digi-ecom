@@ -32,6 +32,7 @@ const webController = require("./controllers/web.controller");
 app.get("/", webController.landing);
 app.get("/checkout", webController.checkout);
 app.get("/checkout/waiting-payment", webController.waiting_for_payment);
+app.get("/profile", webController.profile)
 
 // Feature routes
 const { router: authRoutes, prefix: authPrefix } = require("./features/auth/auth.routes");
@@ -42,6 +43,7 @@ const { router: productRoutes, prefix: productPrefix } = require("./features/pro
 const { router: promoRoutes, prefix: promoPrefix } = require("./features/promo/promo.routes");
 const { router: userRoutes, prefix: userPrefix } = require("./features/user/user.routes");
 const { router: whatsappRoutes, prefix: whatsappPrefix } = require("./features/whatsapp/whatsapp.routes");
+const { router: notificationRoutes, prefix: notificationPrefix } = require('./features/notification/notification.routes');
 
 app.use("/api" + authPrefix, authRoutes);
 app.use("/api" + cartPrefix, cartRoutes);
@@ -51,17 +53,18 @@ app.use("/api" + productPrefix, productRoutes);
 app.use("/api" + promoPrefix, promoRoutes);
 app.use("/api" + userPrefix, userRoutes);
 app.use("/api" + whatsappPrefix, whatsappRoutes);
+app.use("/api" + notificationPrefix, notificationRoutes);
 
 // Legacy route: get_product by slug
 const productController = require("./features/product/product.controller");
 app.get("/api/get_product/:slug", productController.get_product);
 
 // Background worker
-const { checkout_send_email } = require("./features/checkout/checkout.service");
-setInterval(async () => {
-    console.log('10 seconds have passed');
-    await checkout_send_email();
-}, 10000);
+// const { checkout_send_email } = require("./features/checkout/checkout.service");
+// setInterval(async () => {
+//     console.log('10 seconds have passed');
+//     await checkout_send_email();
+// }, 10000);
 
 // Start
 const PORT = process.env.PORT || 4100;
