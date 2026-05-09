@@ -16,18 +16,18 @@ import {
 // DATA & STATE
 // ════════════════════════════════════════════
 
-const NOTIFICATIONS = [
-  { id: 1, icon: '🎉', title: 'Produk baru tersedia: Framer Kit 2025', time: '2 menit lalu', read: false },
-  { id: 2, icon: '💸', title: 'Flash Sale dimulai! Diskon hingga 70%', time: '1 jam lalu', read: false },
-  { id: 3, icon: '⭐', title: 'Review produk Anda telah dibalas', time: '3 jam lalu', read: false },
-  { id: 4, icon: '📦', title: 'Pembelian Anda berhasil diproses', time: '1 hari lalu', read: true },
-  { id: 5, icon: '🔔', title: 'Produk wishlist tersedia kembali', time: '2 hari lalu', read: true },
-];
+// const NOTIFICATIONS = [
+//   { id: 1, icon: '🎉', title: 'Produk baru tersedia: Framer Kit 2025', time: '2 menit lalu', read: false },
+//   { id: 2, icon: '💸', title: 'Flash Sale dimulai! Diskon hingga 70%', time: '1 jam lalu', read: false },
+//   { id: 3, icon: '⭐', title: 'Review produk Anda telah dibalas', time: '3 jam lalu', read: false },
+//   { id: 4, icon: '📦', title: 'Pembelian Anda berhasil diproses', time: '1 hari lalu', read: true },
+//   { id: 5, icon: '🔔', title: 'Produk wishlist tersedia kembali', time: '2 hari lalu', read: true },
+// ];
 
 let currentProduct = null;
 let currentUser = null;
 let activeCategory = 'all';
-let notifData = [...NOTIFICATIONS];
+let notifData = [];
 let PRODUCTS_DATA = [];
 
 // Compatibility shim for older calls to stopPropagations without an event
@@ -42,17 +42,24 @@ async function loadNotifications() {
   try {
     const res = await fetch('/api/notifications', { credentials: 'include' });
     if (res.status === 404) return;
-    if (res.ok) {
-      const data = await res.json();
-      if (Array.isArray(data?.data)) {
-        notifData = data.data.map(n => ({ id: n.id, icon: n.icon || '🔔', title: n.title, time: n.time, read: !!n.read }));
-      }
+    if (!res.ok) { renderNotifications(); return; }
+    const result = await res.json();
+    if (result.status === 'success' && Array.isArray(result?.notifications)) {
+      notifData = result.notifications.map(n => ({
+        id: n.id,
+        icon: n.icon || '🔔',
+        title: n.message,
+        time: n.time || 'Just now',
+        read: n.is_read === 'read',
+        action_url: n.action_url
+      }));
     }
   } catch (e) {
     // ignore; keep existing NOTIFICATIONS
   }
   renderNotifications();
 }
+
 
 // ════════════════════════════════════════════
 // FETCH / RENDER PRODUCTS
@@ -327,7 +334,7 @@ function renderNotifications() {
   document.getElementById('notifBadge').style.display = unread > 0 ? 'flex' : 'none';
 
   list.innerHTML = notifData.map(n => `
-    <div class="notif-item" onclick="markRead(${n.id})">
+    <div class="notif-item" onclick="markRead(${n.id})${n.action_url ? `;window.location.href='${n.action_url}'` : ''}">
       <div class="notif-icon">${n.icon}</div>
       <div class="notif-text">
         <div class="notif-title" style="${n.read ? 'color:var(--text2);font-weight:400' : ''}">${n.title}</div>
@@ -337,14 +344,20 @@ function renderNotifications() {
     </div>`).join('');
 }
 
-function markRead(id) {
+async function markRead(id) {
   notifData = notifData.map(n => n.id === id ? { ...n, read: true } : n);
   renderNotifications();
+  try {
+    await fetch(`/api/notifications/${id}/read`, { method: 'PATCH', credentials: 'include' });
+  } catch (e) {}
 }
 
-document.getElementById('markAllRead').onclick = () => {
+document.getElementById('markAllRead').onclick = async () => {
   notifData = notifData.map(n => ({ ...n, read: true }));
   renderNotifications();
+  try {
+    await fetch('/api/notifications/read-all', { method: 'PATCH', credentials: 'include' });
+  } catch (e) {}
   showToast('✓ All notifications read');
 };
 
