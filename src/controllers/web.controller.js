@@ -11,3 +11,7 @@ exports.checkout = async (req, res) => {
 exports.waiting_for_payment = async (req, res) => {
     res.render("waiting-payment");
 };
+
+exports.profile = async (req, res) => {
+    res.render("profile");
+};
