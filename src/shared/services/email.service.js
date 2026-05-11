@@ -158,9 +158,9 @@ exports.checkEmail = async () => {
                                             FROM invoices i
                                             INNER JOIN orders o ON o.id = i.order_id
                                             WHERE i.total=$1 
-                                              AND i.issued_at>=$2 
+                                              AND i.expires_at>=$2 
                                               AND i.status_payment='unpaid' 
-                                            ORDER BY i.issued_at DESC 
+                                            ORDER BY i.expires_at DESC 
                                             LIMIT 1`,
                                             [nominal, threeDaysAgo.toISOString()]
                                         );
@@ -171,7 +171,7 @@ exports.checkEmail = async () => {
                                             const pelangganId = orders.rows[0].user_id;
                                             
                                             await db.query(
-                                                `UPDATE orders SET status_order='completed' WHERE id=$1`,
+                                                `UPDATE orders SET status='completed' WHERE id=$1`,
                                                 [orderId]
                                             );
                                             
