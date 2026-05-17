@@ -4,13 +4,12 @@ const {
     validatePayload,
     getPrices,
     applyPromo,
-    checkout_add_unique_num,
     countTotal,
     checkout_add_user,
     checkout_create_order,
     checkout_create_invoice,
     checkout_clear_cart,
-    checkout_add_queue,
+    checkout_create_notification,
     createResponse
 } = require('./checkout.service');
 const { db } = require("../../config/database");
@@ -45,7 +44,6 @@ exports.checkout = async (req, res) => {
         result = await validatePayload(result);
         result = await getPrices(result);
         result = await applyPromo(result);
-        result = await checkout_add_unique_num(result);
         result = await countTotal(result);
 
         await client.query("BEGIN");
@@ -53,10 +51,27 @@ exports.checkout = async (req, res) => {
         result = await checkout_create_order(result);
         result = await checkout_create_invoice(result);
         result = await checkout_clear_cart(result);
-        result = await checkout_add_queue(result);
         await client.query("COMMIT");
-        result = await createResponse(result);
 
+        await checkout_create_notification(result);
+
+        // Auto-login guest after checkout
+        if (!loggedInUser) {
+            const token = jwt.sign(
+                { id: result.payload.idUser, username: result.payload.username, email: result.payload.email },
+                process.env.JWT_SECRET,
+                { expiresIn: "24h" }
+            );
+            res.cookie("token", token, {
+                httpOnly: true,
+                sameSite: "lax",
+                maxAge: 24 * 60 * 60 * 1000,
+                path: "/",
+            });
+        }
+
+        result = await createResponse(result);
+        
         res.status(result.code).json({
             code: result.code,
             status: result.status,
@@ -93,7 +108,7 @@ exports.cancelOrder = async (req, res) => {
     try {
         await client.query("BEGIN");
         const invoiceResult = await client.query(
-            "SELECT id, order_id, status FROM invoices WHERE invoice_number = $1",
+            "SELECT id, order_id, status_payment FROM invoices WHERE invoice_number = $1",
             [invoice_number]
         );
         if (invoiceResult.rows.length === 0) {
@@ -101,13 +116,29 @@ exports.cancelOrder = async (req, res) => {
             return res.status(404).json({ code: 404, status: "failed", message: "Invoice not found" });
         }
         const invoice = invoiceResult.rows[0];
-        if (invoice.status !== 'pending') {
+        if (invoice.status_payment !== 'pending') {
             await client.query("ROLLBACK");
-            return res.status(400).json({ code: 400, status: "failed", message: `Cannot cancel order with status '${invoice.status}'` });
+            return res.status(400).json({ code: 400, status: "failed", message: `Cannot cancel order with status '${invoice.status_payment}'` });
         }
-        await client.query("UPDATE invoices SET status = 'cancelled' WHERE id = $1", [invoice.id]);
+        await client.query("UPDATE invoices SET status_payment = 'cancelled' WHERE id = $1", [invoice.id]);
         await client.query("UPDATE orders SET status = 'cancelled' WHERE id = $1", [invoice.order_id]);
         await client.query("COMMIT");
+
+        try {
+            const orderResult = await db.query("SELECT user_id FROM orders WHERE id = $1", [invoice.order_id]);
+            if (orderResult.rows.length > 0) {
+                const { createNotification } = require('../notification/notification.service');
+                await createNotification({
+                    user_id: orderResult.rows[0].user_id,
+                    icon: "🗑️",
+                    message: `Pesanan ${invoice_number} telah dibatalkan`,
+                    action_url: `/checkout/waiting-payment?invoice=${invoice_number}`
+                });
+            }
+        } catch (notifErr) {
+            console.error('Create cancel notification failed:', notifErr);
+        }
+
         res.status(200).json({ code: 200, status: "success", message: "Order cancelled successfully" });
     } catch (err) {
         await client.query("ROLLBACK");

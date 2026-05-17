@@ -139,20 +139,6 @@ exports.applyPromo = async (result) => {
     return result;
 }
 
-exports.checkout_add_unique_num = async (result) => {
-    if (result.status === 'failed') return result;
-    try {
-        result.payload.unique_num = Math.floor(Math.random() * 999) + 1;
-    } catch (err) {
-        result.status = "failed";
-        result.code = 500;
-        result.message = "Add unique number failed";
-        console.error(err);
-        return result;
-    }
-    return result;
-}
-
 exports.countTotal = async (result) => {
     if (result.status === 'failed') return result;
     try {
@@ -162,7 +148,7 @@ exports.countTotal = async (result) => {
             if (price) subtotal += price;
         }
         const discountAmount = Math.floor(subtotal * result.payload.discount_pct);
-        let total = subtotal - discountAmount - result.payload.unique_num;
+        let total = subtotal - discountAmount;
         result.payload.subtotal = subtotal;
         result.payload.discount_amount = discountAmount;
         result.payload.total = total;
@@ -210,9 +196,9 @@ exports.checkout_create_order = async (result) => {
     if (result.status === 'failed') return result;
     try {
         const orderResult = await db.query(
-            `INSERT INTO orders (user_id, payment_method, subtotal, discount_amount, unique_num, total)
-             VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-            [result.payload.idUser, result.payload.payment_method, result.payload.subtotal, result.payload.discount_amount, result.payload.unique_num, result.payload.total]
+            `INSERT INTO orders (user_id, payment_method, subtotal, discount_amount, total)
+             VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+            [result.payload.idUser, result.payload.payment_method, result.payload.subtotal, result.payload.discount_amount, result.payload.total]
         );
         result.payload.idOrder = orderResult.rows[0].id;
         for (const item of result.payload.cart_items) {
@@ -236,12 +222,11 @@ exports.checkout_create_invoice = async (result) => {
     if (result.status === 'failed') return result;
     try {
         const invoice_number = "INV-" + Date.now() + result.payload.idUser + "-" + result.payload.idOrder;
-        const issued_at = new Date();
         const expires_at = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
         const invoiceResult = await db.query(
-            `INSERT INTO invoices (order_id, invoice_number, discount_amount, total, issued_at, unique_num, status)
-             VALUES ($1, $2, $3, $4, $5, $6, 'pending') RETURNING id, invoice_number`,
-            [result.payload.idOrder, invoice_number, result.payload.discount_amount, result.payload.total, issued_at, result.payload.unique_num]
+            `INSERT INTO invoices (order_id, invoice_number, discount_amount, total, expires_at, status_payment)
+             VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id, invoice_number`,
+            [result.payload.idOrder, invoice_number, result.payload.discount_amount, result.payload.total, expires_at]
         );
         result.payload.idInvoice = invoiceResult.rows[0].id;
         result.payload.invoice_number = invoiceResult.rows[0].invoice_number;
@@ -266,64 +251,251 @@ exports.checkout_clear_cart = async (result) => {
     return result;
 }
 
-exports.checkout_add_queue = async (result) => {
+// on called from payment controller
+exports.checkout_add_queue = async (invoiceData, payment_url) => {
+    try { 
+
+        let productListHtml = invoiceData.items.map(row =>
+            `<li>${row.product_name} - Rp. ${row.price.toLocaleString('id-ID')}</li>`
+        ).join('');
+        
+        let paymentTemplate;
+
+        if (invoiceData.payment_method === "qris") {
+            paymentTemplate = `
+                <div style="text-align:center; padding:30px 20px;">
+                    <p style="font-size:15px; color:#555; margin:0 0 20px 0; line-height:1.7;">
+                        Silakan scan QR Code berikut untuk melakukan pembayaran.
+                    </p>
+                    <div style="background:#ffffff; border:1px solid #eeeeee; border-radius:16px; padding:20px; display:inline-block; margin-bottom:18px;">
+                        <img src="${payment_url}" alt="QR Code" style="width:220px; max-width:100%; display:block; margin:auto;">
+                    </div>
+                    <p style="font-size:13px; color:#999999; margin:0;">
+                        QR Code akan otomatis kadaluarsa dalam 15 menit.
+                    </p>
+                </div>
+            `;
+        } else {
+            paymentTemplate = `
+                <div style="background:#ffffff; border:1px solid #eeeeee; border-radius:14px; padding:20px; margin-top:20px;">
+                    <p style="margin-top:0; margin-bottom:18px; color:#555; line-height:1.7;">
+                        Silakan transfer ke rekening berikut untuk melakukan pembayaran:
+                    </p>
+                    <table style="width:100%; border-collapse:collapse; font-size:14px; line-height:1.9; color:#444;">
+                        <tr>
+                            <td width="40%" style="color:#888;">Bank</td>
+                            <td>: ${invoiceData.payment_method.toUpperCase()}</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#888;">No. Rekening</td>
+                            <td>: ${invoiceData.no_rek}</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#888;">Atas Nama</td>
+                            <td>: A.N. Ginyuu</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#888;">Jumlah Transfer</td>
+                            <td>: Rp ${invoiceData.total.toLocaleString('id-ID')}</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#888;">No. Order</td>
+                            <td>: ${invoiceData.invoice_number}</td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+        }
+
+        let messageEmail = `
+    <div style="background-color:#f6f6f6; padding:40px 20px; font-family:'Helvetica Neue',Helvetica,Arial,sans-serif; color:#333333;">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap');
+        </style>
+        
+        <div style="max-width:640px; margin:0 auto; background:#ffffff; border:1px solid #ebebeb; border-radius:24px; overflow:hidden;">
+            
+            <!-- HEADER -->
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#fafafa; border-bottom:1px solid #f0f0f0;">
+                <tr>
+                    <td style="padding:35px 40px 25px 40px;">
+                        <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                            <tr>
+                                <!-- Logo -->
+                                <td>
+                                    <h1 style="font-family:'Syne',sans-serif; font-weight:800; font-size:32px; margin:0; letter-spacing:-1.5px; line-height:1; color:#111111;">
+                                        GIN<span style="color:#999999;">YUU</span>
+                                    </h1>
+                                </td>
+                                <!-- Invoice Info -->
+                                <td align="right" valign="top">
+                                    <p style="margin:0 0 4px 0; font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:#999999;">
+                                        INVOICE
+                                    </p>
+                                    <p style="margin:0; font-size:17px; font-weight:700; color:#111111;">
+                                        #${invoiceData.invoice_number}
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <!-- BODY -->
+            <div style="padding:40px;">
+                <h2 style="font-size:30px; line-height:1.2; color:#111111; margin:0 0 18px 0; letter-spacing:-1px;">
+                    Konfirmasi Pembelian
+                </h2>
+                
+                <p style="font-size:16px; line-height:1.8; color:#555555; margin:0 0 8px 0;">
+                    Halo <strong>${invoiceData.username}</strong>,
+                </p>
+                <p style="font-size:15px; line-height:1.8; color:#666666; margin-bottom:40px;">
+                    Terima kasih telah melakukan pembelian di GINYUU. Berikut adalah rincian pesanan dan instruksi pembayaran Anda.
+                </p>
+                        <!-- PRODUCT -->
+                        <div style="border:1px solid #eeeeee; border-radius:18px; overflow:hidden; margin-bottom:28px;">
+                            <div style="padding:18px 24px; background:#fafafa; border-bottom:1px solid #eeeeee;">
+                                <h3 style="margin:0; font-size:13px; letter-spacing:1px; text-transform:uppercase; color:#999999;">
+                                    Detail Produk
+                                </h3>
+                            </div>
+                            <div style="padding:24px; font-size:15px; color:#444444; line-height:1.9;">
+                                ${productListHtml}
+                            </div>
+                        </div>
+
+                        <!-- PAYMENT SUMMARY -->
+                        <table style="width:100%; border-collapse:collapse; margin-bottom:30px; font-size:15px;">
+                            <tr>
+                                <td style="padding:10px 0; color:#777;">Subtotal</td>
+                                <td align="right">Rp ${invoiceData.subtotal.toLocaleString('id-ID')}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:10px 0; color:#777;">Diskon</td>
+                                <td align="right" style="color:#999;">- Rp ${invoiceData.discount_amount.toLocaleString('id-ID')}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <div style="border-top:1px dashed #dddddd; margin:16px 0;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-top:10px; font-size:18px; font-weight:700; color:#111;">
+                                    Total Tagihan
+                                </td>
+                                <td align="right" style="padding-top:10px; font-size:24px; font-weight:800; color:#111;">
+                                    Rp ${invoiceData.total.toLocaleString('id-ID')}
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- PAYMENT METHOD -->
+                        <div style="background:#fafafa; border:1px solid #eeeeee; border-radius:20px; padding:30px; margin-bottom:35px;">
+                            <h3 style="margin-top:0; margin-bottom:25px; font-size:16px; color:#111111;">
+                                Instruksi Pembayaran
+                            </h3>
+                            <table style="width:100%; font-size:14px; line-height:2; color:#555555; margin-bottom:10px;">
+                                <tr>
+                                    <td width="40%">Nomor Invoice</td>
+                                    <td>: ${invoiceData.invoice_number}</td>
+                                </tr>
+                                <tr>
+                                    <td>Atas Nama</td>
+                                    <td>: ${invoiceData.username}</td>
+                                </tr>
+                                <tr>
+                                    <td>Metode Pembayaran</td>
+                                    <td>: ${invoiceData.payment_method.toUpperCase()}</td>
+                                </tr>
+                            </table>
+                            ${paymentTemplate}
+                        </div>
+
+                        <!-- BUTTON -->
+                        <div style="text-align:center; margin-bottom:45px;">
+                            <a href="https://wa.me/6281333477041" 
+                            style="background:#111111; color:#ffffff; text-decoration:none; padding:14px 32px; border-radius:12px; display:inline-block; font-size:14px; font-weight:700;">
+                                Hubungi Kami
+                            </a>
+                        </div>
+
+                        <!-- FOOTER -->
+                        <div style="border-top:1px solid #f0f0f0; padding-top:30px;">
+                            <table width="100%">
+                                <tr>
+                                    <td>
+                                        <strong style="display:block; font-size:15px; color:#111111; margin-bottom:4px;">
+                                            Admin Finance
+                                        </strong>
+                                        <span style="font-size:13px; color:#999999;">
+                                            PT. Ginyuu Digital Product
+                                        </span>
+                                    </td>
+                                    <td align="right">
+                                        <div style="font-family:'Syne',sans-serif; font-size:18px; font-weight:800; letter-spacing:-1px;">
+                                            <span style="color:#111111;">GIN</span><span style="color:#999999;">YUU</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- COPYRIGHT -->
+                        <div style="margin-top:45px; text-align:center; border-top:1px solid #f0f0f0; padding-top:24px;">
+                            <p style="font-size:12px; color:#999999; margin-bottom:12px; letter-spacing:.5px;">
+                                HELP CENTER • SUPPORT 24/7 • ACCOUNT
+                            </p>
+                            <p style="font-size:11px; color:#aaaaaa; line-height:1.8; margin:0;">
+                                Copyright © 2026 PT. Ginyuu Digital Product.<br>
+                                All Rights Reserved.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const queueinvoiceDataEmail = await db.query(
+            `INSERT INTO queue 
+            (order_id, destination, tipe, pesan, status, created_at, qris_url)
+            VALUES ($1, $2, $3, $4, $5, NOW(), $6) RETURNING id`,
+            [
+                invoiceData.order_id,
+                invoiceData.email,
+                "email",
+                messageEmail,
+                "pending",
+                payment_url || null,
+            ]
+        );
+        console.log("email berhasil di queue")
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+
+exports.checkout_create_notification = async (result) => {
     if (result.status === 'failed') return result;
     try {
-        const productQuery = await db.query(
-            `SELECT p.name, oi.price FROM order_items oi JOIN product p ON oi.product_id = p.id WHERE oi.order_id = $1`,
-            [result.payload.idOrder]
-        );
-        let productListHtml = productQuery.rows.map(row =>
-            `<li>${row.name} - Rp. ${row.price.toLocaleString('id-ID')}</li>`
-        ).join('');
-        let messageEmail = `
-        <p>Halo ${result.payload.username}, terima kasih telah melakukan pembelian.</p>
-        <p>Produk yang dibeli:</p>
-        <ul>${productListHtml}</ul>
-        <p>Subtotal: Rp. ${result.payload.subtotal.toLocaleString('id-ID')}</p>
-        <p>Diskon: Rp. ${result.payload.discount_amount.toLocaleString('id-ID')}</p>
-        <p>Potongan kode unik: Rp. ${result.payload.unique_num}</p>
-        <p><strong>Total Tagihan: Rp. ${result.payload.total.toLocaleString('id-ID')}</strong></p>
-        <p>Silahkan lakukan pembayaran ke rekening berikut:</p>
-        <p>Bank: ${result.payload.payment_method.toUpperCase()}</p>
-        <p>Nomor tagihan: ${result.payload.invoice_number}</p>
-        <p>No. Rekening: ${result.payload.accountNumber} Bank Jago</p>
-        <p>Atas Nama: PT. Ginyuu Teknologi Indonesia</p>
-        <p>Setelah melakukan pembayaran, silahkan konfirmasi ke nomor WhatsApp berikut: 08123456789</p>
-        <p>Terima kasih.</p>`;
-        const queueResultEmail = await db.query(
-            `INSERT INTO queue (order_id, destination, tipe, pesan, status, created_at)
-             VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id`,
-            [result.payload.idOrder, result.payload.email, "email", messageEmail, "pending"]
-        );
-        result.payload.idQueueEmail = queueResultEmail.rows[0].id;
+        const { createNotification } = require('../notification/notification.service');
+        const data = await createNotification({
+            user_id: result.payload.idUser,
+            icon: "🔔",
+            message: "Thank you for your purchase, please make your payment",
+            action_url: `/checkout/waiting-payment?invoice=${result.payload.invoice_number}`
+        });
+        result.payload.idNotification = data.id;
     } catch (err) {
         result.status = "failed";
         result.code = 500;
-        result.message = "Create queue failed";
+        result.message = "Create notification failed";
         console.error(err);
         return result;
     }
     return result;
-};
-
-exports.checkout_send_email = async () => {
-    try {
-        const data = await db.query(
-            `SELECT * FROM queue WHERE tipe = 'email' AND status = 'pending' FOR UPDATE SKIP LOCKED LIMIT 1;`
-        );
-        if (data.rows.length === 0) {
-            console.log("No email to send");
-            return;
-        }
-        const { send_email } = require("../../shared/services/email.service");
-        await send_email(data.rows[0].destination, "Invoice berhasil dibuat", data.rows[0].pesan);
-        console.log("Email sent");
-        await db.query(`UPDATE queue SET status = 'sent' WHERE id = $1`, [data.rows[0].id]);
-    } catch (err) {
-        throw new Error(err);
-    }
-    return;
 }
 
 exports.createResponse = async (result) => {

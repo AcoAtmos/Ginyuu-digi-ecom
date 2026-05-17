@@ -391,6 +391,60 @@ body {
 }
 .promo-success.show { display: flex; }
 
+/* ─── UPSELL ─── */
+.upsell-wrap {
+  margin: 20px 0 16px;
+  animation: fadeUp .35s ease;
+}
+.upsell-header {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px; font-weight: 700; color: var(--text2);
+  margin-bottom: 12px;
+}
+.upsell-items {
+  display: flex; flex-direction: column; gap: 10px;
+}
+.upsell-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  transition: border-color .15s, opacity .3s ease, transform .3s ease;
+}
+.upsell-item:hover { border-color: var(--border3); }
+.upsell-item.removing { opacity: 0; transform: translateX(20px); }
+.upsell-icon {
+  width: 40px; height: 40px;
+  background: var(--bg4); border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.upsell-info { flex: 1; min-width: 0; }
+.upsell-name {
+  font-size: 13px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+.upsell-tags {
+  font-size: 11px; color: var(--text3);
+}
+.upsell-price {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  font-family: 'Syne', sans-serif;
+  flex-shrink: 0;
+}
+.btn-upsell {
+  background: rgba(255,255,255,.08);
+  border: 1px solid var(--border2);
+  color: var(--text); font-family: inherit; font-size: 12px; font-weight: 600;
+  border-radius: 999px; padding: 6px 14px;
+  cursor: pointer; transition: all .15s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.btn-upsell:hover {
+  background: #fff; color: #000; border-color: #fff;
+}
+
 /* ─── SUBMIT BUTTON ─── */
 .btn-place-order {
   width: 100%;
