@@ -1,17 +1,11 @@
-/* ════════════════════════════════════════════
-   CART MODULE - Global Handler (Vanilla JS)
-   Digital products: no quantity, duplicate prevention
-   ════════════════════════════════════════════ */
- 
-const CART_KEY = 'ginyuu_guest_cart';
-const BASE_URL = '';
 
-window.Cart = {
-    
+const CART_KEY = 'ginyuu_guest_cart';
+
+export const Cart = {
     _isLoggedIn: false,
     _onExpired: null,
     _onDuplicate: null,
-    
+
     onSessionExpired(callback) {
         this._onExpired = callback;
     },
@@ -25,7 +19,7 @@ window.Cart = {
     async getAll() {
         if (this._isLoggedIn) {
             try {
-                const res = await fetch(`${BASE_URL}/api/cart`, { credentials: 'include' });
+                const res = await fetch(`/api/cart`, { credentials: 'include' });
                 if (res.status === 401 || res.status === 403) {
                     this._handleSessionExpired();
                     return [];
@@ -35,7 +29,6 @@ window.Cart = {
                     return json.data?.items || [];
                 }
             } catch (err) {
-                // ignore
             }
             return [];
         }
@@ -45,7 +38,7 @@ window.Cart = {
     async add(productId) {
         if (this._isLoggedIn) {
             try {
-                const res = await fetch(`${BASE_URL}/api/cart`, {
+                const res = await fetch(`/api/cart`, {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
@@ -64,11 +57,9 @@ window.Cart = {
                     return { status: 'success' };
                 }
             } catch (err) {
-                // ignore
             }
             return { status: 'error' };
         }
-
         return this._addToLocal(productId);
     },
 
@@ -87,7 +78,7 @@ window.Cart = {
     async remove(productId) {
         if (this._isLoggedIn) {
             try {
-                const res = await fetch(`${BASE_URL}/api/cart/${productId}`, {
+                const res = await fetch(`/api/cart/${productId}`, {
                     method: 'DELETE', credentials: 'include'
                 });
                 if (res.status === 401 || res.status === 403) {
@@ -96,11 +87,9 @@ window.Cart = {
                 }
                 if (res.ok) return { status: 'success' };
             } catch (err) {
-                // ignore
             }
             return { status: 'error' };
         }
-
         return this._removeFromLocal(productId);
     },
 
@@ -113,9 +102,8 @@ window.Cart = {
     async sync() {
         const guestItems = this.getLocalItems();
         if (guestItems.length === 0) return { status: 'empty' };
-
         try {
-            const res = await fetch(`${BASE_URL}/api/cart/sync`, {
+            const res = await fetch(`/api/cart/sync`, {
                 method: 'POST', credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ cart: guestItems })
@@ -129,7 +117,6 @@ window.Cart = {
                 return { status: 'success' };
             }
         } catch (err) {
-            // ignore
         }
         return { status: 'error' };
     },

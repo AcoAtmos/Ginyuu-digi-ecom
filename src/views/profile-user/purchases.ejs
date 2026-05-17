@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('header.ejs') %>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<%- include('../partials/navbar') %>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <%- include('sidebar.ejs') %>
+
+  <!-- MAIN -->
+  <main class="main" id="main">
+    <!-- PURCHASES SECTION -->
+    <div id="section-purchases" class="section-content" >
+      <div class="breadcrumb">Account <span>/ Purchases</span></div>
+      <div class="page-header">
+        <h1>My Purchases</h1>
+        <p>View and manage all your digital product orders</p>
+      </div>
+      <div class="purchase-filters" id="purchaseFilters">
+        <button class="filter-btn active" data-filter="all">All Orders</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+        <button class="filter-btn" data-filter="pending">Pending</button>
+      </div>
+      <div class="purchases-grid" style="margin-top:16px">
+        <div class="order-card" data-status="completed">
+          <div class="order-header">
+            <div class="order-thumb">📘</div>
+            <div class="order-info">
+              <div class="order-title">Notion Productivity Handbook</div>
+              <div class="order-type">EBOOK · Digital Download</div>
+            </div>
+            <div>
+              <div class="order-price">Rp 45.000</div>
+              <div class="order-date">12 May 2026</div>
+            </div>
+          </div>
+          <div class="order-footer">
+            <span class="status-badge status-completed">Completed</span>
+            <div class="order-actions">
+              <button class="order-action-btn" onclick="showToast('Invoice downloaded')">Invoice</button>
+              <button class="order-action-btn primary" onclick="showToast('Downloading your file...')">⬇ Download</button>
+            </div>
+          </div>
+        </div>
+        <div class="order-card" data-status="completed">
+          <div class="order-header">
+            <div class="order-thumb">✍️</div>
+            <div class="order-info">
+              <div class="order-title">Freelance Writing Blueprint</div>
+              <div class="order-type">EBOOK · Digital Download</div>
+            </div>
+            <div>
+              <div class="order-price">Rp 67.000</div>
+              <div class="order-date">3 May 2026</div>
+            </div>
+          </div>
+          <div class="order-footer">
+            <span class="status-badge status-completed">Completed</span>
+            <div class="order-actions">
+              <button class="order-action-btn" onclick="showToast('Invoice downloaded')">Invoice</button>
+              <button class="order-action-btn primary" onclick="showToast('Downloading your file...')">⬇ Download</button>
+            </div>
+          </div>
+        </div>
+        <div class="order-card" data-status="completed">
+          <div class="order-header">
+            <div class="order-thumb">🔍</div>
+            <div class="order-info">
+              <div class="order-title">SEO Starter Playbook</div>
+              <div class="order-type">EBOOK · Digital Download</div>
+            </div>
+            <div>
+              <div class="order-price">Rp 53.000</div>
+              <div class="order-date">27 Apr 2026</div>
+            </div>
+          </div>
+          <div class="order-footer">
+            <span class="status-badge status-completed">Completed</span>
+            <div class="order-actions">
+              <button class="order-action-btn" onclick="showToast('Invoice downloaded')">Invoice</button>
+              <button class="order-action-btn primary" onclick="showToast('Downloading your file...')">⬇ Download</button>
+            </div>
+          </div>
+        </div>
+        <div class="order-card" data-status="pending">
+          <div class="order-header">
+            <div class="order-thumb">📊</div>
+            <div class="order-info">
+              <div class="order-title">Digital Marketing Fundamentals</div>
+              <div class="order-type">COURSE · Access 6 Months</div>
+            </div>
+            <div>
+              <div class="order-price">Rp 58.000</div>
+              <div class="order-date">14 May 2026</div>
+            </div>
+          </div>
+          <div class="order-footer">
+            <span class="status-badge status-pending">Processing</span>
+            <div class="order-actions">
+              <button class="order-action-btn" onclick="showToast('Payment info sent to your email')">Payment Info</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div> 
+
+</body>
+</html>

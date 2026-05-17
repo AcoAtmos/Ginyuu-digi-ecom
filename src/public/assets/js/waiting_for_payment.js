@@ -1,6 +1,6 @@
 import { showToast } from '../../common/main/main.js';
 
-const BE_URL = '';
+let qrisData = null;
 
 let orderData = null;
 let countdownInterval = null;
@@ -8,7 +8,6 @@ let countdownInterval = null;
 document.addEventListener('DOMContentLoaded', async () => {
   const params = new URLSearchParams(window.location.search);
   const invoiceNumber = params.get('invoice');
-
   if (!invoiceNumber) {
     showToast('⚠️ Invoice tidak ditemukan');
     setTimeout(() => { window.location.href = '/'; }, 2000);
@@ -16,12 +15,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   await loadOrderData(invoiceNumber);
+  startPolling()
   setupButtons();
 });
 
 async function loadOrderData(invoiceNumber) {
   try {
-    const res = await fetch(`${BE_URL}/api/get_invoice/${encodeURIComponent(invoiceNumber)}`);
+    const res = await fetch(`/api/get_invoice/${encodeURIComponent(invoiceNumber)}`);
     const json = await res.json();
 
     if (json.status === 'failed' || !json.data) {
@@ -32,8 +32,13 @@ async function loadOrderData(invoiceNumber) {
 
     orderData = json.data;
 
-    if (orderData.status === 'paid') {
+    if (orderData.status_payment === 'paid') {
       showPaidOverlay();
+      return;
+    }
+
+    if (orderData.status_payment === 'cancelled') {
+      showCancelledOverlay();
       return;
     }
 
@@ -56,8 +61,7 @@ function renderPage() {
   document.getElementById('custName').textContent = d.username || '—';
   document.getElementById('custEmail').textContent = d.email || '—';
 
-  const expireAt = new Date(d.issued_at);
-  expireAt.setDate(expireAt.getDate() + 3);
+  const expireAt = new Date(d.expires_at);
   document.getElementById('expireTime').textContent =
     expireAt.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' WIB';
 
@@ -172,36 +176,126 @@ function renderPaymentDetail() {
         </div>
       </div>`;
 
-  } else {
+  } else if (method === "qris") {
     icon.textContent = '⬛';
     title.textContent = 'QRIS';
     badge.textContent = 'Universal';
 
-    const expireAt = new Date(d.issued_at);
-    expireAt.setDate(expireAt.getDate() + 3);
+    const expireAt = new Date(d.expires_at);
     const expireStr = expireAt.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB';
 
-    body.innerHTML = `
-      <div class="qris-box">
-        <div class="qris-frame">
-          <div class="qris-inner"></div>
-          <div class="qris-logo">⬛</div>
-        </div>
-        <div class="qris-note">Scan QR Code ini menggunakan aplikasi e-wallet apapun. GoPay, OVO, DANA, ShopeePay, dan lainnya.</div>
-        <div class="qris-expire">
-          QR Code berlaku hingga: <strong style="color:var(--warning)">${expireStr}</strong>
-        </div>
-        <button class="btn-download-qr" onclick="showToast('⬇️ Mengunduh QR Code…')">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Download QR Code
-        </button>
-      </div>`;
+    body.innerHTML =  `
+    <div id="qrisContainer">
+      <div id="qrisLoading" style="text-align:center;padding:40px 0;color:var(--text2)">
+        ⏳ Memuat QR Code pembayaran...
+      </div>
+      <img id="qrisImage" src="" alt="QRIS Payment" style="display:none;width:220px;height:220px;margin:0 auto;border-radius:12px;">
+      <div id="qrisExpiry" style="display:none;text-align:center;font-size:12px;color:var(--text2);margin-top:8px;"></div>
+      <a id="qrisDirectLink" href="#" target="_blank" style="display:none;text-align:center;font-size:13px;color:var(--accent);margin-top:6px;">
+        🔗 Link Pembayaran Alternatif
+      </a>
+    </div>
+    <div class="qris-note" style="margin-top:12px;font-size:12px;color:var(--text2);text-align:center;">
+      Scan QR Code di atas menggunakan aplikasi GoPay, OVO, DANA, ShopeePay, atau Mobile Banking manapun.
+    </div>
+  `;
+    if (qrisData && qrisData.qris_url){
+      renderQris();
+    }else{
+      createQrisPayment(d.invoice_number);
+    }
+
   }
 }
 
+// create qis payment
+async function createQrisPayment(invoiceNumber){
+  document.getElementById('qrisLoading').style.display = 'block';
+  document.getElementById('qrisImage').style.display = 'none';
+  try{
+    const res = await fetch(`/api/create_qris`, {
+      method: 'POST', 
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        invoice_number: invoiceNumber,
+      }),
+    });
+    
+    const json = await res.json();
+
+    if(json.status === "success" && json.data){
+      
+      qrisData = json.data;
+      renderQris();
+    }else{
+      showToast(`❌ ${json.message || 'Gagal membuat QRIS'}`);
+      document.getElementById('qrisLoading').textContent = 'Gagal memuat QR. Klik refresh untuk coba lagi.';
+    }
+  }catch(err){
+    console.error(err);
+    showToast('❌ Gagal menghubungi server, silakan refresh halaman ini');
+  }
+}
+
+function renderQris(){
+  if (!qrisData) return;
+
+  document.getElementById('qrisLoading').style.display = 'none';
+  document.getElementById('qrisContainer').style.display = 'block';
+
+  const img = document.getElementById("qrisImage");
+  img.src = qrisData.qris_url;
+  img.style.display = "block";
+
+  if (qrisData.direct_url){
+    const link = document.getElementById("qrisDirectLink");
+    link.href = qrisData.direct_url;
+    link.style.display = "inline-block";
+  }
+
+  const expireEl = document.getElementById("qrisExpiry");
+  if (expireEl && qrisData.expired_at) {
+    const expireAt = new Date(qrisData.expired_at);
+    expireEl.textContent = 'QR berlaku hingga: ' +
+      expireAt.toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) + ' WIB';
+    expireEl.style.display = 'block';
+  }
+}  
+
+let pollinterval = null;
+
+function startPolling(){
+  if (pollinterval) clearInterval(pollinterval);
+
+  pollinterval = setInterval(async () =>{
+    if(orderData.status_payment === "paid" || orderData.status_payment === "cancelled"){
+      clearInterval(pollinterval);
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/get_invoice/${encodeURIComponent(orderData.invoice_number)}`);
+
+      const json = await res.json();
+      console.log(json.data);
+      if(json.data?.status_payment === ("paid")){
+        orderData = json.data;
+        clearInterval(pollinterval);
+        showPaidOverlay();
+      } else if (json.data?.status_payment === "cancelled"){
+        clearInterval(pollinterval);
+        showCancelledOverlay();
+      }
+    } catch (e) {
+    }
+    
+  },10000)
+}
+
 function startCountdown() {
-  const issuedAt = new Date(orderData.issued_at);
-  const expireAt = new Date(issuedAt.getTime() + 3 * 24 * 60 * 60 * 1000);
+  const expireAt = new Date(orderData.expires_at);
 
   countdownInterval = setInterval(() => {
     const now = new Date();
@@ -251,13 +345,17 @@ async function checkPaymentStatus() {
   if (refreshIcon) refreshIcon.classList.add('spinning');
 
   try {
-    const res = await fetch(`${BE_URL}/api/get_invoice/${encodeURIComponent(orderData.invoice_number)}`);
+    const res = await fetch(`/api/get_invoice/${encodeURIComponent(orderData.invoice_number)}`);
     const json = await res.json();
 
-    if (json.data?.status === 'paid') {
+    if (json.data?.status_payment === 'paid') {
       orderData = json.data;
       clearInterval(countdownInterval);
       showPaidOverlay();
+    } else if (json.data?.status_payment === 'cancelled') {
+      orderData = json.data;
+      clearInterval(countdownInterval);
+      showCancelledOverlay();
     } else {
       showToast('🔄 Status: Menunggu pembayaran');
     }
@@ -274,6 +372,13 @@ function showPaidOverlay() {
   if (overlay) overlay.classList.add('show');
 }
 
+function showCancelledOverlay() {
+  clearInterval(countdownInterval);
+  document.getElementById('cancelledOrderId').textContent = '#' + (orderData?.invoice_number || '');
+  const overlay = document.getElementById('cancelledOverlay');
+  if (overlay) overlay.classList.add('show');
+}
+
 window.cancelOrder = async function () {
   if (!orderData?.invoice_number) return;
 
@@ -281,7 +386,7 @@ window.cancelOrder = async function () {
   document.getElementById('cancelModal').classList.remove('show');
 
   try {
-    const res = await fetch(`${BE_URL}/api/checkout/cancel`, {
+    const res = await fetch(`/api/checkout/cancel`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ invoice_number: orderData.invoice_number })
@@ -289,8 +394,9 @@ window.cancelOrder = async function () {
     const json = await res.json();
 
     if (json.status === 'success') {
+      orderData.status_payment = 'cancelled';
       showToast('🗑️ Pesanan berhasil dibatalkan');
-      setTimeout(() => { window.location.href = '/'; }, 1200);
+      showCancelledOverlay();
     } else {
       showToast(`❌ ${json.message}`, 'error');
       startCountdown(); // restart if cancel failed

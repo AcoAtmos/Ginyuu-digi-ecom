@@ -3,8 +3,7 @@
 // ════════════════════════════════════════════
 
 import { checkAuthStatus, showToast, logout } from '../../common/main/main.js';
-
-const BE_URL = '';
+import { Cart } from './cart.js';
 
 let cartItems = [];
 let isLoggedIn = false;
@@ -37,6 +36,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (passInput) {
     passInput.addEventListener('input', (e) => checkStrength(e.target.value));
   }
+
+  // Event delegation for upsell buttons
+  document.getElementById('upsellItems').addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-upsell');
+    if (!btn) return;
+    addUpsellItem(parseInt(btn.dataset.id));
+  });
 });
 
 // ════════════════════════════════════════════
@@ -68,10 +74,15 @@ async function loadCartItems() {
     return;
   }
 
-  // For guest: fetch all products and match by id
+  // For guest: batch-fetch only cart products (not all products)
   if (!isLoggedIn) {
     try {
-      const res = await fetch(`${BE_URL}/api/product`);
+      const ids = cartItems.map(i => i.id);
+      const res = await fetch(`/api/product/batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+      });
       if (res.ok) {
         const json = await res.json();
         const products = json.data || [];
@@ -85,14 +96,15 @@ async function loadCartItems() {
               slug: p.slug,
               category: p.category,
               preview: p.preview,
-              discount: p.discount
+              discount: p.discount,
+              tags: p.tags || []
             } : null;
           })
           .filter(Boolean);
         cartItems = enriched;
       }
     } catch (e) {
-      console.error('Failed to load products:', e);
+      console.error('Failed to batch-load products:', e);
     }
   }
 
@@ -104,6 +116,7 @@ async function loadCartItems() {
 
   renderCartItems();
   updateSummary();
+  loadRecommendations();
 }
 
 function renderCartItems() {
@@ -191,7 +204,7 @@ async function applyPromo() {
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0), 0);
 
   try {
-    const res = await fetch(`${BE_URL}/api/promo/validate`, {
+    const res = await fetch(`/api/promo/validate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ code, subtotal })
@@ -279,7 +292,7 @@ async function submitOrder() {
   }
 
   try {
-    const res = await fetch(`${BE_URL}/api/checkout`, {
+    const res = await fetch(`/api/checkout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -313,6 +326,95 @@ async function submitOrder() {
     btn.querySelector('.btn-text').textContent = 'Bayar Sekarang';
     btn.querySelector('.spinner').style.display = 'none';
   }
+}
+
+// ════════════════════════════════════════════
+// UPSELL
+// ════════════════════════════════════════════
+
+let upsellCandidates = [];
+
+async function loadRecommendations() {
+  if (cartItems.length === 0) return;
+
+  try {
+    const cartIds = cartItems.map(i => i.id).join(',');
+    const res = await fetch(`/api/product/recommendations?cart_ids=${cartIds}&limit=3`);
+    if (!res.ok) return;
+    const json = await res.json();
+    upsellCandidates = json.data || [];
+
+    if (upsellCandidates.length === 0) return;
+    renderUpsellItems(upsellCandidates);
+  } catch (e) {
+    console.error('Load recommendations failed:', e);
+  }
+}
+
+function renderUpsellItems(products) {
+  const wrap = document.getElementById('upsellWrap');
+  const container = document.getElementById('upsellItems');
+  wrap.style.display = 'block';
+
+  container.innerHTML = products.map(p => `
+    <div class="upsell-item">
+      <div class="upsell-icon">${p.emoji || '📦'}</div>
+      <div class="upsell-info">
+        <div class="upsell-name">${p.name}</div>
+        <div class="upsell-tags">${(p.tags || []).slice(0, 3).join(', ')}</div>
+      </div>
+      <div class="upsell-price">${formatRp(p.price || 0)}</div>
+      <button class="btn-upsell" data-id="${p.id}">+ Tambah</button>
+    </div>
+  `).join('');
+}
+
+function addUpsellItem(productId) {
+  // Guard: cegah duplikat
+  if (cartItems.some(i => i.id == productId)) {
+    showToast('⚠️ Produk sudah ada di keranjang');
+    return;
+  }
+
+  const product = upsellCandidates.find(p => p.id == productId);
+  if (!product) return;
+
+  cartItems.push({
+    id: product.id,
+    name: product.name,
+    price: product.price,
+    slug: product.slug,
+    category: product.category,
+    preview: product.preview,
+    discount: product.discount,
+    tags: product.tags || []
+  });
+
+  renderCartItems();
+  updateSummary();
+  updateReqBody();
+  showToast('✓ ' + product.name + ' ditambahkan');
+
+  // Remove added item from upsell
+  upsellCandidates = upsellCandidates.filter(p => p.id != productId);
+  if (upsellCandidates.length === 0) {
+    document.getElementById('upsellWrap').style.display = 'none';
+  } else {
+    renderUpsellItems(upsellCandidates);
+  }
+}
+
+// ════════════════════════════════════════════
+// REQUEST BODY PREVIEW
+// ════════════════════════════════════════════
+function updateReqBody() {
+  const payload = {
+    cart_items: cartItems.map(item => ({ id: item.id })),
+    payment_method: selectedPayment,
+    promo_code: promoApplied ? promoApplied.code : null
+  };
+  const pre = document.getElementById('reqBodyPre');
+  if (pre) pre.textContent = JSON.stringify(payload, null, 2);
 }
 
 // ════════════════════════════════════════════
@@ -350,3 +452,4 @@ function checkStrength(password) {
 window.togglePass = togglePass;
 window.checkStrength = checkStrength;
 window.applyPromo = applyPromo;
+window.updateReqBody = updateReqBody;

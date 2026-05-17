@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('header.ejs') %>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<%- include('../partials/navbar') %>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <%- include('sidebar.ejs') %>
+
+  <!-- MAIN -->
+  <main class="main" id="main">
+    <!-- PROFILE SECTION -->
+    <div id="section-profile" class="section-content">
+      <div class="breadcrumb">Account <span>/ My Profile</span></div>
+      <div class="page-header">
+        <h1>My Profile</h1>
+        <p>Manage your personal information and account details</p>
+      </div>
+      <div class="profile-grid">
+        <!-- LEFT CARD -->
+        <div>
+          <div class="profile-card">
+            <div class="avatar-wrap">
+              <div class="avatar-large">AR</div>
+              <button class="avatar-edit" onclick="showToast('Photo upload coming soon')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              </button>
+            </div>
+            <div>
+              <div class="profile-name">Alexa Rawles</div>
+              <div class="profile-email">alexarawles@gmail.com</div>
+              <div class="profile-since">Member since Jun 2022</div>
+            </div>
+            
+          </div>
+        </div>
+        <!-- FORMS -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="form-card">
+            <div class="form-card-header">
+              <h3>Personal Information</h3>
+              <p>Update your name and personal details</p>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Username</label>
+                <input class="form-input" type="text" value="Alexa" placeholder="Your first name"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nick Name</label>
+                <input class="form-input" type="text" value="Alex" placeholder="Your nickname"/>
+              </div>
+              <!-- <div class="form-group">
+                <label class="form-label">Gender</label>
+                <select class="form-input">
+                  <option>Female</option>
+                  <option>Male</option>
+                  <option>Prefer not to say</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Country</label>
+                <select class="form-input">
+                  <option>Indonesia</option>
+                  <option>Malaysia</option>
+                  <option>Singapore</option>
+                  <option>United States</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Language</label>
+                <select class="form-input">
+                  <option>Bahasa Indonesia</option>
+                  <option>English</option>
+                  <option>Malay</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Time Zone</label>
+                <select class="form-input">
+                  <option>WIB (UTC+7)</option>
+                  <option>WITA (UTC+8)</option>
+                  <option>WIT (UTC+9)</option>
+                </select>
+              </div> -->
+              <div class="form-card">
+            <div class="form-card-header">
+              <h3>My Email Address</h3>
+              <p>Manage linked email addresses</p>
+            </div>
+            <div class="email-list">
+              <div class="email-item">
+                <div class="email-icon">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                </div>
+                <div class="email-info">
+                  <div class="email-addr">alexarawles@gmail.com</div>
+                  <div class="email-meta">Added 1 month ago · Primary</div>
+                </div>
+                <span class="email-badge">Verified</span>
+              </div>
+            </div>
+            <button class="add-email-btn" style="margin-top:10px" onclick="showToast('Add email dialog coming soon')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              + Add Email Address
+            </button>
+          </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn btn-ghost" onclick="showToast('Changes discarded')">Cancel</button>
+              <button class="btn btn-primary" onclick="showToast('Profile saved successfully ✓')">Save Changes</button>
+            </div>
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>
