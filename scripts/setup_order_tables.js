@@ -42,9 +42,9 @@ const setupOrderTables = async () => {
             invoice_number VARCHAR(100) NOT NULL UNIQUE,
             discount_amount INTEGER NOT NULL DEFAULT 0,
             total INTEGER NOT NULL DEFAULT 0,
-            issued_at TIMESTAMP NOT NULL,
+            expires_at TIMESTAMP NOT NULL,
             unique_num INTEGER NOT NULL DEFAULT 0,
-            status VARCHAR(20) NOT NULL DEFAULT 'pending',
+            status_payment VARCHAR(20) NOT NULL DEFAULT 'pending',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 

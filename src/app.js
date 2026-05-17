@@ -19,7 +19,15 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use((req, res, next) => {
-    res.locals.BE_URL = process.env.BE_URL || `http://localhost:${process.env.PORT || 4100}`;
+    res.locals.BE_URL = process.env.BASE_URL || process.env.BE_URL || `http://localhost:${process.env.PORT || 4100}`;
+    next();
+});
+
+// Cors
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', 'https://entertain-upcountry-padlock.ngrok-free.dev');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     next();
 });
 
@@ -32,7 +40,10 @@ const webController = require("./controllers/web.controller");
 app.get("/", webController.landing);
 app.get("/checkout", webController.checkout);
 app.get("/checkout/waiting-payment", webController.waiting_for_payment);
-app.get("/profile", webController.profile)
+app.get("/profile", webController.profile);
+app.get("/profile/settings", webController.profile_settings);
+app.get("/profile/purchases", webController.profile_purchases);
+app.get("/profile/security", webController.security);
 
 // Feature routes
 const { router: authRoutes, prefix: authPrefix } = require("./features/auth/auth.routes");
@@ -60,11 +71,11 @@ const productController = require("./features/product/product.controller");
 app.get("/api/get_product/:slug", productController.get_product);
 
 // Background worker
-// const { checkout_send_email } = require("./features/checkout/checkout.service");
-// setInterval(async () => {
-//     console.log('10 seconds have passed');
-//     await checkout_send_email();
-// }, 10000);
+const { send_email_worker } = require("./shared/services/email.service");
+setInterval(async () => {
+    // console.log('10 seconds have passed');
+    await send_email_worker();
+}, 10000);
 
 // Start
 const PORT = process.env.PORT || 4100;

@@ -7,9 +7,7 @@
     "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "express": "^5.2.1",
-    "imapflow": "^1.3.1",
     "jsonwebtoken": "^9.0.3",
-    "mysql2": "^3.16.2",
     "nodemailer": "^8.0.1",
     "pg": "^8.18.0"
   },
@@ -19,6 +17,8 @@
     "setup-cart": "bun scripts/setup_cart_table.js",
     "setup-orders": "bun scripts/setup_order_tables.js",
     "setup-notifications": "node scripts/setup_notifications_table.js",
-"setup-indexes": "node scripts/setup_product_indexes.js"
+"setup-indexes": "node scripts/setup_product_indexes.js",
+    "setup-pg-transactions": "node scripts/setup_payment_gateway_table.js",
+    "drop-unique-num": "node scripts/drop_unique_num.js"
   }
 } 
