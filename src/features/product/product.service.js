@@ -30,6 +30,44 @@ exports.getProduct = async () => {
     return results.rows;
 };
 
+exports.getProductsByIds = async (ids) => {
+    if (!ids || ids.length === 0) return [];
+    const query = "SELECT * FROM product WHERE id = ANY($1::int[])";
+    const results = await db.query(query, [ids]);
+    return results.rows;
+};
+
+exports.getRecommendations = async (cartIds, limit = 3) => {
+    if (!cartIds || cartIds.length === 0) return [];
+
+    try {
+        const query = `
+            WITH cart_tags AS (
+                SELECT DISTINCT unnest(tags) AS tag
+                FROM product
+                WHERE id = ANY($1::int[]) AND tags IS NOT NULL
+            )
+            SELECT p.*,
+                (
+                    SELECT COUNT(*)
+                    FROM unnest(p.tags) t
+                    WHERE t IN (SELECT tag FROM cart_tags)
+                ) AS match_count
+            FROM product p
+            WHERE p.id != ALL($1::int[])
+                AND p.tags IS NOT NULL
+                AND p.tags && ARRAY(SELECT tag FROM cart_tags)
+            ORDER BY match_count DESC
+            LIMIT $2
+        `;
+        const results = await db.query(query, [cartIds, limit]);
+        return results.rows;
+    } catch (error) {
+        console.error("getRecommendations error:", error);
+        return [];
+    }
+};
+
 exports.getProductCategory = async (page, limit) => {
     const query = "SELECT * FROM products ORDER BY id ASC LIMIT $1 OFFSET $2";
     const countQuery = "SELECT COUNT(*) AS total FROM products";
