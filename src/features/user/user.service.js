@@ -45,12 +45,14 @@ exports.get_my_purchases = async (req, res) => {
         if (isAdmin) {
             query = `
                 SELECT o.id as order_id, o.created_at as purchase_date,
-                       u.username as buyer, p.title as product_name,
-                       p.slug as product_slug, o.amount as quantity,
+                       u.username as buyer, p.name as product_name,
+                       p.slug as product_slug, oi.price as item_price,
                        o.subtotal, i.total as total_price, i.invoice_number,
-                       i.issued_at, o.payment_method, o.payment_status
+                       i.expires_at, o.payment_method, o.status as order_status,
+                       i.status_payment
                 FROM orders o
-                JOIN products p ON o.product_id = p.id
+                JOIN order_items oi ON oi.order_id = o.id
+                JOIN product p ON oi.product_id = p.id
                 LEFT JOIN invoices i ON i.order_id = o.id
                 JOIN users u ON o.user_id = u.id
                 ORDER BY o.created_at DESC
@@ -59,19 +61,30 @@ exports.get_my_purchases = async (req, res) => {
             return res.status(200).json({ success: true, data: rows });
         }
         query = `
-            SELECT o.id as order_id, o.created_at as purchase_date,
-                   p.title as product_name, p.slug as product_slug,
-                   o.amount as quantity, o.subtotal, i.total as total_price,
-                   i.invoice_number, i.issued_at, o.payment_method, o.payment_status
+            SELECT o.id as order_id, 
+                   o.created_at as purchase_date,
+                   p.name as product_name,
+                   u.username as buyer, 
+                   p.slug as product_slug,
+                   oi.price as item_price, 
+                   o.subtotal, 
+                   i.total as total_price,
+                   i.invoice_number, 
+                   i.expires_at,   
+                   o.payment_method, 
+                   o.status as order_status,
+                   i.status_payment
             FROM orders o
-            JOIN products p ON o.product_id = p.id
+            JOIN order_items oi ON oi.order_id = o.id
+            JOIN product p ON oi.product_id = p.id
+            JOIN users u ON o.user_id = u.id
             LEFT JOIN invoices i ON i.order_id = o.id
             WHERE o.user_id = $1
             ORDER BY o.created_at DESC
         `;
         const { rows } = await db.query(query, [user.id]);
         console.log("Purchases rows:", rows);
-        res.status(200).json({ success: true, data: rows });
+        res.status(200).json({ success: true, data: rows, ket: "ini adalah data get my purchases" });
     } catch (error) {
         console.error("get_my_purchases error:", error);
         res.status(500).json({ success: false, message: error.message });
@@ -87,12 +100,14 @@ exports.get_all_purchases = async (req, res) => {
         const query = `
             SELECT o.id as order_id, o.created_at as purchase_date,
                    u.username as buyer_username, u.email as buyer_email,
-                   p.title as product_name, p.slug as product_slug,
-                   o.amount as quantity, o.subtotal, i.total as total_price,
-                   i.invoice_number, i.issued_at, o.payment_method, o.payment_status
+                   p.name as product_name, p.slug as product_slug,
+                   oi.price as item_price, o.subtotal, i.total as total_price,
+                   i.invoice_number, i.expires_at, o.payment_method, o.status as order_status,
+                   i.status_payment
             FROM orders o
             JOIN users u ON o.user_id = u.id
-            JOIN products p ON o.product_id = p.id
+            JOIN order_items oi ON oi.order_id = o.id
+            JOIN product p ON oi.product_id = p.id
             LEFT JOIN invoices i ON i.order_id = o.id
             ORDER BY o.created_at DESC
         `;

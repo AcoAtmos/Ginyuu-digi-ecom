@@ -9,6 +9,7 @@ exports.authMiddleware = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
+    console.log(`ini decode : `, decoded);
     next();
   } catch (err) {
     return res.status(401).json({ code: 401, status: "error", message: "Invalid token" });

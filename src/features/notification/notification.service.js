@@ -28,7 +28,7 @@ exports.getAllNotifications = async (userId) => {
 
 exports.markAsRead = async (id, userId) => {
     try {
-        await db.query("UPDATE notifications SET is_read = 'read' WHERE id = $1 AND user_id = $2", [id, userId]);
+        await db.query("UPDATE notifications SET is_read = true WHERE id = $1 AND user_id = $2", [id, userId]);
     } catch (err) {
         console.error('Mark as read failed:', err);
         throw err;
@@ -37,7 +37,7 @@ exports.markAsRead = async (id, userId) => {
 
 exports.markAllAsRead = async (userId) => {
     try {
-        await db.query("UPDATE notifications SET is_read = 'read' WHERE user_id = $1 AND is_read = 'unread'", [userId]);
+        await db.query("UPDATE notifications SET is_read = true WHERE user_id = $1 AND is_read = false", [userId]);
     } catch (err) {
         console.error('Mark all as read failed:', err);
         throw err;
