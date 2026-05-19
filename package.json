@@ -14,11 +14,15 @@
   "scripts": {
     "dev": "bun --watch src/app.js",
     "start": "bun src/app.js",
+    "setup-users": "bun scripts/setup_users_table.js",
+    "setup-product": "bun scripts/setup_product_table.js",
+    "setup-queue": "bun scripts/setup_queue_table.js",
     "setup-cart": "bun scripts/setup_cart_table.js",
     "setup-orders": "bun scripts/setup_order_tables.js",
-    "setup-notifications": "node scripts/setup_notifications_table.js",
-"setup-indexes": "node scripts/setup_product_indexes.js",
-    "setup-pg-transactions": "node scripts/setup_payment_gateway_table.js",
-    "drop-unique-num": "node scripts/drop_unique_num.js"
+    "setup-notifications": "bun scripts/setup_notifications_table.js",
+    "setup-indexes": "bun scripts/setup_product_indexes.js",
+    "setup-pg-transactions": "bun scripts/setup_payment_gateway_table.js",
+    "setup-all": "bun scripts/setup_users_table.js && bun scripts/setup_product_table.js && bun scripts/setup_cart_table.js && bun scripts/setup_order_tables.js && bun scripts/setup_notifications_table.js && bun scripts/setup_queue_table.js && bun scripts/setup_payment_gateway_table.js",
+    "drop-unique-num": "bun scripts/drop_unique_num.js"
   }
-} 
+}
