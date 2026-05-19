@@ -25,4 +25,4 @@
     "setup-all": "bun scripts/setup_users_table.js && bun scripts/setup_product_table.js && bun scripts/setup_cart_table.js && bun scripts/setup_order_tables.js && bun scripts/setup_notifications_table.js && bun scripts/setup_queue_table.js && bun scripts/setup_payment_gateway_table.js",
     "drop-unique-num": "bun scripts/drop_unique_num.js"
   }
-}
+} 
