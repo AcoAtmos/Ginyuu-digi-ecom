@@ -51,58 +51,6 @@
             <button class="btn btn-primary" onclick="showToast('Password updated successfully ✓')">Update Password</button>
           </div>
         </div>
-
-        <div class="security-card">
-          <div class="security-card-header">
-            <div class="security-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-            <div>
-              <div class="security-title">Two-Factor Authentication</div>
-              <div class="security-subtitle">Add an extra layer of security</div>
-            </div>
-            <div class="security-status"><span class="dot-red"></span><span style="color:var(--text2);font-size:12px">Disabled</span></div>
-          </div>
-          <p style="font-size:13px;color:var(--text3);margin-bottom:16px">Protect your account with 2FA. Once enabled, you'll need to enter a code from your authenticator app each time you sign in.</p>
-          <button class="btn btn-ghost" onclick="showToast('2FA setup starting...')">Enable 2FA</button>
-        </div>
-
-        <div class="security-card">
-          <div class="security-card-header">
-            <div class="security-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
-            <div>
-              <div class="security-title">Active Sessions</div>
-              <div class="security-subtitle">Devices currently signed in</div>
-            </div>
-          </div>
-          <div>
-            <div class="session-item">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text2)"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-              <div class="session-device">
-                <div class="session-device-name">Windows 11 · Chrome 124</div>
-                <div class="session-device-meta">Semarang, ID · Active now</div>
-              </div>
-              <span class="session-current">This device</span>
-            </div>
-            <div class="session-item">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text2)"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-              <div class="session-device">
-                <div class="session-device-name">Android · Chrome Mobile</div>
-                <div class="session-device-meta">Jakarta, ID · 2 hours ago</div>
-              </div>
-              <button class="revoke-btn" onclick="showToast('Session revoked')">Revoke</button>
-            </div>
-            <div class="session-item">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--text2)"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-              <div class="session-device">
-                <div class="session-device-name">macOS · Safari 17</div>
-                <div class="session-device-meta">Yogyakarta, ID · 5 days ago</div>
-              </div>
-              <button class="revoke-btn" onclick="showToast('Session revoked')">Revoke</button>
-            </div>
-          </div>
-          <div style="margin-top:12px">
-            <button class="btn btn-danger" onclick="showToast('All other sessions terminated')">Revoke All Other Sessions</button>
-          </div>
-        </div>
       </div>
     </div>
   </main>

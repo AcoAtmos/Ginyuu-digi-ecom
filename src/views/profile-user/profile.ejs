@@ -28,15 +28,15 @@
         <div>
           <div class="profile-card">
             <div class="avatar-wrap">
-              <div class="avatar-large">AR</div>
-              <button class="avatar-edit" onclick="showToast('Photo upload coming soon')">
+              <div class="avatar-large" id="avatarInitial">..</div>
+              <button class="avatar-edit" id="btnAvatarEdit">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
               </button>
             </div>
             <div>
-              <div class="profile-name">Alexa Rawles</div>
-              <div class="profile-email">alexarawles@gmail.com</div>
-              <div class="profile-since">Member since Jun 2022</div>
+              <div class="profile-name" id="profileDisplayName"></div>
+              <div class="profile-email" id="profileDisplayEmail"></div>
+              <div class="profile-since" id="profileDisplaySince"></div>
             </div>
             
           </div>
@@ -51,11 +51,11 @@
             <div class="form-grid">
               <div class="form-group">
                 <label class="form-label">Username</label>
-                <input class="form-input" type="text" value="Alexa" placeholder="Your first name"/>
+                <input class="form-input" type="text" id="inputUsername" placeholder="Your username"/>
               </div>
               <div class="form-group">
-                <label class="form-label">Nick Name</label>
-                <input class="form-input" type="text" value="Alex" placeholder="Your nickname"/>
+                <label class="form-label">Phone</label>
+                <input class="form-input" type="text" id="inputPhone" placeholder="Your phone number"/>
               </div>
               <!-- <div class="form-group">
                 <label class="form-label">Gender</label>
@@ -101,10 +101,10 @@
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
                 </div>
                 <div class="email-info">
-                  <div class="email-addr">alexarawles@gmail.com</div>
-                  <div class="email-meta">Added 1 month ago · Primary</div>
+                  <div class="email-addr" id="profileEmailAddr"></div>
+                  <div class="email-meta">Primary</div>
                 </div>
-                <span class="email-badge">Verified</span>
+                <span class="email-badge" id="profileEmailBadge">Verified</span>
               </div>
             </div>
             <button class="add-email-btn" style="margin-top:10px" onclick="showToast('Add email dialog coming soon')">
@@ -114,17 +114,26 @@
           </div>
             </div>
             <div class="form-actions">
-              <button class="btn btn-ghost" onclick="showToast('Changes discarded')">Cancel</button>
-              <button class="btn btn-primary" onclick="showToast('Profile saved successfully ✓')">Save Changes</button>
+              <button class="btn btn-ghost" id="btnCancel">Cancel</button>
+              <button class="btn btn-primary" id="btnSave">Save Changes</button>
             </div>
           </div>
-
-          
         </div>
       </div>
     </div>
   </main>
 </div>
 
+<!-- Confirm Save Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <div class="modal-title">Update Profile?</div>
+    <div class="modal-desc">Are you sure you want to save these changes to your profile?</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modalCancel">Cancel</button>
+      <button class="btn btn-primary" id="modalConfirm">Yes, Save</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
