@@ -36,55 +36,97 @@ exports.get_my_profile = async (req, res) => {
     }
 };
 
+exports.update_my_profile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { username, phone } = req.body;
+
+        const query = `UPDATE users SET username = $1, phone = $2 WHERE id = $3 RETURNING id, username, email, phone, image_url, role, created_at`;
+        const { rows } = await db.query(query, [username, phone, userId]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
+
+        res.status(200).json({ success: true, data: rows[0] });
+    } catch (error) {
+        console.error("update_my_profile error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 exports.get_my_purchases = async (req, res) => {
     try {
         const user = req.user;
-        console.log("get_my_purchases called, user:", user);
         let query;
-        const isAdmin = user.role === 'admin';
+        const isAdmin = user.role === 'ADMIN';
         if (isAdmin) {
             query = `
-                SELECT o.id as order_id, o.created_at as purchase_date,
-                       u.username as buyer, p.name as product_name,
-                       p.slug as product_slug, oi.price as item_price,
-                       o.subtotal, i.total as total_price, i.invoice_number,
-                       i.expires_at, o.payment_method, o.status as order_status,
-                       i.status_payment
+                SELECT o.id as order_id,
+                       o.created_at as purchase_date,
+                       o.subtotal,
+                       o.discount_amount,
+                       o.unique_num,
+                       o.total as total_price,
+                       o.payment_method,
+                       o.status as order_status,
+                       i.invoice_number,
+                       i.status_payment,
+                       i.expires_at,
+                       u.username as buyer,
+                       COALESCE(
+                         json_agg(
+                           json_build_object(
+                             'product_name', p.name,
+                             'product_slug', p.slug,
+                             'price', oi.price
+                           ) ORDER BY oi.id
+                         ) FILTER (WHERE p.id IS NOT NULL),
+                         '[]'::json
+                       ) as items
                 FROM orders o
+                LEFT JOIN invoices i ON i.order_id = o.id
                 JOIN order_items oi ON oi.order_id = o.id
                 JOIN product p ON oi.product_id = p.id
-                LEFT JOIN invoices i ON i.order_id = o.id
                 JOIN users u ON o.user_id = u.id
+                GROUP BY o.id, i.id, u.id
                 ORDER BY o.created_at DESC
             `;
             const { rows } = await db.query(query);
             return res.status(200).json({ success: true, data: rows });
         }
         query = `
-            SELECT o.id as order_id, 
+            SELECT o.id as order_id,
                    o.created_at as purchase_date,
-                   p.name as product_name,
-                   u.username as buyer, 
-                   p.slug as product_slug,
-                   oi.price as item_price, 
-                   o.subtotal, 
-                   i.total as total_price,
-                   i.invoice_number, 
-                   i.expires_at,   
-                   o.payment_method, 
+                   o.subtotal,
+                   o.discount_amount,
+                   o.unique_num,
+                   o.total as total_price,
+                   o.payment_method,
                    o.status as order_status,
-                   i.status_payment
+                   i.invoice_number,
+                   i.status_payment,
+                   i.expires_at,
+                   COALESCE(
+                     json_agg(
+                       json_build_object(
+                         'product_name', p.name,
+                         'product_slug', p.slug,
+                         'price', oi.price
+                       ) ORDER BY oi.id
+                     ) FILTER (WHERE p.id IS NOT NULL),
+                     '[]'::json
+                   ) as items
             FROM orders o
+            LEFT JOIN invoices i ON i.order_id = o.id
             JOIN order_items oi ON oi.order_id = o.id
             JOIN product p ON oi.product_id = p.id
-            JOIN users u ON o.user_id = u.id
-            LEFT JOIN invoices i ON i.order_id = o.id
             WHERE o.user_id = $1
+            GROUP BY o.id, i.id
             ORDER BY o.created_at DESC
         `;
         const { rows } = await db.query(query, [user.id]);
-        console.log("Purchases rows:", rows);
-        res.status(200).json({ success: true, data: rows, ket: "ini adalah data get my purchases" });
+        res.status(200).json({ success: true, data: rows });
     } catch (error) {
         console.error("get_my_purchases error:", error);
         res.status(500).json({ success: false, message: error.message });
