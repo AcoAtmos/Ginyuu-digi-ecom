@@ -1,4 +1,4 @@
-const { db } = require('./common/helper');
+const { db } = require('../src/config/database');
 
 const setupOrderTables = async () => {
     const queries = [
