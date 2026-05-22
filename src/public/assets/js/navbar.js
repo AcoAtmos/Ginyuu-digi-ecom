@@ -1,5 +1,5 @@
 
-import { showToast, Login, register, logout, checkAuthStatus } from '../../common/main/main.js';
+import { showToast, Login, register, logout, checkAuthStatus, forgotPassword } from '../../common/main/main.js';
 import { Cart } from './cart.js';
 
 let currentUser = null;
@@ -28,7 +28,7 @@ function closeCart() {
 async function addToCart(product) {
   const id = product?.id || product;
   if (!id) return;
-  const result = await Cart.add(id);
+  const result = await Cart.add(product);
   if (result?.status === 'duplicate') {
     showToast('⚠️ This product is already in your cart');
   } else if (result?.status === 'success') {
@@ -229,8 +229,22 @@ function closeAuthModal() {
 function switchTab(tab) {
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
+  const forgotForm = document.getElementById('forgotForm');
   const tabLogin = document.getElementById('tabLogin');
   const tabRegister = document.getElementById('tabRegister');
+
+  if (tab === 'forgot') {
+    if (tabLogin) tabLogin.style.display = 'none';
+    if (tabRegister) tabRegister.style.display = 'none';
+    if (loginForm) loginForm.style.display = 'none';
+    if (registerForm) registerForm.style.display = 'none';
+    if (forgotForm) forgotForm.style.display = '';
+    return;
+  }
+
+  [loginForm, registerForm, forgotForm].forEach(el => { if (el) el.style.display = 'none'; });
+  if (tabLogin) tabLogin.style.display = '';
+  if (tabRegister) tabRegister.style.display = '';
   if (loginForm) loginForm.style.display = tab === 'login' ? '' : 'none';
   if (registerForm) registerForm.style.display = tab === 'register' ? '' : 'none';
   if (tabLogin) tabLogin.classList.toggle('active', tab === 'login');
@@ -238,39 +252,13 @@ function switchTab(tab) {
 }
 
 async function handleLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass = document.getElementById('loginPassword').value;
-  if (!email || !pass) { showToast('⚠️ Fill all the fields'); return; }
+  try {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass = document.getElementById('loginPassword').value;
+    if (!email || !pass) { showToast('⚠️ Fill all the fields'); return; }
 
-  const result = await Login(email, pass);
-  if (result.status === "success") {
-    localStorage['username'] = result.data.user.username;
-    localStorage['email'] = result.data.user.email;
-    currentUser = { name: localStorage['username'], email: localStorage['email'] };
-    Cart.setLoggedIn(true);
-    await Cart.sync();
-    await updateCartBadge();
-    await renderCart();
-    closeAuthModal();
-    renderProfileDropdown();
-    showToast(`👋 Welcome, ${currentUser.name}!`);
-  } else {
-    showToast(result.message);
-  }
-}
-
-async function handleRegister() {
-  const username = document.getElementById('regUsername').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
-  const password = document.getElementById('regPassword').value;
-  const confirmPass = document.getElementById('regConfirmPassword').value;
-  const terms = document.getElementById('regTerms').checked;
-
-  const result = await register(username, email, password, confirmPass, terms);
-  if (result.status === "success") {
-    closeAuthModal();
-    const result = await Login(email, password);
-    if (result.status == "success") {
+    const result = await Login(email, pass);
+    if (result.status === "success") {
       localStorage['username'] = result.data.user.username;
       localStorage['email'] = result.data.user.email;
       currentUser = { name: localStorage['username'], email: localStorage['email'] };
@@ -278,11 +266,79 @@ async function handleRegister() {
       await Cart.sync();
       await updateCartBadge();
       await renderCart();
+      closeAuthModal();
+      renderProfileDropdown();
+      showToast(`👋 Welcome, ${currentUser.name}!`);
+    } else {
+      showToast(result.message);
     }
-    renderProfileDropdown();
-    showToast(result.message);
-  } else {
-    showToast(result.message);
+  } catch (err) {
+    console.error('Login error:', err);
+    showToast('⚠️ An unexpected error occurred');
+  }
+}
+
+async function handleRegister() {
+  try {
+    const username = document.getElementById('regUsername').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const confirmPass = document.getElementById('regConfirmPassword').value;
+    const terms = document.getElementById('regTerms').checked;
+
+    const result = await register(username, email, password, confirmPass, terms);
+    if (result.status === "success") {
+      closeAuthModal();
+      const result = await Login(email, password);
+      if (result.status == "success") {
+        localStorage['username'] = result.data.user.username;
+        localStorage['email'] = result.data.user.email;
+        currentUser = { name: localStorage['username'], email: localStorage['email'] };
+        Cart.setLoggedIn(true);
+        await Cart.sync();
+        await updateCartBadge();
+        await renderCart();
+      }
+      renderProfileDropdown();
+      showToast(result.message);
+    } else {
+      showToast(result.message);
+    }
+  } catch (err) {
+    console.error('Register error:', err);
+    showToast('⚠️ An unexpected error occurred');
+  }
+}
+
+async function handleForgotPassword() {
+  try {
+    const email = document.getElementById('forgotEmail')?.value.trim();
+    if (!email) { showToast('⚠️ Enter your email address'); return; }
+
+    const btn = document.getElementById('btnAuthForgot');
+    const originalText = 'Send Reset Link';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Sending...';
+
+    const result = await forgotPassword(email);
+    if (result.status === "success") {
+      showToast('✓ Reset link sent — check your email');
+      switchTab('login');
+      document.getElementById('forgotEmail').value = '';
+    } else {
+      showToast(result.message);
+    }
+
+    btn.disabled = false;
+    btn.textContent = originalText;
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    showToast('⚠️ An unexpected error occurred');
+    const btn = document.getElementById('btnAuthForgot');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Send Reset Link';
+    }
   }
 }
 
@@ -334,6 +390,16 @@ function toggleDropdown(btn, dropdown) {
 }
 
 // ════════════════════════════════════════════
+// SIDEBAR
+// ════════════════════════════════════════════
+function initSidebarActive() {
+  const path = window.location.pathname.replace(/\/+$/, '');
+  document.querySelectorAll('#sidebar .nav-item[data-section]').forEach(btn => {
+    btn.classList.toggle('active', path === '/' + btn.dataset.section);
+  });
+}
+
+// ════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════
 async function initNavbar() {
@@ -354,6 +420,7 @@ async function initNavbar() {
 
   renderProfileDropdown();
   updateCartBadge();
+  initSidebarActive();
 }
 
 // Auto-init — runs after DOM is parsed (module scripts are deferred by default)
@@ -466,6 +533,9 @@ document.getElementById('tabLogin')?.addEventListener('click', () => switchTab('
 document.getElementById('tabRegister')?.addEventListener('click', () => switchTab('register'));
 document.getElementById('btnAuthLogin')?.addEventListener('click', handleLogin);
 document.getElementById('btnAuthRegister')?.addEventListener('click', handleRegister);
+document.getElementById('forgotPasswordLink')?.addEventListener('click', () => switchTab('forgot'));
+document.getElementById('backToLogin')?.addEventListener('click', () => switchTab('login'));
+document.getElementById('btnAuthForgot')?.addEventListener('click', handleForgotPassword);
 
 document.querySelectorAll('[data-switch-tab]').forEach(el => {
   el.addEventListener('click', () => switchTab(el.dataset.switchTab));
@@ -515,11 +585,19 @@ document.querySelector('.sidebar-toggle')?.addEventListener('click', (e) => {
 });
 
 // ════════════════════════════════════════════
+// UPDATE CURRENT USER (called externally after profile save)
+// ════════════════════════════════════════════
+function updateCurrentUser(name, email) {
+  currentUser = { name, email };
+  renderProfileDropdown();
+}
+
+// ════════════════════════════════════════════
 // EXPORTS (consumed by products.js, landing.js)
 // ════════════════════════════════════════════
 export { addToCart };
 
 // ════════════════════════════════════════════
-// GLOBAL EXPORTS — for remaining inline onclick in EJS (profile pages)
+// GLOBAL — for profile.js classic script
 // ════════════════════════════════════════════
-window.showToast = showToast;
+window.updateCurrentUser = updateCurrentUser;

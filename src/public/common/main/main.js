@@ -175,6 +175,26 @@ async function register(username, email, password, confirmPass, terms) {
     } 
 }
 
+async function forgotPassword(email) {
+    try {
+        const response = await fetch("/api/auth/forgot-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: 'include',
+            body: JSON.stringify({ email }),
+        });
+        const data = await response.json();
+        if (data.status === "success") {
+            return { status: "success", message: data.message };
+        } else {
+            return { status: "error", message: data.message };
+        }
+    } catch (error) {
+        console.error("Error during forgot password:", error);
+        return { status: "error", message: "An error occurred" };
+    }
+}
+
 async function logout() {
     try {
         await fetch("/api/auth/logout", {
@@ -228,5 +248,20 @@ export {
     Login,
     logout,
     register,
+    forgotPassword,
     showToast
 }
+
+// ════════════════════════════════════════════
+// GLOBAL EXPORTS — for inline onclick in EJS & classic <script> tags
+// ════════════════════════════════════════════
+window.showToast = showToast;
+window.Login = Login;
+window.register = register;
+window.logout = logout;
+window.forgotPassword = forgotPassword;
+window.checkAuthStatus = checkAuthStatus;
+window.setCookie = setCookie;
+window.getCookie = getCookie;
+window.deleteCookie = deleteCookie;
+window.isCookieSet = isCookieSet;

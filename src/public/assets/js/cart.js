@@ -35,7 +35,10 @@ export const Cart = {
         return this.getLocalItems();
     },
 
-    async add(productId) {
+    async add(product) {
+        const productId = (product && typeof product === 'object') ? product.id : product;
+        if (!productId) return { status: 'error' };
+
         if (this._isLoggedIn) {
             try {
                 const res = await fetch(`/api/cart`, {
@@ -46,7 +49,7 @@ export const Cart = {
                 });
                 if (res.status === 401 || res.status === 403) {
                     this._handleSessionExpired();
-                    return this._addToLocal(productId);
+                    return this._addToLocal(product);
                 }
                 if (res.ok) {
                     const json = await res.json();
@@ -60,17 +63,25 @@ export const Cart = {
             }
             return { status: 'error' };
         }
-        return this._addToLocal(productId);
+        return this._addToLocal(product);
     },
 
-    _addToLocal(productId) {
+    _addToLocal(product) {
+        const productId = (product && typeof product === 'object') ? product.id : product;
+        if (!productId) return { status: 'error' };
+
         const items = this.getLocalItems();
         const existing = items.find(i => i.id == productId);
         if (existing) {
             if (this._onDuplicate) this._onDuplicate();
             return { status: 'duplicate', message: 'This product is already in your cart' };
         }
-        items.push({ id: productId });
+
+        const entry = (product && typeof product === 'object')
+            ? { id: product.id, name: product.name, price: product.price, slug: product.slug }
+            : { id: productId };
+
+        items.push(entry);
         this.saveLocalItems(items);
         return { status: 'success' };
     },

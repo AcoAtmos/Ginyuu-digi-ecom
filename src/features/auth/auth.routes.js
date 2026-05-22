@@ -7,5 +7,7 @@ router.post("/verify_token", controller.verifyToken);
 router.post("/register_checkout", controller.registerCheckout);
 router.get("/me", controller.getMe);
 router.post("/logout", controller.logout);
+router.post("/forgot-password", controller.forgotPassword);
+router.post("/reset-password", controller.resetPassword);
 
 module.exports = { router, prefix: "/auth" };

@@ -426,6 +426,4 @@ function formatRp(n) {
   return 'Rp ' + (n || 0).toLocaleString('id-ID');
 }
 
-window.showToast = showToast;
 window.cancelOrder = cancelOrder;
-window.copyText = copyText;

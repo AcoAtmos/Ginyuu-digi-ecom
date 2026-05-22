@@ -1,4 +1,4 @@
-const { register, login, registerCheckout } = require("./auth.service");
+const { register, login, forgotPassword, resetPassword, registerCheckout } = require("./auth.service");
 const jwt = require("jsonwebtoken");
 const { db } = require("../../config/database");
 
@@ -90,6 +90,51 @@ exports.verifyToken = async (req, res) => {
             message: "No token found",
             data: null
         });
+    }
+};
+
+exports.forgotPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ code: 400, status: "error", message: "Email is required" });
+        } 
+        await forgotPassword(email);
+        return res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "If the email exists, a reset link has been sent"
+        });
+    } catch (err) {
+        return res.status(500).json({
+            code: 500,
+            status: "error",
+            message: err.message,
+            data: err
+        });
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const { token, password } = req.body;
+        if (!token || !password) {
+            return res.status(400).json({ code: 400, status: "error", message: "Token and password are required" });
+        }
+        if (password.length < 8) {
+            return res.status(400).json({ code: 400, status: "error", message: "Password must be at least 8 characters" });
+        }
+        await resetPassword(token, password);
+        return res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "Password reset successfully"
+        });
+    } catch (err) {
+        if (err.message === 'Invalid or expired token') {
+            return res.status(400).json({ code: 400, status: "error", message: err.message });
+        }
+        return res.status(500).json({ code: 500, status: "error", message: err.message });
     }
 };
 

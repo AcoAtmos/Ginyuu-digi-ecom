@@ -40,6 +40,7 @@ const webController = require("./controllers/web.controller");
 app.get("/", webController.landing);
 app.get("/checkout", webController.checkout);
 app.get("/checkout/waiting-payment", webController.waiting_for_payment);
+app.get("/reset-password", webController.resetPassword);
 app.get("/profile", webController.profile);
 app.get("/profile/settings", webController.profile_settings);
 app.get("/profile/purchases", webController.profile_purchases);

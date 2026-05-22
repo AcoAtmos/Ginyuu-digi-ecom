@@ -12,6 +12,10 @@ exports.waiting_for_payment = async (req, res) => {
     res.render("waiting-payment");
 };
 
+exports.resetPassword = async (req, res) => {
+    res.render("reset-password", { token: req.query.token || null });
+};
+
 // profile section
 exports.profile = async (req, res) => {
     res.render("profile-user/profile");
