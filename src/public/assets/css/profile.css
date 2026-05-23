@@ -249,6 +249,25 @@ select.form-input{cursor:pointer;-webkit-appearance:none;background-image:url("d
 .modal-desc { font-size: 14px; color: var(--text2); margin-bottom: 24px; line-height: 1.7; }
 .modal-actions { display: flex; gap: 10px; justify-content: center; }
 
+/* PURCHASES TOOLBAR */
+.purchases-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.purchases-search-wrap{position:relative;flex:1;min-width:180px}
+.purchases-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+.purchases-search{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 12px 9px 34px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .25s}
+.purchases-search:focus{border-color:var(--border2)}
+.purchases-search::placeholder{color:var(--text3)}
+.purchases-sort{display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px;cursor:pointer;transition:all .25s;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.purchases-sort:hover{background:var(--bg4);color:var(--text)}
+.purchases-filters{display:flex;gap:6px;flex-wrap:wrap}
+
+/* PAGINATION */
+.purchases-pagination{display:flex;justify-content:center;padding:24px 0 8px}
+.pagination-inner{display:flex;align-items:center;gap:4px}
+.page-btn{min-width:36px;height:36px;padding:0 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:13px;cursor:pointer;transition:all .25s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center}
+.page-btn:hover{background:var(--bg3);color:var(--text);border-color:var(--border2)}
+.page-btn.active{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:600;cursor:default}
+.page-dots{padding:0 4px;color:var(--text3);font-size:13px}
+
 /* FADE IN */
 .section-content{animation:fadeUp 0.2s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
