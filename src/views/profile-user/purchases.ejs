@@ -23,13 +23,28 @@
         <h1>My Purchases</h1>
         <p>View and manage all your digital product orders</p>
       </div>
-      <div class="purchase-filters" id="purchaseFilters">
-        <button class="filter-btn active" data-filter="all">All Orders</button>
-        <button class="filter-btn" data-filter="completed">Completed</button>
-        <button class="filter-btn" data-filter="pending">Pending</button>
-        <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+      <!-- TOOLBAR: search + filter + sort -->
+      <div class="purchases-toolbar">
+        <div class="purchases-search-wrap">
+          <svg class="purchases-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="purchases-search" id="purchasesSearch" type="text" placeholder="Search invoice or product...">
+        </div>
+        <div class="purchases-filters" id="purchaseFilters">
+          <button class="filter-btn active" data-filter="">All Orders</button>
+          <button class="filter-btn" data-filter="completed">Completed</button>
+          <button class="filter-btn" data-filter="pending">Pending</button>
+          <button class="filter-btn" data-filter="cancelled">Cancelled</button>
+        </div>
+        <button class="purchases-sort" id="purchasesSort" data-sort="desc">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          Newest
+        </button>
       </div>
+
       <div class="purchases-grid" id="purchasesGrid" style="margin-top:16px"></div>
+
+      <!-- PAGINATION -->
+      <div class="purchases-pagination" id="purchasesPagination"></div>
 
       <div class="empty-state" id="purchasesEmpty" style="display:none">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.3">
