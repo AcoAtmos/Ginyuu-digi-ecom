@@ -58,10 +58,12 @@ exports.update_my_profile = async (req, res) => {
 exports.get_my_purchases = async (req, res) => {
     try {
         const user = req.user;
-        let query;
         const isAdmin = user.role === 'ADMIN';
+        const { search, status, sort = 'desc', page = 1, limit = 10 } = req.query;
+
         if (isAdmin) {
-            query = `
+            const orderDir = sort === 'asc' ? 'ASC' : 'DESC';
+            const adminQuery = `
                 SELECT o.id as order_id,
                        o.created_at as purchase_date,
                        o.subtotal,
@@ -90,12 +92,39 @@ exports.get_my_purchases = async (req, res) => {
                 JOIN product p ON oi.product_id = p.id
                 JOIN users u ON o.user_id = u.id
                 GROUP BY o.id, i.id, u.id
-                ORDER BY o.created_at DESC
+                ORDER BY o.created_at ${orderDir}
             `;
-            const { rows } = await db.query(query);
+            const { rows } = await db.query(adminQuery);
             return res.status(200).json({ success: true, data: rows });
         }
-        query = `
+
+        const pageNum = Math.max(1, parseInt(page));
+        const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+        const offset = (pageNum - 1) * limitNum;
+        const orderDir = sort === 'asc' ? 'ASC' : 'DESC';
+
+        const searchPattern = search && search.trim() ? `%${search.trim()}%` : null;
+        const statusFilter = status && status.trim() ? status.trim() : null;
+
+        // Count total matching orders
+        const countQuery = `
+            SELECT COUNT(DISTINCT o.id)
+            FROM orders o
+            LEFT JOIN invoices i ON i.order_id = o.id
+            WHERE o.user_id = $1
+              AND ($2::text IS NULL OR i.invoice_number ILIKE $2
+                OR EXISTS (
+                  SELECT 1 FROM order_items oi2
+                  JOIN product p2 ON oi2.product_id = p2.id
+                  WHERE oi2.order_id = o.id AND p2.name ILIKE $2
+                ))
+              AND ($3::text IS NULL OR o.status = $3)
+        `;
+        const countResult = await db.query(countQuery, [user.id, searchPattern, statusFilter]);
+        const total = parseInt(countResult.rows[0].count);
+
+        // Fetch paginated data
+        const dataQuery = `
             SELECT o.id as order_id,
                    o.created_at as purchase_date,
                    o.subtotal,
@@ -122,11 +151,29 @@ exports.get_my_purchases = async (req, res) => {
             JOIN order_items oi ON oi.order_id = o.id
             JOIN product p ON oi.product_id = p.id
             WHERE o.user_id = $1
+              AND ($2::text IS NULL OR i.invoice_number ILIKE $2
+                OR EXISTS (
+                  SELECT 1 FROM order_items oi2
+                  JOIN product p2 ON oi2.product_id = p2.id
+                  WHERE oi2.order_id = o.id AND p2.name ILIKE $2
+                ))
+              AND ($3::text IS NULL OR o.status = $3)
             GROUP BY o.id, i.id
-            ORDER BY o.created_at DESC
+            ORDER BY o.created_at ${orderDir}
+            LIMIT $4 OFFSET $5
         `;
-        const { rows } = await db.query(query, [user.id]);
-        res.status(200).json({ success: true, data: rows });
+        const { rows } = await db.query(dataQuery, [user.id, searchPattern, statusFilter, limitNum, offset]);
+
+        res.status(200).json({
+            success: true,
+            data: rows,
+            pagination: {
+                page: pageNum,
+                limit: limitNum,
+                total,
+                totalPages: Math.ceil(total / limitNum)
+            }
+        });
     } catch (error) {
         console.error("get_my_purchases error:", error);
         res.status(500).json({ success: false, message: error.message });
