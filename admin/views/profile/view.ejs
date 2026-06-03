@@ -1,0 +1,37 @@
+<%- include('../layouts/admin-layout', { title: 'Profile', page: 'profile' }) %>
+
+<div class="profile-header">
+  <div class="profile-avatar" id="profileAvatar">A</div>
+  <div class="profile-info">
+    <h2 id="profileName">—</h2>
+    <p id="profileEmail">—</p>
+  </div>
+</div>
+
+<div class="profile-meta" id="profileMeta">
+  <div class="profile-meta-item"><div class="profile-meta-label">Role</div><div class="profile-meta-value" id="metaRole">—</div></div>
+  <div class="profile-meta-item"><div class="profile-meta-label">Phone</div><div class="profile-meta-value" id="metaPhone">—</div></div>
+  <div class="profile-meta-item"><div class="profile-meta-label">Member since</div><div class="profile-meta-value" id="metaJoined">—</div></div>
+</div>
+
+<div style="display:flex;gap:12px;margin-top:24px">
+  <a href="/profile/change-password" class="btn btn-secondary">Change password</a>
+</div>
+
+<%- include('../layouts/admin-footer') %>
+<script>
+(async function() {
+  try {
+    const res = await fetch('/api/profile');
+    const data = await res.json();
+    if (!data.success) return;
+    const u = data.data;
+    document.getElementById('profileName').textContent = u.username;
+    document.getElementById('profileEmail').textContent = u.email;
+    document.getElementById('profileAvatar').textContent = (u.username || 'A')[0].toUpperCase();
+    document.getElementById('metaRole').textContent = u.role;
+    document.getElementById('metaPhone').textContent = u.phone || '—';
+    document.getElementById('metaJoined').textContent = u.created_at ? formatDate(u.created_at) : '—';
+  } catch(e) {}
+})();
+</script>
