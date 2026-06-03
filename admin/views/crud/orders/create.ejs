@@ -1,0 +1,119 @@
+<%- include('../../layouts/admin-layout', { title: 'Create Order', page: 'orders' }) %>
+
+<div class="section-card" style="max-width:700px">
+  <div class="section-card-header">
+    <div class="section-card-title">Create Order</div>
+  </div>
+  <div class="section-card-body" style="padding:24px">
+    <div class="auth-error" id="formError" style="display:none"></div>
+    <form id="createForm">
+      <div class="form-group">
+        <label class="form-label">Customer (User ID)</label>
+        <div style="display:flex;gap:8px">
+          <input class="form-input" name="user_id" id="userId" type="number" placeholder="Enter user ID" required style="flex:1">
+          <button type="button" class="btn btn-ghost" onclick="lookupUser()">Lookup</button>
+        </div>
+        <div id="userLookup" style="margin-top:8px;font-size:13px;color:#666"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select class="form-select" name="payment_method" required>
+          <option value="qris">QRIS</option>
+          <option value="bank_transfer">Bank Transfer</option>
+          <option value="manual">Manual</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Items <span style="color:#666;font-weight:400">(product_id : price)</span></label>
+        <div id="itemsContainer">
+          <div class="form-row" style="margin-bottom:8px">
+            <input class="form-input" name="product_id[]" type="number" placeholder="Product ID" required>
+            <input class="form-input" name="price[]" type="number" placeholder="Price (leave 0 for default)">
+          </div>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="addItemRow()">+ Add item</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Discount (optional)</label>
+        <input class="form-input" name="discount_amount" type="number" value="0" min="0">
+      </div>
+      <div class="form-actions">
+        <a href="/admin/orders" class="btn btn-ghost">Cancel</a>
+        <button class="btn btn-primary" type="submit">Create order</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../../layouts/admin-footer') %>
+<script>
+function addItemRow() {
+  const container = document.getElementById('itemsContainer');
+  const row = document.createElement('div');
+  row.className = 'form-row';
+  row.style.marginBottom = '8px';
+  row.innerHTML = `
+    <input class="form-input" name="product_id[]" type="number" placeholder="Product ID" required>
+    <input class="form-input" name="price[]" type="number" placeholder="Price (leave 0 for default)">
+  `;
+  container.appendChild(row);
+}
+
+async function lookupUser() {
+  const id = document.getElementById('userId').value;
+  const el = document.getElementById('userLookup');
+  if (!id) { el.textContent = ''; return; }
+  try {
+    const res = await fetch(`/api/admin/users/detail/${id}`);
+    const data = await res.json();
+    if (data.success) el.innerHTML = `<span style="color:#4ade80">✓ ${data.data.username} (${data.data.email})</span>`;
+    else el.innerHTML = `<span style="color:#ef4444">✗ User not found</span>`;
+  } catch { el.innerHTML = `<span style="color:#ef4444">✗ Lookup failed</span>`; }
+}
+
+document.getElementById('createForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('button[type="submit"]');
+  const errEl = document.getElementById('formError');
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Creating...';
+
+  const productIds = form.querySelectorAll('input[name="product_id[]"]');
+  const prices = form.querySelectorAll('input[name="price[]"]');
+  const items = [];
+  for (let i = 0; i < productIds.length; i++) {
+    if (productIds[i].value) items.push({ product_id: parseInt(productIds[i].value), price: parseInt(prices[i].value) || 0 });
+  }
+
+  const body = {
+    user_id: parseInt(form.user_id.value),
+    payment_method: form.payment_method.value,
+    items,
+    discount_amount: parseInt(form.discount_amount.value) || 0,
+  };
+
+  try {
+    const res = await fetch('/api/admin/orders/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast('Order created');
+      setTimeout(() => window.location.href = `/admin/orders/detail/${result.data.order.id}`, 800);
+    } else {
+      errEl.textContent = result.message;
+      errEl.style.display = 'block';
+    }
+  } catch {
+    errEl.textContent = 'Connection error';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create order';
+  }
+});
+</script>
