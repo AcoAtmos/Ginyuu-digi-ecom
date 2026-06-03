@@ -1,0 +1,78 @@
+<%- include('../../layouts/admin-layout', { title: 'Edit Customer', page: 'users' }) %>
+
+<div class="section-card" style="max-width:600px">
+  <div class="section-card-header">
+    <div class="section-card-title">Edit Customer</div>
+  </div>
+  <div class="section-card-body" style="padding:24px">
+    <div class="auth-error" id="formError" style="display:none"></div>
+    <form id="editForm">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Username</label><input class="form-input" name="username" id="fieldUsername" required></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="email" id="fieldEmail" required></div>
+      </div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" name="phone" id="fieldPhone"></div>
+      <div class="form-group">
+        <label class="form-label">Role</label>
+        <select class="form-select" name="role" id="fieldRole">
+          <option value="MEMBER">Member</option>
+          <option value="ADMIN">Admin</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <a href="/admin/users" class="btn btn-ghost">Cancel</a>
+        <button class="btn btn-primary" type="submit">Save changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../../layouts/admin-footer') %>
+<script>
+(async function() {
+  const id = window.location.pathname.split('/').pop();
+  try {
+    const res = await fetch(`/api/admin/users/detail/${id}`);
+    const data = await res.json();
+    if (!data.success) return;
+    const u = data.data;
+    document.getElementById('fieldUsername').value = u.username;
+    document.getElementById('fieldEmail').value = u.email;
+    document.getElementById('fieldPhone').value = u.phone || '';
+    document.getElementById('fieldRole').value = u.role;
+  } catch(e) {}
+})();
+
+document.getElementById('editForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('button[type="submit"]');
+  const errEl = document.getElementById('formError');
+  const id = window.location.pathname.split('/').pop();
+  const data = Object.fromEntries(new FormData(form));
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  try {
+    const res = await fetch(`/api/admin/users/edit/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast('Changes saved');
+      setTimeout(() => window.location.href = `/admin/users/detail/${id}`, 800);
+    } else {
+      errEl.textContent = result.message;
+      errEl.style.display = 'block';
+    }
+  } catch {
+    errEl.textContent = 'Connection error';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save changes';
+  }
+});
+</script>
