@@ -13,6 +13,8 @@
   },
   "scripts": {
     "dev": "bun --watch src/app.js",
+    "admin": "bun --watch admin/app.js",
+    "seed:admin": "bun admin/seed.js", 
     "start": "bun src/app.js",
     "setup-users": "bun scripts/setup_users_table.js",
     "setup-product": "bun scripts/setup_product_table.js",
