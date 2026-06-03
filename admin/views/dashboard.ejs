@@ -1,0 +1,80 @@
+<%- include('layouts/admin-layout', { title: 'Dashboard', page: 'dashboard' }) %>
+
+<div class="stats-grid" id="statsGrid">
+  <div class="stat-card"><div class="stat-card-value"><div class="skeleton" style="width:100px;height:36px"></div></div><div class="stat-card-label">Total Revenue</div></div>
+  <div class="stat-card"><div class="stat-card-value"><div class="skeleton" style="width:60px;height:36px"></div></div><div class="stat-card-label">Total Orders</div></div>
+  <div class="stat-card"><div class="stat-card-value"><div class="skeleton" style="width:60px;height:36px"></div></div><div class="stat-card-label">Customers</div></div>
+  <div class="stat-card"><div class="stat-card-value"><div class="skeleton" style="width:60px;height:36px"></div></div><div class="stat-card-label">Products</div></div>
+</div>
+
+<div class="content-grid">
+  <div class="section-card">
+    <div class="section-card-header">
+      <div class="section-card-title">Recent Orders</div>
+      <a href="/admin/orders" class="section-card-link">View all</a>
+    </div>
+    <div class="section-card-body">
+      <table class="data-table" id="recentOrdersTable">
+        <thead><tr><th>Invoice</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-card-header">
+      <div class="section-card-title">New Customers</div>
+      <a href="/admin/users" class="section-card-link">View all</a>
+    </div>
+    <div class="section-card-body">
+      <table class="data-table" id="recentUsersTable">
+        <thead><tr><th>Name</th><th>Email</th><th>Joined</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('layouts/admin-footer') %>
+<script>
+(async function() {
+  try {
+    const res = await fetch('/api/admin/dashboard/stats');
+    const data = await res.json();
+    if (!data.success) return;
+
+    const s = data.stats;
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card">
+        <div class="stat-card-header"><div class="stat-card-label">Total Revenue</div><div class="stat-card-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div>
+        <div class="stat-card-value">${s.totalRevenue.toLocaleString('id-ID')}</div>
+        <div class="stat-card-label">IDR</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header"><div class="stat-card-label">Total Orders</div><div class="stat-card-icon"><svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div></div>
+        <div class="stat-card-value">${s.totalOrders}</div>
+        <div class="stat-card-label">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header"><div class="stat-card-label">Customers</div><div class="stat-card-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div></div>
+        <div class="stat-card-value">${s.totalUsers}</div>
+        <div class="stat-card-label">Active members</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-header"><div class="stat-card-label">Products</div><div class="stat-card-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div></div>
+        <div class="stat-card-value">${s.totalProducts}</div>
+        <div class="stat-card-label">In catalog</div>
+      </div>
+    `;
+
+    const ordersTbody = document.querySelector('#recentOrdersTable tbody');
+    ordersTbody.innerHTML = data.recentOrders.length
+      ? data.recentOrders.map(o => `<tr><td>${o.invoice_number || '—'}</td><td>${o.username || o.email}</td><td>Rp ${(o.total || 0).toLocaleString('id-ID')}</td><td>${statusBadge(o.status)}</td><td>${formatDate(o.created_at)}</td></tr>`).join('')
+      : '<tr><td colspan="5" class="table-empty">No orders yet</td></tr>';
+
+    const usersTbody = document.querySelector('#recentUsersTable tbody');
+    usersTbody.innerHTML = data.recentUsers.length
+      ? data.recentUsers.map(u => `<tr><td>${u.username}</td><td>${u.email}</td><td>${formatDate(u.created_at)}</td></tr>`).join('')
+      : '<tr><td colspan="3" class="table-empty">No users yet</td></tr>';
+  } catch(e) {}
+})();
+</script>
