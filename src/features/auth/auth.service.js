@@ -49,7 +49,10 @@ exports.forgotPassword = async (email) => {
     const user = rows[0];
     const jwt = require('jsonwebtoken');
     const token = jwt.sign(
-        { id: user.id, email: user.email, type: 'password_reset' },
+        {   id: user.id, 
+            email: user.email, 
+            type: 'password_reset' 
+        },
         process.env.JWT_SECRET,
         { expiresIn: '15m' }
     );
