@@ -1,0 +1,67 @@
+<%- include('../../layouts/admin-layout', { title: 'Order Detail', page: 'orders' }) %>
+
+<div class="detail-grid" id="orderDetail">
+  <div class="loader" style="grid-column:1/-1"><div class="loader-spinner"></div></div>
+</div>
+
+<%- include('../../layouts/admin-footer') %>
+<script>
+(async function() {
+  const id = window.location.pathname.split('/').pop();
+  try {
+    const res = await fetch(`/api/admin/orders/detail/${id}`);
+    const data = await res.json();
+    if (!data.success) { document.querySelector('.detail-grid').innerHTML = '<p style="color:#666;text-align:center;padding:48px">Order not found</p>'; return; }
+    const { order, items, invoice } = data.data;
+    document.getElementById('orderDetail').innerHTML = `
+      <div class="detail-section">
+        <div class="detail-section-title">Order Info</div>
+        <div class="detail-row"><span class="detail-label">Order ID</span><span class="detail-value">#${order.id}</span></div>
+        <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${statusBadge(order.status)}</span></div>
+        <div class="detail-row"><span class="detail-label">Payment Method</span><span class="detail-value">${order.payment_method}</span></div>
+        <div class="detail-row"><span class="detail-label">Subtotal</span><span class="detail-value">Rp ${(order.subtotal || 0).toLocaleString('id-ID')}</span></div>
+        <div class="detail-row"><span class="detail-label">Discount</span><span class="detail-value">Rp ${(order.discount_amount || 0).toLocaleString('id-ID')}</span></div>
+        <div class="detail-row"><span class="detail-label">Total</span><span class="detail-value" style="color:#fff;font-weight:600">Rp ${(order.total || 0).toLocaleString('id-ID')}</span></div>
+        <div class="detail-row"><span class="detail-label">Date</span><span class="detail-value">${formatDate(order.created_at)}</span></div>
+      </div>
+      <div class="detail-section">
+        <div class="detail-section-title">Customer</div>
+        <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">${order.username}</span></div>
+        <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${order.email}</span></div>
+        <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${order.phone || '—'}</span></div>
+      </div>
+      ${invoice ? `
+      <div class="detail-section">
+        <div class="detail-section-title">Invoice</div>
+        <div class="detail-row"><span class="detail-label">Invoice No.</span><span class="detail-value">${invoice.invoice_number}</span></div>
+        <div class="detail-row"><span class="detail-label">Payment Status</span><span class="detail-value">${statusBadge(invoice.status_payment)}</span></div>
+        <div class="detail-row"><span class="detail-label">Expires</span><span class="detail-value">${formatDate(invoice.expires_at)}</span></div>
+      </div>
+      ` : ''}
+      <div class="detail-section full">
+        <div class="detail-section-title">Items</div>
+        <table class="data-table">
+          <thead><tr><th>Product</th><th>Price</th></tr></thead>
+          <tbody>
+            ${items.map(item => `<tr><td><a href="/admin/products" class="disabled" style="color:#fff">${item.product_name}</a></td><td>Rp ${(item.price || 0).toLocaleString('id-ID')}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="detail-section" style="display:flex;flex-direction:column;gap:12px;justify-content:center">
+        <a href="/admin/orders/edit/${order.id}" class="btn btn-secondary" style="justify-content:center">Edit order</a>
+        ${order.status === 'pending' ? `<button class="btn btn-danger" style="justify-content:center" onclick="cancelOrder(${order.id})">Cancel order</button>` : ''}
+      </div>
+    `;
+  } catch(e) { document.querySelector('.detail-grid').innerHTML = '<p style="color:#666;text-align:center;padding:48px">Error loading order</p>'; }
+})();
+
+async function cancelOrder(id) {
+  if (!confirm('Cancel this order?')) return;
+  try {
+    const res = await fetch(`/api/admin/orders/edit/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({status: 'cancelled'}) });
+    const data = await res.json();
+    if (data.success) { showToast('Order cancelled'); setTimeout(() => location.reload(), 800); }
+    else showToast(data.message, 'error');
+  } catch { showToast('Failed to cancel', 'error'); }
+}
+</script>
