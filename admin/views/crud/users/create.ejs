@@ -1,0 +1,59 @@
+<%- include('../../layouts/admin-layout', { title: 'Add Customer', page: 'users' }) %>
+
+<div class="section-card" style="max-width:600px">
+  <div class="section-card-header">
+    <div class="section-card-title">Add Customer</div>
+  </div>
+  <div class="section-card-body" style="padding:24px">
+    <div class="auth-error" id="formError" style="display:none"></div>
+    <form id="createForm">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Username</label><input class="form-input" name="username" required></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" name="email" required></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" name="password" required minlength="6"></div>
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-input" name="phone" placeholder="Optional"></div>
+      </div>
+      <div class="form-actions">
+        <a href="/admin/users" class="btn btn-ghost">Cancel</a>
+        <button class="btn btn-primary" type="submit">Create customer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../../layouts/admin-footer') %>
+<script>
+document.getElementById('createForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('button[type="submit"]');
+  const errEl = document.getElementById('formError');
+  const data = Object.fromEntries(new FormData(form));
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Creating...';
+  try {
+    const res = await fetch('/api/admin/users/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast('Customer created');
+      setTimeout(() => window.location.href = `/admin/users/detail/${result.data.id}`, 800);
+    } else {
+      errEl.textContent = result.message;
+      errEl.style.display = 'block';
+    }
+  } catch {
+    errEl.textContent = 'Connection error';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create customer';
+  }
+});
+</script>
