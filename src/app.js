@@ -25,7 +25,7 @@ app.use((req, res, next) => {
 
 // Cors
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'https://yearning-batch-comment.ngrok-free.dev');
+    res.setHeader('Access-Control-Allow-Origin', 'https://yearning-batch-comment.ngrok-free.dev' );
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     next();
@@ -57,6 +57,7 @@ const { router: userRoutes, prefix: userPrefix } = require("./features/user/user
 const { router: whatsappRoutes, prefix: whatsappPrefix } = require("./features/whatsapp/whatsapp.routes");
 const { router: notificationRoutes, prefix: notificationPrefix } = require('./features/notification/notification.routes');
 
+// API routes
 app.use("/api" + authPrefix, authRoutes);
 app.use("/api" + cartPrefix, cartRoutes);
 app.use("/api" + checkoutPrefix, checkoutRoutes);
