@@ -1,0 +1,30 @@
+<%- include('../../layouts/admin-layout', { title: 'Orders', page: 'orders' }) %>
+
+<div class="search-filter">
+  <div class="search-box">
+    <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+    <input type="text" id="searchInput" placeholder="Search by invoice, customer name, or email...">
+  </div>
+  <select class="filter-select" id="statusFilter">
+    <option value="">All status</option>
+    <option value="pending">Pending</option>
+    <option value="completed">Completed</option>
+    <option value="cancelled">Cancelled</option>
+  </select>
+  <a href="/admin/orders/create" class="btn btn-primary">Add order</a>
+</div>
+
+<div class="section-card">
+  <div class="section-card-body" style="overflow-x:auto">
+    <table class="data-table" id="ordersTable">
+      <thead>
+        <tr><th>Invoice</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Payment</th><th>Date</th><th class="col-actions">Actions</th></tr>
+      </thead>
+      <tbody id="ordersBody"><tr><td colspan="8" class="table-empty"><div class="loader"><div class="loader-spinner"></div></div></td></tr></tbody>
+    </table>
+  </div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<%- include('../../layouts/admin-footer') %>
+<script src="/assets/js/orders.js"></script>
