@@ -2,8 +2,9 @@ const { db } = require("../../config/database");
 
 exports.getCart = async (userId) => {
     const query = `
-        SELECT c.id, c.product_id, c.added_at,
-               p.name, p.slug, p.price, p.discount, p.category, p.preview
+        SELECT 
+            c.id, c.product_id, c.added_at,
+            p.name, p.slug, p.price, p.discount, p.category, p.preview
         FROM cart_items c
         JOIN product p ON c.product_id = p.id
         WHERE c.user_id = $1
