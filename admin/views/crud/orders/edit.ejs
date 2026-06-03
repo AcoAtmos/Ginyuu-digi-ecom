@@ -1,0 +1,204 @@
+<%- include('../../layouts/admin-layout', { title: 'Edit Order', page: 'orders' }) %>
+
+<div class="section-card" style="max-width:720px">
+  <div class="section-card-header">
+    <div class="section-card-title">Edit Order</div>
+  </div>
+  <div class="section-card-body" style="padding:24px">
+    <div class="auth-error" id="formError" style="display:none"></div>
+    <form id="editForm" style="display:none">
+
+      <div class="form-group">
+        <label class="form-label">Order Date</label>
+        <input class="form-input" name="created_at" type="datetime-local" id="fieldDate">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Payment Method</label>
+        <select class="form-select" name="payment_method" id="fieldPayment">
+          <option value="qris">QRIS</option>
+          <option value="bank_transfer">Bank Transfer</option>
+          <option value="manual">Manual</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" name="status" id="fieldStatus">
+          <option value="pending">Pending</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <hr style="border-color:#222;margin:20px 0">
+
+      <label class="form-label" style="margin-bottom:12px;display:block">Items</label>
+      <div id="itemsContainer"></div>
+      <button type="button" class="btn btn-ghost" id="addItemBtn" style="margin-top:8px">+ Add Item</button>
+
+      <hr style="border-color:#222;margin:20px 0">
+
+      <div class="form-group">
+        <label class="form-label">Discount Amount (IDR)</label>
+        <input class="form-input" name="discount_amount" type="number" id="fieldDiscount" min="0" step="1" value="0">
+      </div>
+
+      <div style="text-align:right;font-size:18px;margin:16px 0;color:#ccc">
+        Subtotal: <strong id="displaySubtotal">0</strong> &mdash;
+        Total: <strong id="displayTotal">0</strong>
+      </div>
+
+      <div class="form-actions">
+        <a href="/admin/orders" class="btn btn-ghost">Cancel</a>
+        <button class="btn btn-primary" type="submit">Save changes</button>
+      </div>
+    </form>
+    <div id="loadingState"><div class="loader"><div class="loader-spinner"></div></div></div>
+  </div>
+</div>
+
+<%- include('../../layouts/admin-footer') %>
+<script>
+(async function() {
+  const id = window.location.pathname.split('/').pop();
+
+  async function loadData() {
+    const [orderRes, productRes] = await Promise.all([
+      fetch(`/api/admin/orders/detail/${id}`),
+      fetch(`/api/admin/products/list`)
+    ]);
+    const orderData = await orderRes.json();
+    if (!orderData.success) {
+      document.querySelector('.section-card-body').innerHTML = '<p style="color:#666;text-align:center;padding:24px">Order not found</p>';
+      return null;
+    }
+    const productData = await productRes.json();
+    return { order: orderData.data, products: productData.data || [] };
+  }
+
+  const { order, products } = await loadData();
+  if (!order) return;
+
+  const { order: ord, items, invoice } = order;
+
+  document.getElementById('fieldPayment').value = ord.payment_method;
+  document.getElementById('fieldStatus').value = ord.status;
+  document.getElementById('fieldDiscount').value = ord.discount_amount;
+  if (ord.created_at) {
+    const d = new Date(ord.created_at);
+    const pad = n => String(n).padStart(2,'0');
+    document.getElementById('fieldDate').value =
+      `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  const container = document.getElementById('itemsContainer');
+  let itemIndex = 0;
+
+  function recalc() {
+    const rows = container.querySelectorAll('.item-row');
+    let subtotal = 0;
+    rows.forEach(row => {
+      const sel = row.querySelector('.item-product');
+      const price = parseFloat(sel.selectedOptions[0]?.dataset?.price) || 0;
+      subtotal += price;
+      row.querySelector('.item-subtotal').textContent = price.toLocaleString('id-ID');
+    });
+    const discount = parseFloat(document.getElementById('fieldDiscount').value) || 0;
+    const total = Math.max(0, subtotal - discount);
+    document.getElementById('displaySubtotal').textContent = subtotal.toLocaleString('id-ID');
+    document.getElementById('displayTotal').textContent = total.toLocaleString('id-ID');
+  }
+
+  function addItem(productId) {
+    const idx = itemIndex++;
+    const div = document.createElement('div');
+    div.className = 'item-row';
+    div.style.cssText = 'display:flex;gap:8px;align-items:center;margin-bottom:8px';
+    div.innerHTML = `
+      <select class="form-select item-product" data-index="${idx}" style="flex:1;min-width:0">
+        <option value="">-- Select Product --</option>
+        ${products.map(p => `<option value="${p.id}" data-price="${p.price}" ${p.id == productId ? 'selected' : ''}>${p.name}</option>`).join('')}
+      </select>
+      <span class="item-subtotal" style="width:100px;text-align:right;color:#999">0</span>
+      <button type="button" class="btn btn-ghost item-remove" style="padding:4px 10px;color:#f44">&times;</button>
+    `;
+    container.appendChild(div);
+
+    const productSelect = div.querySelector('.item-product');
+    productSelect.addEventListener('change', recalc);
+    div.querySelector('.item-remove').addEventListener('click', () => {
+      div.remove();
+      recalc();
+    });
+
+    recalc();
+  }
+
+  if (items && items.length) {
+    items.forEach(item => addItem(item.product_id));
+  }
+
+  document.getElementById('addItemBtn').addEventListener('click', () => addItem(''));
+
+  document.getElementById('fieldDiscount').addEventListener('input', recalc);
+
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('editForm').style.display = 'block';
+})();
+
+document.getElementById('editForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('button[type="submit"]');
+  const errEl = document.getElementById('formError');
+  const id = window.location.pathname.split('/').pop();
+
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    const items = [];
+    document.querySelectorAll('.item-row').forEach(row => {
+      const sel = row.querySelector('.item-product');
+      const productId = sel.value;
+      if (!productId) return;
+      const price = parseFloat(sel.selectedOptions[0]?.dataset?.price) || 0;
+      items.push({ product_id: parseInt(productId), price });
+    });
+
+    const payload = {
+      payment_method: document.getElementById('fieldPayment').value,
+      status: document.getElementById('fieldStatus').value,
+      discount_amount: parseFloat(document.getElementById('fieldDiscount').value) || 0,
+      items
+    };
+
+    const dateVal = document.getElementById('fieldDate').value;
+    if (dateVal) {
+      payload.created_at = new Date(dateVal).toISOString();
+    }
+
+    const res = await fetch(`/api/admin/orders/edit/${id}`, {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const result = await res.json();
+    if (result.success) {
+      showToast('Order updated');
+      setTimeout(() => window.location.href = `/admin/orders/detail/${id}`, 800);
+    } else {
+      errEl.textContent = result.message;
+      errEl.style.display = 'block';
+    }
+  } catch {
+    errEl.textContent = 'Connection error';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save changes';
+  }
+});
+</script>
