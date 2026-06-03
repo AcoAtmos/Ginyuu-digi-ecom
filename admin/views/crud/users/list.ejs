@@ -1,0 +1,24 @@
+<%- include('../../layouts/admin-layout', { title: 'Customers', page: 'users' }) %>
+
+<div class="search-filter">
+  <div class="search-box">
+    <span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+    <input type="text" id="searchInput" placeholder="Search by name, email, or phone...">
+  </div>
+  <a href="/admin/users/create" class="btn btn-primary">Add customer</a>
+</div>
+
+<div class="section-card">
+  <div class="section-card-body" style="overflow-x:auto">
+    <table class="data-table" id="usersTable">
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Joined</th><th class="col-actions">Actions</th></tr>
+      </thead>
+      <tbody id="usersBody"><tr><td colspan="6" class="table-empty"><div class="loader"><div class="loader-spinner"></div></div></td></tr></tbody>
+    </table>
+  </div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<%- include('../../layouts/admin-footer') %>
+<script src="/assets/js/users.js"></script>
