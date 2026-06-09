@@ -9,22 +9,20 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^8.0.1",
-    "pg": "^8.18.0"
+    "pg": "^8.18.0",
+    "drizzle-orm": "^0.45.2"
   },
   "scripts": {
     "dev": "bun --watch src/app.js",
     "admin": "bun --watch admin/app.js",
-    "seed:admin": "bun admin/seed.js", 
+    "seed:admin": "bun admin/seed.js",
     "start": "bun src/app.js",
-    "setup-users": "bun scripts/setup_users_table.js",
-    "setup-product": "bun scripts/setup_product_table.js",
-    "setup-queue": "bun scripts/setup_queue_table.js",
-    "setup-cart": "bun scripts/setup_cart_table.js",
-    "setup-orders": "bun scripts/setup_order_tables.js",
-    "setup-notifications": "bun scripts/setup_notifications_table.js",
-    "setup-indexes": "bun scripts/setup_product_indexes.js",
-    "setup-pg-transactions": "bun scripts/setup_payment_gateway_table.js",
-    "setup-all": "bun scripts/setup_users_table.js && bun scripts/setup_product_table.js && bun scripts/setup_cart_table.js && bun scripts/setup_order_tables.js && bun scripts/setup_notifications_table.js && bun scripts/setup_queue_table.js && bun scripts/setup_payment_gateway_table.js",
-    "drop-unique-num": "bun scripts/drop_unique_num.js"
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10"
   }
-} 
+}
