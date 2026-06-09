@@ -1,12 +1,13 @@
-const { db } = require("../../config/database");
+const { db } = require("../../../db");
+const { users } = require("../../../db/schema");
+const { eq } = require("drizzle-orm");
 const bcrypt = require('bcrypt');
 
 exports.register = async (body) => {
     const { username, email, password, terms } = body;
-    const query = `INSERT INTO users (username, email, password, terms) VALUES ($1, $2, $3, $4)`;
     const hashedPassword = await bcrypt.hash(password, 10);
     try {
-        await db.query(query, [username, email, hashedPassword, terms]);
+        await db.insert(users).values({ username, email, password: hashedPassword, terms });
         return;
     } catch (err) {
         throw new Error(err);
@@ -15,10 +16,8 @@ exports.register = async (body) => {
 
 exports.login = async (body) => {
     const { email, password } = body;
-    const query = `SELECT * FROM users WHERE email = $1`;
     try {
-        const { rows } = await db.query(query, [email]);
-        const user = rows[0];
+        const [user] = await db.select().from(users).where(eq(users.email, email));
         if (!user) {
             throw new Error("User not found");
         }
@@ -32,7 +31,7 @@ exports.login = async (body) => {
             role: user.role || 'MEMBER',
             email: user.email,
             phone: user.phone,
-            image_url: user.image_url
+            image_url: user.imageUrl
         };
     } catch (err) {
         throw new Error(err);
@@ -40,13 +39,11 @@ exports.login = async (body) => {
 };
 
 exports.forgotPassword = async (email) => {
-    const query = `SELECT id, username, email FROM users WHERE email = $1`;
-    const { rows } = await db.query(query, [email]);
-    if (rows.length === 0) {
+    const [user] = await db.select({ id: users.id, username: users.username, email: users.email }).from(users).where(eq(users.email, email));
+    if (!user) {
         throw new Error("User not found");
     };
 
-    const user = rows[0];
     const jwt = require('jsonwebtoken');
     const token = jwt.sign(
         {   id: user.id, 
@@ -101,21 +98,19 @@ exports.resetPassword = async (token, newPassword) => {
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    const query = `UPDATE users SET password = $1 WHERE id = $2 RETURNING id`;
-    const { rows } = await db.query(query, [hashedPassword, decoded.id]);
+    const [user] = await db.update(users).set({ password: hashedPassword }).where(eq(users.id, decoded.id)).returning({ id: users.id });
 
-    if (rows.length === 0) {
+    if (!user) {
         throw new Error('User not found');
     }
 };
 
 exports.registerCheckout = async (body) => {
     const { username, email, password, phone } = body;
-    const query = `INSERT INTO users (username, email, password, phone) VALUES ($1, $2, $3, $4) RETURNING *`;
     const hashedPassword = await bcrypt.hash(password, 10);
     try {
-        const { rows } = await db.query(query, [username, email, hashedPassword, phone]);
-        return rows[0];
+        const [inserted] = await db.insert(users).values({ username, email, password: hashedPassword, phone }).returning();
+        return inserted;
     } catch (err) {
         throw new Error(err);
     }

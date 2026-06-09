@@ -1,6 +1,8 @@
 const { register, login, forgotPassword, resetPassword, registerCheckout } = require("./auth.service");
 const jwt = require("jsonwebtoken");
-const { db } = require("../../config/database");
+const { db } = require("../../../db");
+const { users } = require("../../../db/schema");
+const { eq } = require("drizzle-orm");
 
 exports.register = async (req, res) => {
     try {
@@ -168,9 +170,8 @@ exports.getMe = async (req, res) => {
     }
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const query = `SELECT id, username, email, phone, image_url, role, created_at FROM users WHERE id = $1`;
-        const { rows } = await db.query(query, [decoded.id]);
-        if (rows.length === 0) {
+        const [user] = await db.select({ id: users.id, username: users.username, email: users.email, phone: users.phone, imageUrl: users.imageUrl, role: users.role, createdAt: users.createdAt }).from(users).where(eq(users.id, decoded.id));
+        if (!user) {
             return res.status(404).json({
                 code: 404,
                 status: "error",
@@ -180,7 +181,7 @@ exports.getMe = async (req, res) => {
         return res.status(200).json({
             code: 200,
             status: "success",
-            data: rows[0]
+            data: user
         });
     } catch (err) {
         return res.status(401).json({
