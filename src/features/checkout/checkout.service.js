@@ -1,4 +1,6 @@
-const { db } = require("../../config/database");
+const { db } = require("../../../db");
+const { users, product, orders, orderItems, invoices, cartItems, promoCodes, queue } = require("../../../db/schema");
+const { eq, and, inArray, sql } = require("drizzle-orm");
 const bcrypt = require("bcrypt");
 
 exports.capturePayload = async (data) => {
@@ -76,11 +78,8 @@ exports.getPrices = async (result) => {
     if (result.status === 'failed') return result;
     try {
         const productIds = result.payload.cart_items.map(item => item.id);
-        const queryResult = await db.query(
-            "SELECT id, name, price FROM product WHERE id = ANY($1)",
-            [productIds]
-        );
-        if (queryResult.rows.length !== productIds.length) {
+        const rows = await db.select({ id: product.id, name: product.name, price: product.price }).from(product).where(inArray(product.id, productIds));
+        if (rows.length !== productIds.length) {
             result.message = "One or more products not found";
             result.code = 400;
             result.status = "failed";
@@ -88,7 +87,7 @@ exports.getPrices = async (result) => {
         }
         const priceMap = {};
         const nameMap = {};
-        queryResult.rows.forEach(row => {
+        rows.forEach(row => {
             priceMap[row.id] = row.price;
             nameMap[row.id] = row.name;
         });
@@ -107,31 +106,34 @@ exports.applyPromo = async (result) => {
     if (result.status === 'failed') return result;
     if (!result.payload.promo_code) return result;
     try {
-        const queryResult = await db.query(
-            `SELECT id, code, discount_pct, max_usage, used_count, expires_at, is_active
-             FROM promo_codes WHERE code = $1 AND is_active = true`,
-            [result.payload.promo_code]
-        );
-        if (queryResult.rows.length === 0) {
+        const [promo] = await db.select({
+            id: promoCodes.id,
+            code: promoCodes.code,
+            discountPct: promoCodes.discountPct,
+            maxUsage: promoCodes.maxUsage,
+            usedCount: promoCodes.usedCount,
+            expiresAt: promoCodes.expiresAt,
+            isActive: promoCodes.isActive
+        }).from(promoCodes).where(and(eq(promoCodes.code, result.payload.promo_code), eq(promoCodes.isActive, true)));
+        if (!promo) {
             result.message = "Invalid promo code";
             result.code = 400;
             result.status = "failed";
             return result;
         }
-        const promo = queryResult.rows[0];
-        if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+        if (promo.expiresAt && new Date(promo.expiresAt) < new Date()) {
             result.message = "Promo code has expired";
             result.code = 400;
             result.status = "failed";
             return result;
         }
-        if (promo.max_usage && promo.used_count >= promo.max_usage) {
+        if (promo.maxUsage && promo.usedCount >= promo.maxUsage) {
             result.message = "Promo code usage limit reached";
             result.code = 400;
             result.status = "failed";
             return result;
         }
-        result.payload.discount_pct = parseFloat(promo.discount_pct);
+        result.payload.discount_pct = parseFloat(promo.discountPct);
         result.payload.promo_id = promo.id;
     } catch (err) {
         console.error("Apply promo failed:", err);
@@ -168,8 +170,8 @@ exports.checkout_add_user = async (result) => {
             result.payload.idUser = result.payload.loggedInUserId;
             return result;
         }
-        const userResult = await db.query("SELECT id FROM users WHERE email = $1", [result.payload.email]);
-        if (userResult.rows.length > 0) {
+        const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, result.payload.email));
+        if (existing) {
             result.status = "failed";
             result.code = 401;
             result.message = "EMAIL_ALREADY_REGISTERED";
@@ -177,11 +179,8 @@ exports.checkout_add_user = async (result) => {
             return result;
         }
         const hashedPassword = await bcrypt.hash(result.payload.password, 10);
-        const insertResult = await db.query(
-            `INSERT INTO users (email, username, password, terms) VALUES ($1, $2, $3, $4) RETURNING id`,
-            [result.payload.email, result.payload.username, hashedPassword, result.payload.terms]
-        );
-        result.payload.idUser = insertResult.rows[0].id;
+        const [insertResult] = await db.insert(users).values({ email: result.payload.email, username: result.payload.username, password: hashedPassword, terms: result.payload.terms }).returning({ id: users.id });
+        result.payload.idUser = insertResult.id;
     } catch (err) {
         result.status = "failed";
         result.code = 500;
@@ -195,18 +194,17 @@ exports.checkout_add_user = async (result) => {
 exports.checkout_create_order = async (result) => {
     if (result.status === 'failed') return result;
     try {
-        const orderResult = await db.query(
-            `INSERT INTO orders (user_id, payment_method, subtotal, discount_amount, total)
-             VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-            [result.payload.idUser, result.payload.payment_method, result.payload.subtotal, result.payload.discount_amount, result.payload.total]
-        );
-        result.payload.idOrder = orderResult.rows[0].id;
+        const [orderResult] = await db.insert(orders).values({
+            userId: result.payload.idUser,
+            paymentMethod: result.payload.payment_method,
+            subtotal: result.payload.subtotal,
+            discountAmount: result.payload.discount_amount,
+            total: result.payload.total
+        }).returning({ id: orders.id });
+        result.payload.idOrder = orderResult.id;
         for (const item of result.payload.cart_items) {
             const price = result.payload.priceMap[item.id];
-            await db.query(
-                `INSERT INTO order_items (order_id, product_id, price) VALUES ($1, $2, $3)`,
-                [result.payload.idOrder, item.id, price]
-            );
+            await db.insert(orderItems).values({ orderId: result.payload.idOrder, productId: item.id, price });
         }
     } catch (err) {
         result.status = "failed";
@@ -223,13 +221,16 @@ exports.checkout_create_invoice = async (result) => {
     try {
         const invoice_number = "INV-" + Date.now() + result.payload.idUser + "-" + result.payload.idOrder;
         const expires_at = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-        const invoiceResult = await db.query(
-            `INSERT INTO invoices (order_id, invoice_number, discount_amount, total, expires_at, status_payment)
-             VALUES ($1, $2, $3, $4, $5, 'pending') RETURNING id, invoice_number`,
-            [result.payload.idOrder, invoice_number, result.payload.discount_amount, result.payload.total, expires_at]
-        );
-        result.payload.idInvoice = invoiceResult.rows[0].id;
-        result.payload.invoice_number = invoiceResult.rows[0].invoice_number;
+        const [invoiceResult] = await db.insert(invoices).values({
+            orderId: result.payload.idOrder,
+            invoiceNumber: invoice_number,
+            discountAmount: result.payload.discount_amount,
+            total: result.payload.total,
+            expiresAt: expires_at,
+            statusPayment: 'pending'
+        }).returning({ id: invoices.id, invoiceNumber: invoices.invoiceNumber });
+        result.payload.idInvoice = invoiceResult.id;
+        result.payload.invoice_number = invoiceResult.invoiceNumber;
         result.payload.expires_at = expires_at;
     } catch (err) {
         result.status = "failed";
@@ -244,7 +245,7 @@ exports.checkout_create_invoice = async (result) => {
 exports.checkout_clear_cart = async (result) => {
     if (result.status === 'failed') return result;
     try {
-        await db.query("DELETE FROM cart_items WHERE user_id = $1", [result.payload.idUser]);
+        await db.delete(cartItems).where(eq(cartItems.userId, result.payload.idUser));
     } catch (err) {
         console.error("Failed to clear cart:", err);
     }
@@ -457,19 +458,14 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
             </div>
         `;
 
-        const queueinvoiceDataEmail = await db.query(
-            `INSERT INTO queue 
-            (order_id, destination, tipe, pesan, status, created_at, qris_url)
-            VALUES ($1, $2, $3, $4, $5, NOW(), $6) RETURNING id`,
-            [
-                invoiceData.order_id,
-                invoiceData.email,
-                "email",
-                messageEmail,
-                "pending",
-                payment_url || null,
-            ]
-        );
+        const [queueResult] = await db.insert(queue).values({
+            orderId: invoiceData.order_id,
+            destination: invoiceData.email,
+            tipe: "email",
+            pesan: messageEmail,
+            status: "pending",
+            qrisUrl: payment_url || null
+        }).returning({ id: queue.id });
         console.log("email berhasil di queue")
     } catch (err) {
         console.error(err);

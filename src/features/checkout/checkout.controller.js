@@ -12,10 +12,11 @@ const {
     checkout_create_notification,
     createResponse
 } = require('./checkout.service');
-const { db } = require("../../config/database");
+const { db } = require("../../../db");
+const { users, invoices, orders } = require("../../../db/schema");
+const { eq } = require("drizzle-orm");
 
 exports.checkout = async (req, res) => {
-    const client = await db.connect();
     let result = { code: 500, status: "failed", message: "Internal Server Error" };
 
     try {
@@ -26,9 +27,9 @@ exports.checkout = async (req, res) => {
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
                 loggedInUserId = decoded.id;
-                const userResult = await db.query("SELECT id, username, email, phone FROM users WHERE id = $1", [loggedInUserId]);
-                if (userResult.rows.length > 0) {
-                    loggedInUser = userResult.rows[0];
+                const [userRow] = await db.select({ id: users.id, username: users.username, email: users.email, phone: users.phone }).from(users).where(eq(users.id, loggedInUserId));
+                if (userRow) {
+                    loggedInUser = userRow;
                 }
             } catch (err) {}
         }
@@ -46,12 +47,10 @@ exports.checkout = async (req, res) => {
         result = await applyPromo(result);
         result = await countTotal(result);
 
-        await client.query("BEGIN");
         result = await checkout_add_user(result);
         result = await checkout_create_order(result);
         result = await checkout_create_invoice(result);
         result = await checkout_clear_cart(result);
-        await client.query("COMMIT");
 
         await checkout_create_notification(result);
 
@@ -84,7 +83,6 @@ exports.checkout = async (req, res) => {
             }
         });
     } catch (err) {
-        await client.query("ROLLBACK");
         console.error('Checkout error:', err);
         res.status(result.code || 500).json({
             code: result.code || 500,
@@ -93,8 +91,6 @@ exports.checkout = async (req, res) => {
             debug_error: err.toString(),
             stack: err.stack
         });
-    } finally {
-        client.release();
     }
 };
 
@@ -104,32 +100,27 @@ exports.cancelOrder = async (req, res) => {
         return res.status(400).json({ code: 400, status: "failed", message: "Invoice number is required" });
     }
 
-    const client = await db.connect();
+    let invoiceData;
     try {
-        await client.query("BEGIN");
-        const invoiceResult = await client.query(
-            "SELECT id, order_id, status_payment FROM invoices WHERE invoice_number = $1",
-            [invoice_number]
-        );
-        if (invoiceResult.rows.length === 0) {
-            await client.query("ROLLBACK");
-            return res.status(404).json({ code: 404, status: "failed", message: "Invoice not found" });
-        }
-        const invoice = invoiceResult.rows[0];
-        if (invoice.status_payment !== 'pending') {
-            await client.query("ROLLBACK");
-            return res.status(400).json({ code: 400, status: "failed", message: `Cannot cancel order with status '${invoice.status_payment}'` });
-        }
-        await client.query("UPDATE invoices SET status_payment = 'cancelled' WHERE id = $1", [invoice.id]);
-        await client.query("UPDATE orders SET status = 'cancelled' WHERE id = $1", [invoice.order_id]);
-        await client.query("COMMIT");
+        await db.transaction(async (tx) => {
+            const [invoice] = await tx.select({ id: invoices.id, orderId: invoices.orderId, statusPayment: invoices.statusPayment }).from(invoices).where(eq(invoices.invoiceNumber, invoice_number));
+            if (!invoice) {
+                throw new Error("INVOICE_NOT_FOUND");
+            }
+            if (invoice.statusPayment !== 'pending') {
+                throw new Error("CANNOT_CANCEL_" + invoice.statusPayment.toUpperCase());
+            }
+            invoiceData = invoice;
+            await tx.update(invoices).set({ statusPayment: 'cancelled' }).where(eq(invoices.id, invoice.id));
+            await tx.update(orders).set({ status: 'cancelled' }).where(eq(orders.id, invoice.orderId));
+        });
 
         try {
-            const orderResult = await db.query("SELECT user_id FROM orders WHERE id = $1", [invoice.order_id]);
-            if (orderResult.rows.length > 0) {
+            const [orderRow] = await db.select({ userId: orders.userId }).from(orders).where(eq(orders.id, invoiceData.orderId));
+            if (orderRow) {
                 const { createNotification } = require('../notification/notification.service');
                 await createNotification({
-                    user_id: orderResult.rows[0].user_id,
+                    user_id: orderRow.userId,
                     icon: "🗑️",
                     message: `Pesanan ${invoice_number} telah dibatalkan`,
                     action_url: `/checkout/waiting-payment?invoice=${invoice_number}`
@@ -141,10 +132,14 @@ exports.cancelOrder = async (req, res) => {
 
         res.status(200).json({ code: 200, status: "success", message: "Order cancelled successfully" });
     } catch (err) {
-        await client.query("ROLLBACK");
+        if (err.message === "INVOICE_NOT_FOUND") {
+            return res.status(404).json({ code: 404, status: "failed", message: "Invoice not found" });
+        }
+        if (err.message && err.message.startsWith("CANNOT_CANCEL_")) {
+            const status = err.message.replace("CANNOT_CANCEL_", "").toLowerCase();
+            return res.status(400).json({ code: 400, status: "failed", message: `Cannot cancel order with status '${status}'` });
+        }
         console.error('Cancel order error:', err);
         res.status(500).json({ code: 500, status: "failed", message: "Failed to cancel order" });
-    } finally {
-        client.release();
     }
 };
