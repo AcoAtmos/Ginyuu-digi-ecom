@@ -1,4 +1,6 @@
-const { db } = require("../../config/database");
+const { db } = require("../../../db");
+const { users, product, orders, orderItems, invoices } = require("../../../db/schema");
+const { eq, desc, asc, sql } = require("drizzle-orm");
 
 exports.get_profile = async (req, res) => {
     try {
@@ -15,21 +17,19 @@ exports.get_profile = async (req, res) => {
 };
 
 exports.get_profile_by_username = async (username) => {
-    const query = `SELECT id, username, email, phone, image_url, role, created_at FROM users WHERE username = $1`;
-    const { rows } = await db.query(query, [username]);
-    return rows[0];
+    const [row] = await db.select({ id: users.id, username: users.username, email: users.email, phone: users.phone, imageUrl: users.imageUrl, role: users.role, createdAt: users.createdAt }).from(users).where(eq(users.username, username));
+    return row;
 };
 
 exports.get_my_profile = async (req, res) => {
     try {
         const user = req.user;
         console.log("get_my_profile called, user:", user);
-        const query = `SELECT id, username, email, phone, image_url, role, created_at FROM users WHERE id = $1`;
-        const { rows } = await db.query(query, [user.id]);
-        if (rows.length === 0) {
+        const [row] = await db.select({ id: users.id, username: users.username, email: users.email, phone: users.phone, imageUrl: users.imageUrl, role: users.role, createdAt: users.createdAt }).from(users).where(eq(users.id, user.id));
+        if (!row) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
-        res.status(200).json({ success: true, data: rows[0] });
+        res.status(200).json({ success: true, data: row });
     } catch (error) {
         console.error("get_my_profile error:", error);
         res.status(500).json({ success: false, message: error.message });
@@ -41,14 +41,13 @@ exports.update_my_profile = async (req, res) => {
         const userId = req.user.id;
         const { username, phone } = req.body;
 
-        const query = `UPDATE users SET username = $1, phone = $2 WHERE id = $3 RETURNING id, username, email, phone, image_url, role, created_at`;
-        const { rows } = await db.query(query, [username, phone, userId]);
+        const [row] = await db.update(users).set({ username, phone }).where(eq(users.id, userId)).returning({ id: users.id, username: users.username, email: users.email, phone: users.phone, imageUrl: users.imageUrl, role: users.role, createdAt: users.createdAt });
 
-        if (rows.length === 0) {
+        if (!row) {
             return res.status(404).json({ success: false, message: "User not found" });
         }
 
-        res.status(200).json({ success: true, data: rows[0] });
+        res.status(200).json({ success: true, data: row });
     } catch (error) {
         console.error("update_my_profile error:", error);
         res.status(500).json({ success: false, message: error.message });
@@ -63,7 +62,7 @@ exports.get_my_purchases = async (req, res) => {
 
         if (isAdmin) {
             const orderDir = sort === 'asc' ? 'ASC' : 'DESC';
-            const adminQuery = `
+            const adminResult = await db.execute(sql`
                 SELECT o.id as order_id,
                        o.created_at as purchase_date,
                        o.subtotal,
@@ -92,10 +91,9 @@ exports.get_my_purchases = async (req, res) => {
                 JOIN product p ON oi.product_id = p.id
                 JOIN users u ON o.user_id = u.id
                 GROUP BY o.id, i.id, u.id
-                ORDER BY o.created_at ${orderDir}
-            `;
-            const { rows } = await db.query(adminQuery);
-            return res.status(200).json({ success: true, data: rows });
+                ORDER BY o.created_at ${sql.raw(orderDir)}
+            `);
+            return res.status(200).json({ success: true, data: adminResult.rows });
         }
 
         const pageNum = Math.max(1, parseInt(page));
@@ -107,24 +105,23 @@ exports.get_my_purchases = async (req, res) => {
         const statusFilter = status && status.trim() ? status.trim() : null;
 
         // Count total matching orders
-        const countQuery = `
+        const countResult = await db.execute(sql`
             SELECT COUNT(DISTINCT o.id)
             FROM orders o
             LEFT JOIN invoices i ON i.order_id = o.id
-            WHERE o.user_id = $1
-              AND ($2::text IS NULL OR i.invoice_number ILIKE $2
+            WHERE o.user_id = ${user.id}
+              AND (${searchPattern ? sql`i.invoice_number ILIKE ${searchPattern}` : sql`TRUE`}
                 OR EXISTS (
                   SELECT 1 FROM order_items oi2
                   JOIN product p2 ON oi2.product_id = p2.id
-                  WHERE oi2.order_id = o.id AND p2.name ILIKE $2
+                  WHERE oi2.order_id = o.id AND p2.name ILIKE ${searchPattern}
                 ))
-              AND ($3::text IS NULL OR o.status = $3)
-        `;
-        const countResult = await db.query(countQuery, [user.id, searchPattern, statusFilter]);
+              AND (${statusFilter ? sql`o.status = ${statusFilter}` : sql`TRUE`})
+        `);
         const total = parseInt(countResult.rows[0].count);
 
         // Fetch paginated data
-        const dataQuery = `
+        const dataResult = await db.execute(sql`
             SELECT o.id as order_id,
                    o.created_at as purchase_date,
                    o.subtotal,
@@ -150,19 +147,19 @@ exports.get_my_purchases = async (req, res) => {
             LEFT JOIN invoices i ON i.order_id = o.id
             JOIN order_items oi ON oi.order_id = o.id
             JOIN product p ON oi.product_id = p.id
-            WHERE o.user_id = $1
-              AND ($2::text IS NULL OR i.invoice_number ILIKE $2
+            WHERE o.user_id = ${user.id}
+              AND (${searchPattern ? sql`i.invoice_number ILIKE ${searchPattern}` : sql`TRUE`}
                 OR EXISTS (
                   SELECT 1 FROM order_items oi2
                   JOIN product p2 ON oi2.product_id = p2.id
-                  WHERE oi2.order_id = o.id AND p2.name ILIKE $2
+                  WHERE oi2.order_id = o.id AND p2.name ILIKE ${searchPattern}
                 ))
-              AND ($3::text IS NULL OR o.status = $3)
+              AND (${statusFilter ? sql`o.status = ${statusFilter}` : sql`TRUE`})
             GROUP BY o.id, i.id
-            ORDER BY o.created_at ${orderDir}
-            LIMIT $4 OFFSET $5
-        `;
-        const { rows } = await db.query(dataQuery, [user.id, searchPattern, statusFilter, limitNum, offset]);
+            ORDER BY o.created_at ${sql.raw(orderDir)}
+            LIMIT ${limitNum} OFFSET ${offset}
+        `);
+        const rows = dataResult.rows;
 
         res.status(200).json({
             success: true,
@@ -186,7 +183,7 @@ exports.get_all_purchases = async (req, res) => {
         if (user.role !== 'ADMIN') {
             return res.status(403).json({ success: false, message: "Admin only" });
         }
-        const query = `
+        const result = await db.execute(sql`
             SELECT o.id as order_id, o.created_at as purchase_date,
                    u.username as buyer_username, u.email as buyer_email,
                    p.name as product_name, p.slug as product_slug,
@@ -199,9 +196,8 @@ exports.get_all_purchases = async (req, res) => {
             JOIN product p ON oi.product_id = p.id
             LEFT JOIN invoices i ON i.order_id = o.id
             ORDER BY o.created_at DESC
-        `;
-        const { rows } = await db.query(query);
-        res.status(200).json({ success: true, data: rows });
+        `);
+        res.status(200).json({ success: true, data: result.rows });
     } catch (error) {
         console.error("get_all_purchases error:", error);
         res.status(500).json({ success: false, message: error.message });
