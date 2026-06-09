@@ -1,4 +1,6 @@
 const { db } = require("../../config/db");
+const { eq, sql, inArray } = require("drizzle-orm");
+const { users, product, orders, orderItems, invoices } = require("../../../db/schema");
 
 exports.getList = async ({ search, status, sort, page, limit }) => {
     const pageNum = Math.max(1, parseInt(page) || 1);
@@ -8,19 +10,24 @@ exports.getList = async ({ search, status, sort, page, limit }) => {
     const searchPattern = search && search.trim() ? `%${search.trim()}%` : null;
     const statusFilter = status && status.trim() ? status.trim() : null;
 
-    const countQuery = `
+    const searchCondition = searchPattern
+        ? sql`(i.invoice_number ILIKE ${searchPattern} OR u.username ILIKE ${searchPattern} OR u.email ILIKE ${searchPattern})`
+        : sql`TRUE`;
+    const statusCondition = statusFilter
+        ? sql`o.status = ${statusFilter}`
+        : sql`TRUE`;
+
+    const countResult = await db.execute(sql`
         SELECT COUNT(DISTINCT o.id)
         FROM orders o
         LEFT JOIN invoices i ON i.order_id = o.id
         JOIN users u ON o.user_id = u.id
-        WHERE ($1::text IS NULL OR i.invoice_number ILIKE $1
-            OR u.username ILIKE $1 OR u.email ILIKE $1)
-          AND ($2::text IS NULL OR o.status = $2)
-    `;
-    const countResult = await db.query(countQuery, [searchPattern, statusFilter]);
+        WHERE ${searchCondition}
+          AND ${statusCondition}
+    `);
     const total = parseInt(countResult.rows[0].count);
 
-    const dataQuery = `
+    const result = await db.execute(sql`
         SELECT o.id as order_id,
                o.created_at as purchase_date,
                o.subtotal,
@@ -51,18 +58,16 @@ exports.getList = async ({ search, status, sort, page, limit }) => {
         LEFT JOIN invoices i ON i.order_id = o.id
         JOIN order_items oi ON oi.order_id = o.id
         JOIN product p ON oi.product_id = p.id
-        WHERE ($1::text IS NULL OR i.invoice_number ILIKE $1
-            OR u.username ILIKE $1 OR u.email ILIKE $1)
-          AND ($2::text IS NULL OR o.status = $2)
+        WHERE ${searchCondition}
+          AND ${statusCondition}
         GROUP BY o.id, i.id, u.id
-        ORDER BY o.created_at ${orderDir}
-        LIMIT $3 OFFSET $4
-    `;
-    const { rows } = await db.query(dataQuery, [searchPattern, statusFilter, limitNum, offset]);
+        ORDER BY o.created_at ${sql.raw(orderDir)}
+        LIMIT ${limitNum} OFFSET ${offset}
+    `);
 
     return {
         success: true,
-        data: rows,
+        data: result.rows,
         pagination: {
             page: pageNum,
             limit: limitNum,
@@ -73,36 +78,23 @@ exports.getList = async ({ search, status, sort, page, limit }) => {
 };
 
 exports.getDetail = async (id) => {
-    const orderQuery = `
-        SELECT o.*, u.username, u.email, u.phone
-        FROM orders o
-        JOIN users u ON o.user_id = u.id
-        WHERE o.id = $1
-    `;
-    const { rows: [order] } = await db.query(orderQuery, [id]);
+    const [orderResult, itemsResult, invoiceResult] = await Promise.all([
+        db.execute(sql`SELECT o.*, u.username, u.email, u.phone FROM orders o JOIN users u ON o.user_id = u.id WHERE o.id = ${id}`),
+        db.execute(sql`SELECT oi.*, p.name as product_name, p.slug as product_slug FROM order_items oi JOIN product p ON oi.product_id = p.id WHERE oi.order_id = ${id} ORDER BY oi.id`),
+        db.execute(sql`SELECT * FROM invoices WHERE order_id = ${id}`),
+    ]);
+
+    const [order] = orderResult.rows;
     if (!order) return null;
-
-    const itemsQuery = `
-        SELECT oi.*, p.name as product_name, p.slug as product_slug
-        FROM order_items oi
-        JOIN product p ON oi.product_id = p.id
-        WHERE oi.order_id = $1
-        ORDER BY oi.id
-    `;
-    const { rows: items } = await db.query(itemsQuery, [id]);
-
-    const invoiceQuery = `
-        SELECT * FROM invoices WHERE order_id = $1
-    `;
-    const { rows: [invoice] } = await db.query(invoiceQuery, [id]);
+    const items = itemsResult.rows;
+    const [invoice] = invoiceResult.rows;
 
     return { order, items, invoice };
 };
 
 exports.create = async ({ user_id, payment_method, items, discount_amount }) => {
     const ids = items.map(i => i.product_id);
-    const productQuery = `SELECT id, name, price FROM product WHERE id = ANY($1)`;
-    const { rows: products } = await db.query(productQuery, [ids]);
+    const products = await db.select({ id: product.id, name: product.name, price: product.price }).from(product).where(inArray(product.id, ids));
 
     const priceMap = {};
     for (const p of products) {
@@ -118,28 +110,25 @@ exports.create = async ({ user_id, payment_method, items, discount_amount }) => 
 
     const total = Math.max(0, subtotal - discount_amount);
 
-    const insertOrder = `
+    const [order] = (await db.execute(sql`
         INSERT INTO orders (user_id, payment_method, subtotal, discount_amount, total, status)
-        VALUES ($1, $2, $3, $4, $5, 'pending')
+        VALUES (${user_id}, ${payment_method}, ${subtotal}, ${discount_amount}, ${total}, 'pending')
         RETURNING *
-    `;
-    const { rows: [order] } = await db.query(insertOrder, [user_id, payment_method, subtotal, discount_amount, total]);
+    `)).rows;
 
     for (const oi of orderItems) {
-        await db.query(
-            `INSERT INTO order_items (order_id, product_id, price) VALUES ($1, $2, $3)`,
-            [order.id, oi.product_id, oi.price]
-        );
+        await db.execute(sql`
+            INSERT INTO order_items (order_id, product_id, price) VALUES (${order.id}, ${oi.product_id}, ${oi.price})
+        `);
     }
 
     const invoice_number = "INV-" + Date.now() + user_id + "-" + order.id;
     const expires_at = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-    const insertInvoice = `
+    const [invoice] = (await db.execute(sql`
         INSERT INTO invoices (order_id, invoice_number, discount_amount, total, expires_at, status_payment)
-        VALUES ($1, $2, $3, $4, $5, 'pending')
+        VALUES (${order.id}, ${invoice_number}, ${discount_amount}, ${total}, ${expires_at}, 'pending')
         RETURNING *
-    `;
-    const { rows: [invoice] } = await db.query(insertInvoice, [order.id, invoice_number, discount_amount, total, expires_at]);
+    `)).rows;
 
     return { order, invoice, items: orderItems };
 };
@@ -147,6 +136,7 @@ exports.create = async ({ user_id, payment_method, items, discount_amount }) => 
 exports.update = async (id, fields) => {
     const allowed = ['payment_method', 'status', 'discount_amount'];
 
+    // updated status 
     if (fields.status) {
         const validStatuses = ['pending', 'completed', 'cancelled'];
         if (!validStatuses.includes(fields.status)) {
@@ -157,9 +147,7 @@ exports.update = async (id, fields) => {
     // if items are provided then do a full recalculation in a transaction
     if (fields.items && Array.isArray(fields.items) && fields.items.length > 0) {
         const ids = fields.items.map(i => i.product_id);
-        const { rows: products } = await db.query(
-            `SELECT id, name, price FROM product WHERE id = ANY($1)`, [ids]
-        );
+        const products = await db.select({ id: product.id, name: product.name, price: product.price }).from(product).where(inArray(product.id, ids));
         const priceMap = {};
         for (const p of products) priceMap[p.id] = p.price;
 
@@ -173,111 +161,76 @@ exports.update = async (id, fields) => {
         const discount = fields.discount_amount !== undefined ? Number(fields.discount_amount) : 0;
         const total = Math.max(0, subtotal - discount);
 
-        const client = await db.connect();
-        try {
-            await client.query('BEGIN');
-
+        return await db.transaction(async (tx) => {
             // Delete old items
-            await client.query(`DELETE FROM order_items WHERE order_id = $1`, [id]);
+            await tx.execute(sql`DELETE FROM order_items WHERE order_id = ${id}`);
 
             // Insert new items
             for (const oi of orderItems) {
-                await client.query(
-                    `INSERT INTO order_items (order_id, product_id, price) VALUES ($1, $2, $3)`,
-                    [id, oi.product_id, oi.price]
-                );
+                await tx.execute(sql`INSERT INTO order_items (order_id, product_id, price) VALUES (${id}, ${oi.product_id}, ${oi.price})`);
             }
 
             // Build update SET for other fields + subtotal + total
             const otherFields = allowed.filter(k => fields[k] !== undefined);
-            const setParts = [];
-            const vals = [];
-            let vi = 1;
+            const setItems = [];
             for (const k of otherFields) {
-                setParts.push(`${k} = $${vi++}`);
-                vals.push(fields[k]);
+                setItems.push(sql`${sql.raw(k)} = ${fields[k]}`);
             }
-            setParts.push(`subtotal = $${vi++}`);
-            vals.push(subtotal);
-            setParts.push(`total = $${vi++}`);
-            vals.push(total);
+            setItems.push(sql`subtotal = ${subtotal}`);
+            setItems.push(sql`total = ${total}`);
 
             if (fields.created_at) {
-                setParts.push(`created_at = $${vi++}`);
-                vals.push(fields.created_at);
+                setItems.push(sql`created_at = ${fields.created_at}`);
             }
 
-            vals.push(id);
-            const { rows: [order] } = await client.query(
-                `UPDATE orders SET ${setParts.join(', ')} WHERE id = $${vi} RETURNING *`,
-                vals
-            );
+            const [order] = (await tx.execute(sql`UPDATE orders SET ${sql.join(setItems, sql`, `)} WHERE id = ${id} RETURNING *`)).rows;
 
             if (fields.status === 'cancelled') {
-                await client.query(
-                    `UPDATE invoices SET status_payment = 'cancelled' WHERE order_id = $1 AND status_payment = 'pending'`,
-                    [id]
-                );
+                await tx.execute(sql`UPDATE invoices SET status_payment = 'cancelled' WHERE order_id = ${id} AND status_payment = 'pending'`);
             }
 
-            await client.query('COMMIT');
             return order || null;
-        } catch (err) {
-            await client.query('ROLLBACK');
-            throw err;
-        } finally {
-            client.release();
-        }
+        });
     }
 
     // No items — update scalar fields only
-    const setClauses = [];
-    const values = [];
-    let idx = 1;
+    const setItems = [];
 
     for (const key of allowed) {
         if (fields[key] !== undefined) {
-            setClauses.push(`${key} = $${idx++}`);
-            values.push(fields[key]);
+            setItems.push(sql`${sql.raw(key)} = ${fields[key]}`);
         }
     }
 
     if (fields.created_at) {
-        setClauses.push(`created_at = $${idx++}`);
-        values.push(fields.created_at);
+        setItems.push(sql`created_at = ${fields.created_at}`);
     }
 
-    if (setClauses.length === 0) {
-        const { rows: [order] } = await db.query(`SELECT * FROM orders WHERE id = $1`, [id]);
+    if (setItems.length === 0) {
+        const [order] = (await db.execute(sql`SELECT * FROM orders WHERE id = ${id}`)).rows;
         return order || null;
     }
 
     if (fields.discount_amount !== undefined) {
-        const { rows: [current] } = await db.query(`SELECT subtotal FROM orders WHERE id = $1`, [id]);
+        const [current] = (await db.execute(sql`SELECT subtotal FROM orders WHERE id = ${id}`)).rows;
         if (current) {
             const newTotal = Math.max(0, current.subtotal - fields.discount_amount);
-            setClauses.push(`total = $${idx++}`);
-            values.push(newTotal);
+            setItems.push(sql`total = ${newTotal}`);
         }
     }
 
-    values.push(id);
-    const query = `UPDATE orders SET ${setClauses.join(', ')} WHERE id = $${idx} RETURNING *`;
-    const { rows: [order] } = await db.query(query, values);
+    const [order] = (await db.execute(sql`UPDATE orders SET ${sql.join(setItems, sql`, `)} WHERE id = ${id} RETURNING *`)).rows;
 
     if (order && fields.status === 'cancelled') {
-        await db.query(
-            `UPDATE invoices SET status_payment = 'cancelled' WHERE order_id = $1 AND status_payment = 'pending'`,
-            [id]
-        );
+        await db.execute(sql`UPDATE invoices SET status_payment = 'cancelled' WHERE order_id = ${id} AND status_payment = 'pending'`);
     }
 
     return order || null;
 };
 
 exports.remove = async (id) => {
-    const { rows: [order] } = await db.query(`SELECT id FROM orders WHERE id = $1`, [id]);
+    const [order] = await db.select({ id: orders.id }).from(orders).where(eq(orders.id, id));
     if (!order) return false;
-    await db.query(`DELETE FROM orders WHERE id = $1`, [id]);
+    await db.delete(orders).where(eq(orders.id, id));
     return true;
 };
