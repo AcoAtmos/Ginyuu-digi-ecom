@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
-const { db } = require("../../config/database");
+const { db } = require("../../../db");
+const { sql } = require("drizzle-orm");
 
 const createTransporter = () => {
     return nodemailer.createTransport({
@@ -31,51 +32,43 @@ exports.send_email = async (to, subject, html) => {
 }
 
 exports.send_email_worker = async () => {
-  const client = await db.connect();
   try {
-    await client.query("BEGIN");
+    let sendError = null;
+    const info = await db.transaction(async (tx) => {
+      const data = await tx.execute(sql`
+        SELECT * FROM queue WHERE tipe = 'email' AND status = 'pending' FOR UPDATE SKIP LOCKED LIMIT 1
+      `);
+      if (data.rows.length === 0) return;
 
-    const data = await client.query(
-        `SELECT * FROM queue WHERE tipe = 'email' AND status = 'pending' FOR UPDATE SKIP LOCKED LIMIT 1;`
-    );
-    if (data.rows.length === 0) {
-        await client.query("COMMIT");
-        // console.log("No email to send");
-        return;
-    }
+      const row = data.rows[0];
 
-    const row = data.rows[0];
-
-    if (!row.destination) {
+      if (!row.destination) {
         console.error("Queue item has no destination email, marking as failed. Queue ID:", row.id);
         return;
-    }
+      }
 
-    try {
+      try {
         const transporter = createTransporter();
-        const info = await transporter.sendMail({
-            from: `"Ginyuu" <${process.env.EMAIL_SENDER}>`,
-            to: row.destination,
-            subject: "Invoice has been created",
-            html: row.pesan
+        const mailInfo = await transporter.sendMail({
+          from: `"Ginyuu" <${process.env.EMAIL_SENDER}>`,
+          to: row.destination,
+          subject: "Invoice has been created",
+          html: row.pesan
         });
 
-        await client.query(`UPDATE queue SET status = 'sent' WHERE id = $1`, [row.id]);
-        await client.query("COMMIT");
+        await tx.execute(sql`UPDATE queue SET status = 'sent' WHERE id = ${row.id}`);
+        return mailInfo;
+      } catch (err) {
+        sendError = err;
+        await tx.execute(sql`UPDATE queue SET status = 'failed' WHERE id = ${row.id}`);
+      }
+    });
 
-        // console.log("Email terkirim:", info); 
-        return info;
-    } catch (sendError) {
-        await client.query(`UPDATE queue SET status = 'failed' WHERE id = $1`, [row.id]);
-        await client.query("COMMIT");
-        throw sendError;
-    }
+    if (sendError) throw sendError;
+    return info;
   } catch (error) {
-    await client.query("ROLLBACK").catch(() => {});
     console.error("Gagal kirim email:", error);
     throw error;
-  } finally {
-    client.release();
   }
 }
 
