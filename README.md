@@ -6,47 +6,24 @@ Full-stack e-commerce for digital products with guest checkout, multi-product ca
 
 ## Architecture
 
-```
-┌────────────────────────────────────────────────────────────┐
-│               Express 5 Server (Port 4100)                  │
-│  EJS Templates + Vanilla JS + REST API + PostgreSQL         │
-│                                                             │
-│  ┌─────────────┐ ┌──────────────┐ ┌──────────────────┐     │
-│  │  landing.ejs │ │ checkout.ejs │ │  main.js / cart.js│     │
-│  │  landing.js  │ │ checkout.js  │ │  navbar.js (ESM) │     │
-│  └─────────────┘ └──────────────┘ └──────────────────┘     │
-│  ┌──────────────────────────────────────────────────┐       │
-│  │  Profile pages: profile.ejs / purchases.ejs      │       │
-│  │  /settings.ejs / security.ejs / waiting-payment  │       │
-│  └──────────────────────────────────────────────────┘       │
-│  ┌──────────────────────────────────────────────────┐       │
-│  │  Partials: navbar.ejs, auth-modal.ejs,           │       │
-│  │            cart-sidebar.ejs                       │       │
-│  └──────────────────────────────────────────────────┘       │
-│                                                             │
-│  Features (routes + controller + service per domain):       │
-│  ┌──────┐ ┌──────┐ ┌────────┐ ┌───────┐ ┌───────┐        │
-│  │ auth │ │ cart │ │checkout│ │ promo │ │payment│         │
-│  └──────┘ └──────┘ └────────┘ └───────┘ └───────┘        │
-│  ┌──────┐ ┌────────┐ ┌────────────┐ ┌──────────┐         │
-│  │ user │ │product │ │notification│ │ whatsapp │          │
-│  └──────┘ └────────┘ └────────────┘ └──────────┘         │
-│                                                             │
-│  Shared: auth middleware, email service, whatsapp service   │
-└──────────────────────────┬─────────────────────────────────┘
-                           │
-                           ▼
-                 ┌──────────────────────┐
-                 │   PostgreSQL Server   │
-                 │  (users, product,     │
-                 │   cart_items, orders, │
-                 │   order_items,        │
-                 │   invoices, promo_    │
-                 │   codes, queue,       │
-                 │   notifications,      │
-                 │   payment_gateway)    │
-                 └──────────────────────┘
-```
+Express 5 server (Port 4100) with EJS templates, vanilla JavaScript frontend, REST API, and PostgreSQL database managed via Drizzle ORM.
+
+**Frontend layers:**
+- Views: landing.ejs, checkout.ejs, waiting-payment.ejs, reset-password.ejs
+- Profile pages: profile.ejs, purchases.ejs, settings.ejs, security.ejs
+- Partials: navbar.ejs, auth-modal.ejs, cart-sidebar.ejs
+- JavaScript: main.js (shared utilities), navbar.js, cart.js, landing.js, products.js, checkout.js, profile.js, waiting_for_payment.js
+
+**Backend features (route + controller + service per domain):**
+auth, cart, checkout, promo, payment, user, product, notification, whatsapp
+
+**Shared layer:**
+auth middleware, email service (Nodemailer + queue worker), whatsapp service
+
+**Database layer (Drizzle ORM):**
+db/schema/ directory with 10 table definitions, Drizzle query builder for all CRUD operations, automated migration support via drizzle-kit.
+
+PostgreSQL tables: users, product, cart_items, orders, order_items, invoices, promo_codes, queue, notifications, payment_gateway_transactions
 
 ---
 
@@ -67,15 +44,7 @@ bun install
 ### 2. Database Setup
 ```bash
 createdb ginyuu
-cd scripts
-node setup_users_table.js
-node setup_product_table.js
-node setup_cart_table.js
-node setup_order_tables.js
-node setup_queue_table.js
-node setup_notifications_table.js
-node setup_payment_gateway_table.js
-node setup_product_indexes.js
+bun run db:push
 ```
 
 ### 3. Configure Environment
@@ -86,6 +55,7 @@ DB_HOST=localhost
 DB_USER=postgres
 DB_PASSWORD=your_password
 DB_NAME=ginyuu
+DATABASE_URL=postgres://postgres:your_password@localhost:5432/ginyuu
 JWT_SECRET=your_secret_key
 FE_URL=http://localhost:4100
 ACCOUNT_NUMBER=1234567890
@@ -101,9 +71,10 @@ API_KEY=your_key
 
 ### 4. Run
 ```bash
-bun --watch src/app.js
+bun run dev           # Main store (Port 4100)
+bun run admin         # Admin panel (Port 3100)
 ```
-**Access:** `http://localhost:4100`
+**Access:** Store at `http://localhost:4100`, Admin at `http://localhost:3100`
 
 ---
 
@@ -285,53 +256,26 @@ bun --watch src/app.js
 
 ## File Structure
 
-```
-ginyuu/
-├── .env                          # Environment variables
-├── package.json                  # Dependencies (Express 5, pg, etc.)
-├── scripts/                      # Database setup scripts
-│   ├── setup_users_table.js
-│   ├── setup_product_table.js
-│   ├── setup_cart_table.js
-│   ├── setup_order_tables.js
-│   ├── setup_queue_table.js
-│   ├── setup_notifications_table.js
-│   ├── setup_payment_gateway_table.js
-│   └── setup_product_indexes.js
-│
-└── src/
-    ├── app.js                    # Express entry point
-    ├── config/
-    │   └── database.js           # pg Pool connection
-    ├── controllers/
-    │   └── web.controller.js     # Page render handlers
-    ├── features/                 # Feature modules (route + controller + service)
-    │   ├── auth/                 # Register, login, logout, forgot/reset password
-    │   ├── cart/                 # Cart CRUD + sync
-    │   ├── checkout/             # Checkout pipeline
-    │   ├── notification/         # FCM push token registration
-    │   ├── payment/              # Invoices, QRIS gateway integration
-    │   ├── product/              # Product CRUD
-    │   ├── promo/                # Promo code validation
-    │   ├── user/                 # Profile, purchases
-    │   └── whatsapp/             # WhatsApp number check
-    ├── shared/
-    │   ├── middleware/
-    │   │   └── auth.middleware.js # authMiddleware, adminMiddleware
-    │   └── services/
-    │       ├── email.service.js  # Nodemailer + queue worker
-    │       └── whatsapp.service.js
-    ├── public/
-    │   ├── assets/
-    │   │   ├── css/              # landing.css, checkout.css, profile.css, etc.
-    │   │   └── js/               # landing.js, cart.js, navbar.js, profile.js, etc.
-    │   └── common/
-    │       └── main/main.js      # Shared frontend utilities
-    └── views/
-        ├── landing.ejs, checkout.ejs, waiting-payment.ejs, reset-password.ejs
-        ├── partials/             # navbar.ejs, auth-modal.ejs, cart-sidebar.ejs
-        └── profile-user/         # profile.ejs, purchases.ejs, settings.ejs, security.ejs, header.ejs, sidebar.ejs
-```
+**Root level:**
+- .env - Environment variables (DB, JWT, Email, Payment gateway)
+- package.json - Dependencies with scripts
+- drizzle.config.ts - Drizzle Kit configuration for migrations
+- db/ - Database layer (Drizzle ORM)
+  - schema/ - 10 table definitions (users, product, cartItems, orders, etc.)
+  - index.js - Drizzle client initialization
+  - migrations/ - Auto-generated SQL migration files
+- admin/ - Admin panel (Express on Port 3100)
+  - app.js, seed.js
+  - config/, features/ (auth, dashboard, orders, profile, users), views/, public/
+- src/ - Main store application (Express on Port 4100)
+  - app.js - Express entry point
+  - config/database.js - Database connection (re-exports Drizzle client)
+  - controllers/web.controller.js - Page render handlers
+  - features/ - Feature modules (route + controller + service per domain)
+    - auth, cart, checkout, notification, payment, product, promo, user, whatsapp
+  - shared/ - Shared middleware (auth.middleware.js) and services (email, whatsapp)
+  - public/assets/ - CSS and JavaScript files for frontend
+  - views/ - EJS templates (landing, checkout, profile pages, partials)
 
 ---
 
@@ -344,6 +288,7 @@ ginyuu/
 | `DB_USER` | PostgreSQL user |
 | `DB_PASSWORD` | PostgreSQL password |
 | `DB_NAME` | Database name |
+| `DATABASE_URL` | Connection string for Drizzle Kit (format: postgres://user:pass@host:5432/db) |
 | `JWT_SECRET` | JWT signing key |
 | `FE_URL` | Frontend URL (CORS origin) |
 | `BASE_URL` | Base URL for email links |
@@ -363,12 +308,16 @@ ginyuu/
 3. Import routes in `src/app.js`
 
 ### Database changes
-- Scripts in `scripts/` are idempotent (`DROP TABLE IF EXISTS ... CASCADE`)
+- Edit table definitions in `db/schema/` directory
+- Generate migration: `bun run db:generate`
+- Apply migration: `bun run db:migrate`
+- Or push directly to database: `bun run db:push`
+- Browse database via Drizzle Studio: `bun run db:studio`
 - All foreign keys use `ON DELETE CASCADE`
 
 ### Security
 - Passwords: bcrypt (10 rounds)
 - Auth: JWT in HttpOnly cookie (not JS-accessible)
-- SQL injection: parameterized queries (`$1, $2, ...`)
+- SQL injection: Drizzle ORM parameterized queries (auto-escaped)
 - Prices: server-side only (fetched from DB during checkout)
 - CORS: restricted to `FE_URL`
