@@ -7,6 +7,9 @@ const {
 
 const { createNotification } = require("../notification/notification.service");
 const klikQris = require("./payment.gateway");
+const { db } = require("../../../db");
+const { paymentGatewayTransactions, invoices, orders } = require("../../../db/schema");
+const { eq, sql } = require("drizzle-orm");
 
 exports.getInvoice = async (req, res) => {
     const { invoice_number } = req.params;
@@ -138,14 +141,12 @@ exports.webhookHandler = async (req, res) =>{
         }
 
         //search transaction in db
-        const query = `
+        const result = await db.execute(sql`
             SELECT pgt.*, i.invoice_number, i.order_id 
             FROM payment_gateway_transactions pgt
             JOIN invoices i ON i.id = pgt.invoice_id
-            WHERE pgt.gateway_order_id = $1 LIMIT 1 
-        `;
-        const {db} = require("../../config/database");
-        const result = await db.query(query, [data.order_id]);
+            WHERE pgt.gateway_order_id = ${data.order_id} LIMIT 1 
+        `);
 
         if (result.rows.length === 0){
             return res.status(404).json({
@@ -169,14 +170,14 @@ exports.webhookHandler = async (req, res) =>{
         }
 
         //update gateway transaction status 
-        await db.query("UPDATE payment_gateway_transactions SET status = $1, updated_at = NOW() WHERE id = $2", [data.status, transaction.id]);
+        await db.update(paymentGatewayTransactions).set({ status: data.status, updatedAt: sql`NOW()` }).where(eq(paymentGatewayTransactions.id, transaction.id));
 
         // if status paid/ success update invoice to paid
         if(data.status === "PAID" || data.status === "SUCCESS"){
             await updateInvoiceToPaid(transaction.invoice_id);
 
-            const userResult = await db.query("SELECT user_id FROM orders WHERE id = $1", [transaction.order_id]);
-            const userId = userResult.rows[0]?.user_id;
+            const [orderRow] = await db.select({ userId: orders.userId }).from(orders).where(eq(orders.id, transaction.order_id));
+            const userId = orderRow?.userId;
 
             if (userId) {
                 await createNotification({
