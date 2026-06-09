@@ -1,4 +1,6 @@
 const { db } = require("./config/db");
+const { eq } = require("drizzle-orm");
+const { users } = require("../db/schema");
 const bcrypt = require('bcrypt');
 const readline = require('readline');
 
@@ -15,10 +17,7 @@ async function main() {
     const password = await ask('Password: ');
     const hashed = await bcrypt.hash(password, 10);
     try {
-      await db.query(
-        `INSERT INTO users (username, email, password, role) VALUES ($1, $2, $3, 'ADMIN')`,
-        [username, email, hashed]
-      );
+      await db.insert(users).values({ username, email, password: hashed, role: 'ADMIN' });
       console.log(`\n✓ Admin user "${username}" created successfully!\n`);
     } catch (err) {
       if (err.message.includes('duplicate')) {
@@ -29,28 +28,27 @@ async function main() {
     }
   } else if (action === '2') {
     const email = await ask('Email of user to promote: ');
-    const { rows } = await db.query(`SELECT id, username, email, role FROM users WHERE email = $1`, [email]);
-    if (rows.length === 0) {
+    const [user] = await db.select({ id: users.id, username: users.username, email: users.email, role: users.role }).from(users).where(eq(users.email, email));
+    if (!user) {
       console.log('\n✗ User not found\n');
     } else {
-      const user = rows[0];
       console.log(`\nFound: ${user.username} (${user.email}) — current role: ${user.role}`);
       const confirm = await ask(`Promote to ADMIN? (y/n): `);
       if (confirm.toLowerCase() === 'y') {
-        await db.query(`UPDATE users SET role = 'ADMIN' WHERE id = $1`, [user.id]);
+        await db.update(users).set({ role: 'ADMIN' }).where(eq(users.id, user.id));
         console.log(`\n✓ ${user.username} is now an ADMIN!\n`);
       }
     }
   } else if (action === '3') {
     const email = await ask('Email: ');
-    const { rows } = await db.query(`SELECT id, username FROM users WHERE email = $1`, [email]);
-    if (rows.length === 0) {
+    const [user] = await db.select({ id: users.id, username: users.username }).from(users).where(eq(users.email, email));
+    if (!user) {
       console.log('\n✗ User not found\n');
     } else {
       const password = await ask('New password: ');
       const hashed = await bcrypt.hash(password, 10);
-      await db.query(`UPDATE users SET password = $1 WHERE id = $2`, [hashed, rows[0].id]);
-      console.log(`\n✓ Password updated for ${rows[0].username}\n`);
+      await db.update(users).set({ password: hashed }).where(eq(users.id, user.id));
+      console.log(`\n✓ Password updated for ${user.username}\n`);
     }
   }
 
