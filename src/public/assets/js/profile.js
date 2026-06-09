@@ -35,8 +35,8 @@ async function loadProfile() {
     if (usernameInput) usernameInput.value = user.username || "";
     if (phoneInput) phoneInput.value = user.phone || "";
 
-    if (sinceEl && user.created_at) {
-      const d = new Date(user.created_at);
+    if (sinceEl && user.createdAt) {
+      const d = new Date(user.createdAt);
       const months = [
         "Jan",
         "Feb",
