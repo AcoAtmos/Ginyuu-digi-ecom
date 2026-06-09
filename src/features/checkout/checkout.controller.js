@@ -39,6 +39,7 @@ exports.checkout = async (req, res) => {
             body.loggedInUserId = loggedInUser.id;
             body.username = loggedInUser.username;
             body.email = loggedInUser.email;
+            body.phone = loggedInUser.phone;
         }
 
         result = await capturePayload(body);

@@ -16,7 +16,8 @@ exports.capturePayload = async (data) => {
             discount_pct: 0,
             terms: data?.terms || true,
             loggedInUserId: loggedInUserId,
-            accountNumber: process.env.ACCOUNT_NUMBER || "1234567890"
+            accountNumber: process.env.ACCOUNT_NUMBER || "1234567890",
+            phone: data?.phone || null
         },
         code: 200,
         status: "success",
@@ -175,11 +176,11 @@ exports.checkout_add_user = async (result) => {
             result.status = "failed";
             result.code = 401;
             result.message = "EMAIL_ALREADY_REGISTERED";
-            result.data = { message: "Email ini sudah terdaftar. Silakan login terlebih dahulu sebelum checkout." };
+            result.data = { message: "This email is already registered. Please login first before checkout." };
             return result;
         }
         const hashedPassword = await bcrypt.hash(result.payload.password, 10);
-        const [insertResult] = await db.insert(users).values({ email: result.payload.email, username: result.payload.username, password: hashedPassword, terms: result.payload.terms }).returning({ id: users.id });
+        const [insertResult] = await db.insert(users).values({ email: result.payload.email, username: result.payload.username, password: hashedPassword, phone: result.payload.phone, terms: result.payload.terms }).returning({ id: users.id });
         result.payload.idUser = insertResult.id;
     } catch (err) {
         result.status = "failed";
@@ -266,13 +267,13 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
             paymentTemplate = `
                 <div style="text-align:center; padding:30px 20px;">
                     <p style="font-size:15px; color:#555; margin:0 0 20px 0; line-height:1.7;">
-                        Silakan scan QR Code berikut untuk melakukan pembayaran.
+                        Please scan the QR Code below to make a payment.
                     </p>
                     <div style="background:#ffffff; border:1px solid #eeeeee; border-radius:16px; padding:20px; display:inline-block; margin-bottom:18px;">
                         <img src="${payment_url}" alt="QR Code" style="width:220px; max-width:100%; display:block; margin:auto;">
                     </div>
                     <p style="font-size:13px; color:#999999; margin:0;">
-                        QR Code akan otomatis kadaluarsa dalam 15 menit.
+                        QR Code will automatically expire in 15 minutes.
                     </p>
                 </div>
             `;
@@ -280,7 +281,7 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
             paymentTemplate = `
                 <div style="background:#ffffff; border:1px solid #eeeeee; border-radius:14px; padding:20px; margin-top:20px;">
                     <p style="margin-top:0; margin-bottom:18px; color:#555; line-height:1.7;">
-                        Silakan transfer ke rekening berikut untuk melakukan pembayaran:
+                        Please transfer to the following account to make a payment:
                     </p>
                     <table style="width:100%; border-collapse:collapse; font-size:14px; line-height:1.9; color:#444;">
                         <tr>
@@ -445,7 +446,7 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
 
                         <!-- COPYRIGHT -->
                         <div style="margin-top:45px; text-align:center; border-top:1px solid #f0f0f0; padding-top:24px;">
-                            <p style="font-size:12px; color:#999999; margin-bottom:12px; letter-spacing:.5px;">
+                            <p style="font-size:12px; color:#999999; margin-Please scan the QR Code below to make a paymentbottom:12px; letter-spacing:.5px;">
                                 HELP CENTER • SUPPORT 24/7 • ACCOUNT
                             </p>
                             <p style="font-size:11px; color:#aaaaaa; line-height:1.8; margin:0;">
@@ -466,7 +467,36 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
             status: "pending",
             qrisUrl: payment_url || null
         }).returning({ id: queue.id });
-        console.log("email berhasil di queue")
+        console.log("email queued successfully")
+
+        if (invoiceData.phone) {
+            let paymentInfo;
+            if (invoiceData.payment_method === "qris" && payment_url) {
+                paymentInfo = `\nScan QRIS: ${payment_url}`;
+            } else {
+                paymentInfo = `\nPlease transfer to ${invoiceData.payment_method.toUpperCase()}\nNo. Rekening: ${invoiceData.accountNumber || process.env.ACCOUNT_NUMBER || "1234567890"}\nA.N. Ginyuu`;
+            }
+
+            const waMessage = `Hi ${invoiceData.username},
+
+Thank you for purchasing at GINYUU.
+
+Invoice: #${invoiceData.invoice_number}
+Total: Rp ${invoiceData.total.toLocaleString('id-ID')}
+Payment Method: ${invoiceData.payment_method.toUpperCase()}${paymentInfo}
+
+For inquiries, please contact us.`;
+
+            await db.insert(queue).values({
+                orderId: invoiceData.order_id,
+                destination: invoiceData.phone,
+                tipe: "whatsapp",
+                pesan: waMessage,
+                status: "pending",
+                qrisUrl: payment_url || null
+            });
+            console.log("whatsapp queued successfully")
+        }
     } catch (err) {
         console.error(err);
     }
