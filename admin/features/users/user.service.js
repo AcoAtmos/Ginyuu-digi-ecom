@@ -1,4 +1,6 @@
 const { db } = require("../../config/db");
+const { eq, sql } = require("drizzle-orm");
+const { users, orders } = require("../../../db/schema");
 const bcrypt = require('bcrypt');
 
 exports.getList = async ({ search, sort, page, limit }) => {
@@ -8,25 +10,27 @@ exports.getList = async ({ search, sort, page, limit }) => {
     const orderDir = sort === 'asc' ? 'ASC' : 'DESC';
     const searchPattern = search && search.trim() ? `%${search.trim()}%` : null;
 
-    const countQuery = `
+    const searchCondition = searchPattern
+        ? sql`username ILIKE ${searchPattern} OR email ILIKE ${searchPattern} OR phone ILIKE ${searchPattern}`
+        : sql`TRUE`;
+
+    const countResult = await db.execute(sql`
         SELECT COUNT(*) FROM users
-        WHERE ($1::text IS NULL OR username ILIKE $1 OR email ILIKE $1 OR phone ILIKE $1)
-    `;
-    const countResult = await db.query(countQuery, [searchPattern]);
+        WHERE ${searchCondition}
+    `);
     const total = parseInt(countResult.rows[0].count);
 
-    const dataQuery = `
+    const result = await db.execute(sql`
         SELECT id, username, email, phone, image_url, role, created_at
         FROM users
-        WHERE ($1::text IS NULL OR username ILIKE $1 OR email ILIKE $1 OR phone ILIKE $1)
-        ORDER BY created_at ${orderDir}
-        LIMIT $2 OFFSET $3
-    `;
-    const { rows } = await db.query(dataQuery, [searchPattern, limitNum, offset]);
+        WHERE ${searchCondition}
+        ORDER BY created_at ${sql.raw(orderDir)}
+        LIMIT ${limitNum} OFFSET ${offset}
+    `);
 
     return {
         success: true,
-        data: rows,
+        data: result.rows,
         pagination: {
             page: pageNum,
             limit: limitNum,
@@ -37,69 +41,72 @@ exports.getList = async ({ search, sort, page, limit }) => {
 };
 
 exports.getDetail = async (id) => {
-    const query = `
-        SELECT id, username, email, phone, image_url, role, created_at
-        FROM users WHERE id = $1
-    `;
-    const { rows } = await db.query(query, [id]);
-    if (rows.length === 0) return null;
+    const [user] = await db.select({
+        id: users.id, username: users.username, email: users.email,
+        phone: users.phone, image_url: users.imageUrl, role: users.role,
+        created_at: users.createdAt
+    }).from(users).where(eq(users.id, id));
+    if (!user) return null;
 
-    const orderCountQuery = `SELECT COUNT(*) as total_orders FROM orders WHERE user_id = $1`;
-    const { rows: [orderCount] } = await db.query(orderCountQuery, [id]);
+    const orderCountResult = await db.execute(sql`SELECT COUNT(*) as total_orders FROM orders WHERE user_id = ${id}`);
+    const totalOrders = parseInt(orderCountResult.rows[0].total_orders);
 
     return {
-        ...rows[0],
-        total_orders: parseInt(orderCount.total_orders)
+        ...user,
+        total_orders: totalOrders
     };
 };
 
 exports.create = async ({ username, email, password, phone }) => {
     const hashed = await bcrypt.hash(password, 10);
-    const query = `
-        INSERT INTO users (username, email, password, phone, role)
-        VALUES ($1, $2, $3, $4, 'MEMBER')
-        RETURNING id, username, email, phone, role, created_at
-    `;
-    const { rows } = await db.query(query, [username, email, hashed, phone || null]);
-    return rows[0];
+    const [user] = await db.insert(users).values({
+        username,
+        email,
+        password: hashed,
+        phone: phone || null,
+        role: 'MEMBER',
+    }).returning({
+        id: users.id, username: users.username, email: users.email,
+        phone: users.phone, role: users.role, created_at: users.createdAt
+    });
+    return user;
 };
 
 exports.update = async (id, fields) => {
     const allowed = ['username', 'email', 'phone', 'image_url', 'role'];
-    const setClauses = [];
-    const values = [];
-    let idx = 1;
+    const setItems = [];
 
     for (const key of allowed) {
         if (fields[key] !== undefined) {
-            setClauses.push(`${key} = $${idx++}`);
-            values.push(fields[key]);
+            setItems.push(sql`${sql.raw(key)} = ${fields[key]}`);
         }
     }
 
-    if (setClauses.length === 0) {
-        const { rows } = await db.query(`SELECT id, username, email, phone, image_url, role, created_at FROM users WHERE id = $1`, [id]);
-        return rows[0] || null;
+    if (setItems.length === 0) {
+        const [user] = await db.select({
+            id: users.id, username: users.username, email: users.email,
+            phone: users.phone, image_url: users.imageUrl, role: users.role,
+            created_at: users.createdAt
+        }).from(users).where(eq(users.id, id));
+        return user || null;
     }
 
-    values.push(id);
-    const query = `UPDATE users SET ${setClauses.join(', ')} WHERE id = $${idx} RETURNING id, username, email, phone, image_url, role, created_at`;
-    const { rows } = await db.query(query, values);
-    return rows[0] || null;
+    const [user] = (await db.execute(sql`UPDATE users SET ${sql.join(setItems, sql`, `)} WHERE id = ${id} RETURNING id, username, email, phone, image_url, role, created_at`)).rows;
+    return user || null;
 };
 
 exports.remove = async (id) => {
-    const { rows } = await db.query(`SELECT id FROM users WHERE id = $1`, [id]);
-    if (rows.length === 0) return false;
-    await db.query(`DELETE FROM users WHERE id = $1`, [id]);
+    const [user] = await db.select({ id: users.id }).from(users).where(eq(users.id, id));
+    if (!user) return false;
+    await db.delete(users).where(eq(users.id, id));
     return true;
 };
 
 exports.resetPassword = async (id, newPassword) => {
-    const { rows } = await db.query(`SELECT id FROM users WHERE id = $1`, [id]);
-    if (rows.length === 0) return null;
+    const [user] = await db.select({ id: users.id }).from(users).where(eq(users.id, id));
+    if (!user) return null;
 
     const hashed = await bcrypt.hash(newPassword, 10);
-    await db.query(`UPDATE users SET password = $1 WHERE id = $2`, [hashed, id]);
-    return rows[0];
+    await db.update(users).set({ password: hashed }).where(eq(users.id, id));
+    return user;
 };
