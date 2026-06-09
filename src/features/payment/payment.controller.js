@@ -45,14 +45,14 @@ exports.createQris = async (req, res) => {
 
         // check if theres a Qris transaction before create a new one 
         const existing = await getGatewayTransactionByInvoiceId(invoiceData.invoice_id);
-        if (existing && existing.qris_url){
+        if (existing && existing.qrisUrl){
             return res.status(200).json({
                 code:200, status:"success", message:"QRIS already created", 
                 data: {
-                    qris_url : existing.qris_url,
-                    direct_url : existing.direct_url,
-                    gateway_order_id : existing.gateway_order_id,
-                    expired_at : existing.gateway_expired_at
+                    qris_url : existing.qrisUrl,
+                    direct_url : existing.directUrl,
+                    gateway_order_id : existing.gatewayOrderId,
+                    expired_at : existing.gatewayExpiredAt
                 }
             });
         }
@@ -126,6 +126,20 @@ exports.createQris = async (req, res) => {
         
     }catch(err){
         console.error("createQris error:", err);
+        if (err.response?.status === 422) {
+            const existing = await getGatewayTransactionByInvoiceId(invoiceData.invoice_id);
+            if (existing && existing.qrisUrl) {
+                return res.status(200).json({
+                    code:200, status:"success", message:"QRIS already created",
+                    data: {
+                        qris_url: existing.qrisUrl,
+                        direct_url: existing.directUrl,
+                        gateway_order_id: existing.gatewayOrderId,
+                        expired_at: existing.gatewayExpiredAt
+                    }
+                });
+            }
+        }
         return res.status(500).json({code:500, status:"failed", message:"Internal server error", data:null});
     }
 };
