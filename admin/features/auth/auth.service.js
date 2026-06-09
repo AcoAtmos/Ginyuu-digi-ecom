@@ -1,4 +1,6 @@
 const { db } = require("../../config/db");
+const { eq, and } = require("drizzle-orm");
+const { users } = require("../../../db/schema");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const nodemailer = require("nodemailer");
@@ -21,9 +23,7 @@ const sendEmail = async (to, subject, html) => {
 };
 
 exports.login = async ({ email, password }) => {
-    const query = `SELECT * FROM users WHERE email = $1`;
-    const { rows } = await db.query(query, [email]);
-    const user = rows[0];
+    const [user] = await db.select().from(users).where(eq(users.email, email));
 
     if (!user) {
         throw new Error("Invalid email or password");
@@ -43,14 +43,13 @@ exports.login = async ({ email, password }) => {
         username: user.username,
         email: user.email,
         phone: user.phone,
-        image_url: user.image_url,
+        image_url: user.imageUrl,
         role: user.role
     };
 };
 
 exports.forgotPassword = async (email) => {
-    const query = `SELECT id, username, email, role FROM users WHERE email = $1`;
-    const { rows } = await db.query(query, [email]);
+    const rows = await db.select({ id: users.id, username: users.username, email: users.email, role: users.role }).from(users).where(eq(users.email, email));
 
     if (rows.length === 0 || rows[0].role !== 'ADMIN') {
         return;
@@ -104,12 +103,9 @@ exports.resetPassword = async (token, newPassword) => {
     }
 
     const hashed = await bcrypt.hash(newPassword, 10);
-    const { rows } = await db.query(
-        `UPDATE users SET password = $1 WHERE id = $2 AND role = 'ADMIN' RETURNING id`,
-        [hashed, decoded.id]
-    );
+    const [result] = await db.update(users).set({ password: hashed }).where(and(eq(users.id, decoded.id), eq(users.role, 'ADMIN'))).returning({ id: users.id });
 
-    if (rows.length === 0) {
+    if (!result) {
         throw new Error('User not found');
     }
 };
