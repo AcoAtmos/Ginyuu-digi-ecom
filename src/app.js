@@ -73,10 +73,9 @@ const productController = require("./features/product/product.controller");
 app.get("/api/get_product/:slug", productController.get_product);
 
 // Background worker
-const { send_email_worker } = require("./shared/services/email.service");
+const { send_queue_worker } = require("./shared/services/email.service");
 setInterval(async () => {
-    // console.log('10 seconds have passed');
-    await send_email_worker();
+    await send_queue_worker();
 }, 10000);
 
 // Start
