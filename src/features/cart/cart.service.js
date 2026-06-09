@@ -1,18 +1,21 @@
-const { db } = require("../../config/database");
+const { db } = require("../../../db");
+const { product, cartItems } = require("../../../db/schema");
+const { eq, and, desc } = require("drizzle-orm");
 
 exports.getCart = async (userId) => {
-    const query = `
-        SELECT 
-            c.id, c.product_id, c.added_at,
-            p.name, p.slug, p.price, p.discount, p.category, p.preview
-        FROM cart_items c
-        JOIN product p ON c.product_id = p.id
-        WHERE c.user_id = $1
-        ORDER BY c.added_at DESC
-    `;
-    const results = await db.query(query, [userId]);
-    const items = results.rows.map(row => ({
-        id: row.product_id,
+    const rows = await db.select({
+        id: cartItems.id,
+        productId: cartItems.productId,
+        addedAt: cartItems.addedAt,
+        name: product.name,
+        slug: product.slug,
+        price: product.price,
+        discount: product.discount,
+        category: product.category,
+        preview: product.preview
+    }).from(cartItems).leftJoin(product, eq(cartItems.productId, product.id)).where(eq(cartItems.userId, userId)).orderBy(desc(cartItems.addedAt));
+    const items = rows.map(row => ({
+        id: row.productId,
         cartItemId: row.id,
         name: row.name,
         slug: row.slug,
@@ -27,17 +30,11 @@ exports.getCart = async (userId) => {
 };
 
 exports.addItem = async (userId, productId) => {
-    const productCheck = await db.query("SELECT id FROM product WHERE id = $1", [productId]);
-    if (productCheck.rows.length === 0) throw new Error("Product not found");
+    const [productCheck] = await db.select({ id: product.id }).from(product).where(eq(product.id, productId));
+    if (!productCheck) throw new Error("Product not found");
     try {
-        const query = `
-            INSERT INTO cart_items (user_id, product_id)
-            VALUES ($1, $2)
-            ON CONFLICT (user_id, product_id) DO NOTHING
-            RETURNING id
-        `;
-        const result = await db.query(query, [userId, productId]);
-        if (result.rows.length === 0) return { isDuplicate: true };
+        const [result] = await db.insert(cartItems).values({ userId, productId }).onConflictDoNothing().returning({ id: cartItems.id });
+        if (!result) return { isDuplicate: true };
         return { isDuplicate: false };
     } catch (err) {
         throw err;
@@ -45,7 +42,7 @@ exports.addItem = async (userId, productId) => {
 };
 
 exports.removeItem = async (userId, productId) => {
-    await db.query("DELETE FROM cart_items WHERE user_id = $1 AND product_id = $2", [userId, productId]);
+    await db.delete(cartItems).where(and(eq(cartItems.userId, userId), eq(cartItems.productId, productId)));
     return { success: true };
 };
 
