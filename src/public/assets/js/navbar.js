@@ -115,8 +115,8 @@ async function loadNotifications() {
         icon: n.icon || '🔔',
         title: n.message,
         time: n.time || 'Just now',
-        read: n.is_read === true,
-        action_url: n.action_url
+        read: n.isRead === true,
+        action_url: n.actionUrl
       }));
       const locallyReadIds = new Set(notifData.filter(n => n.read).map(n => n.id));
       notifData = fresh.map(n =>
