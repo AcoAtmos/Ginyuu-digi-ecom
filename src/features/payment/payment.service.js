@@ -50,7 +50,7 @@ exports.saveGatewayTransaction = async ({invoiceId, gatewayOrderId, signature, q
         directUrl,
         amount,
         status: 'pending',
-        gatewayExpiredAt: expiredAt
+        gatewayExpiredAt: expiredAt ? new Date(expiredAt) : null
     }).returning({ id: paymentGatewayTransactions.id });
     return result.id;
 }
