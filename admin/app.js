@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
 
 // middleware
 app.use(cors({ origin: process.env.ADMIN_PUBLIC_URL, credentials: true }));
