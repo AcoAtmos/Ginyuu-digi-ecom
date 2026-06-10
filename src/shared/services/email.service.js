@@ -18,16 +18,16 @@ exports.send_email = async (to, subject, html) => {
     const transporter = createTransporter();
 
     const info = await transporter.sendMail({
-        from: `"Billing Digital" <${process.env.EMAIL_SENDER}>`,
+        from: `"GINYUU" <${process.env.EMAIL_SENDER}>`,
         to: to,
         subject: subject,
         html: html
     });
 
-    console.log("Email terkirim:", info);
+    console.log("Email sent:", info);
     return info;
   } catch (error) {
-    console.error("Gagal kirim email:", error);
+    console.error("Failed to send email:", error);
     throw error;
   }
 }
@@ -72,7 +72,7 @@ exports.send_queue_worker = async () => {
     if (sendError) throw sendError;
     return info;
   } catch (error) {
-    console.error("Gagal kirim queue:", error);
+    console.error("Failed to send queue:", error);
     throw error;
   }
 }
