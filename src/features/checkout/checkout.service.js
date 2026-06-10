@@ -256,12 +256,12 @@ exports.checkout_clear_cart = async (result) => {
 
 // on called from payment controller
 exports.checkout_add_queue = async (invoiceData, payment_url) => {
-    try { 
+    try {
 
         let productListHtml = invoiceData.items.map(row =>
             `<li>${row.product_name} - Rp. ${row.price.toLocaleString('id-ID')}</li>`
         ).join('');
-        
+
         let paymentTemplate;
 
         if (invoiceData.payment_method === "qris") {
@@ -484,7 +484,7 @@ Thank you for purchasing at GINYUU.
 
 Invoice: #${invoiceData.invoice_number}
 Total: Rp ${invoiceData.total.toLocaleString('id-ID')}
-Payment Method: ${invoiceData.payment_method.toUpperCase()}${paymentInfo}
+Please Check your email to scan the QR code !
 
 For inquiries, please contact us.`;
 
