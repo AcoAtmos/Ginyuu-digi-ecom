@@ -9,7 +9,7 @@ dotenv.config();
 const app = express();
 
 // middleware
-app.use(cors({ origin: process.env.ADMIN_BASE_URL, credentials: true }));
+app.use(cors({ origin: process.env.ADMIN_PUBLIC_URL, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -19,7 +19,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use((req, res, next) => {
-    res.locals.ADMIN_URL = process.env.ADMIN_BASE_URL || `http://localhost:${process.env.ADMIN_PORT || 3100}`;
+    res.locals.ADMIN_PUBLIC_URL = process.env.ADMIN_PUBLIC_URL || `http://localhost:${process.env.ADMIN_PORT || 3100}`;
     next();
 });
 
@@ -28,7 +28,7 @@ app.use("/assets", express.static(path.join(__dirname, "public")));
 
 // CORS headers
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', process.env.ADMIN_BASE_URL);
+    res.setHeader('Access-Control-Allow-Origin', process.env.ADMIN_PUBLIC_URL);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     next();
