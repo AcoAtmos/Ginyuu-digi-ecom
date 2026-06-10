@@ -59,12 +59,23 @@ async function loadProfile() {
   }
 }
 
+function validatePhoneInput(phone) {
+  if (!phone) return true;
+  const digits = phone.replace(/\D/g, "");
+  return digits.length >= 10 && digits.length <= 15;
+}
+
 async function saveProfile() {
   const username = document.getElementById("inputUsername")?.value.trim();
   const phone = document.getElementById("inputPhone")?.value.trim();
 
   if (!username) {
     showToast("Username is required");
+    return;
+  }
+
+  if (phone && !validatePhoneInput(phone)) {
+    showToast("Invalid phone number (10-15 digits expected)");
     return;
   }
 
