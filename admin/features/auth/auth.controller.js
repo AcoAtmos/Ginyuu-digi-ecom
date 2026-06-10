@@ -37,7 +37,7 @@ exports.login = async (req, res) => {
             { expiresIn: "24h" }
         );
 
-        res.cookie("token", token, {
+        res.cookie("admin_token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
@@ -71,8 +71,10 @@ exports.login = async (req, res) => {
 };
 
 exports.logout = async (req, res) => {
-    res.cookie("token", "", {
+    res.cookie("admin_token", "", {
         httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
         expires: new Date(0),
         path: "/"
     });
@@ -122,14 +124,14 @@ exports.resetPassword = async (req, res) => {
 };
 
 exports.verifyToken = async (req, res) => {
-    const token = req.cookies?.token;
+    const token = req.cookies?.admin_token;
     if (!token) {
         return res.status(200).json({ code: 200, status: "success", message: "No token found", data: null });
     }
 
     try {
         const decoded = jwt.verify(token, process.env.ADMIN_JWT_SECRET);
-        if (decoded.role !== 'ADMIN') {
+        if (decoded.role !== 'ADMIN' || decoded.status !== 'active') {
             return res.status(200).json({ code: 200, status: "success", message: "No token found", data: null });
         }
         return res.status(200).json({
