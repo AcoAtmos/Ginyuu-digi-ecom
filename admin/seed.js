@@ -17,7 +17,7 @@ async function main() {
     const password = await ask('Password: ');
     const hashed = await bcrypt.hash(password, 10);
     try {
-      await db.insert(users).values({ username, email, password: hashed, role: 'ADMIN' });
+      await db.insert(users).values({ username, email, password: hashed, role: 'ADMIN', status: 'active' });
       console.log(`\n✓ Admin user "${username}" created successfully!\n`);
     } catch (err) {
       if (err.message.includes('duplicate')) {
