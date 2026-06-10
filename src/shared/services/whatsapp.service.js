@@ -1,4 +1,10 @@
 const axios = require("axios");
+const { normalizePhone } = require("../helpers/phone");
+
+function normalize(input) {
+    const n = normalizePhone(input);
+    return n || input;
+}
 
 exports.checkWhatsapp = async (phone) => {
     const { data } = await axios.post(
@@ -6,7 +12,7 @@ exports.checkWhatsapp = async (phone) => {
         {
             api_key: process.env.API_KEY_WOOWA,
             sender: "6287879878393",
-            number: phone
+            number: normalize(phone)
         }
     );
     return data;
@@ -18,7 +24,7 @@ exports.sendWhatsApp = async (phone, message) => {
         {
             api_key: process.env.API_KEY_WOOWA,
             sender: "6287879878393",
-            number: phone,
+            number: normalize(phone),
             message: message
         }
     );
