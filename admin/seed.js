@@ -35,7 +35,7 @@ async function main() {
       console.log(`\nFound: ${user.username} (${user.email}) — current role: ${user.role}`);
       const confirm = await ask(`Promote to ADMIN? (y/n): `);
       if (confirm.toLowerCase() === 'y') {
-        await db.update(users).set({ role: 'ADMIN' }).where(eq(users.id, user.id));
+        await db.update(users).set({ role: 'ADMIN', status: 'active' }).where(eq(users.id, user.id));
         console.log(`\n✓ ${user.username} is now an ADMIN!\n`);
       }
     }
