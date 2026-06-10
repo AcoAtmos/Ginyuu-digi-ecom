@@ -11,5 +11,6 @@ router.get("/me", controller.getMe);
 router.post("/logout", controller.logout);
 router.post("/forgot-password", controller.forgotPassword);
 router.post("/reset-password", controller.resetPassword);
+router.get("/verify-email-change", controller.verifyEmailChange);
 
 module.exports = { router, prefix: "/auth" };
