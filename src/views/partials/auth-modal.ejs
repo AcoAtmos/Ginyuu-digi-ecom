@@ -55,6 +55,15 @@
         <button class="btn-auth" id="btnAuthRegister">Create Account</button>
         <div class="auth-footer-text">Already have an account? <a data-switch-tab="login">Login</a></div>
     </div>
+    <div id="verifyEmailForm" style="display:none;">
+        <div class="auth-title">Check Your Email</div>
+        <div class="auth-subtitle">We've sent a verification link to <strong id="verifyEmailAddr"></strong></div>
+        <div style="font-size:13px;color:#999;margin-bottom:20px;line-height:1.6">
+            Click the link in the email to activate your account, then login.
+        </div>
+        <button class="btn-auth" id="btnResendVerification" style="margin-bottom:6px">Resend Verification</button>
+        <div class="auth-footer-text"><a id="backToLoginVerify" style="cursor:pointer">◀ Back to Login</a></div>
+    </div>
     <div id="forgotForm" style="display:none;">
         <div class="auth-title">Reset Password</div>
         <div class="auth-subtitle">Enter your email to receive a reset link</div>
