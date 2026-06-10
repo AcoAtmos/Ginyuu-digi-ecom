@@ -229,7 +229,7 @@ bun run admin         # Admin panel (Port 3100)
 **Seed codes:** `DIGI20` (20%), `HEMAT20` (20%), `WELCOME10` (10%), `NEWYEAR` (15%)
 
 ### queue (Message queue — email & WhatsApp)
-`id (PK)`, `order_id (FK)`, `destination` (email address or phone), `tipe` (email/whatsapp), `pesan` (HTML or plain text), `qris_url`, `status` (pending/sent/failed), `created_at`
+`id (PK)`, `order_id (FK)`, `destination` (email address or phone), `tipe` (email/whatsapp), `pesan` (HTML or plain text), `qris_url`, `status` (pending/success/failed), `created_at`
 
 ### notifications
 `id (PK)`, `user_id (FK)`, `icon`, `message`, `action_url`, `is_read`, `created_at`
