@@ -54,6 +54,10 @@ function setupLoggedInUI() {
   document.querySelectorAll('.guest-only').forEach(el => el.style.display = 'none');
   document.getElementById('passwordSection').style.display = 'none';
   document.querySelectorAll('.logged-only').forEach(el => el.style.display = 'block');
+  const phoneRow = document.getElementById('phoneFieldRow');
+  if (phoneRow && currentUser.phone) {
+    phoneRow.style.display = 'none';
+  }
 }
 
 function setupGuestUI() {
