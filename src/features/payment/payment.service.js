@@ -119,7 +119,6 @@ exports.sendOrderSuccessEmail = async (invoiceId) => {
                             <span style="color:#111111;">GIN</span><span style="color:#999999;">YUU</span>
                         </div>
                         <div style="font-size:12px; color:#aaaaaa; letter-spacing:2px; margin-bottom:30px;">DIGITAL PRODUCTS</div>
-                        <div style="font-size:56px; margin-bottom:16px;">&#x2705;</div>
                         <h1 style="margin:0 0 8px 0; font-size:24px; color:#111111; font-weight:700;">Payment Successful!</h1>
                         <p style="margin:0 0 4px 0; font-size:14px; color:#888888;">Invoice #${invoiceNumber}</p>
                     </div>
