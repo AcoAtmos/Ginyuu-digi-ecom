@@ -289,19 +289,19 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
                             <td>: ${invoiceData.payment_method.toUpperCase()}</td>
                         </tr>
                         <tr>
-                            <td style="color:#888;">No. Rekening</td>
+                            <td style="color:#888;">Account Number</td>
                             <td>: ${process.env.ACCOUNT_NUMBER || "1234567890"}</td>
                         </tr>
                         <tr>
-                            <td style="color:#888;">Atas Nama</td>
-                            <td>: A.N. Ginyuu</td>
+                            <td style="color:#888;">Account Name</td>
+                            <td>: Ginyuu</td>
                         </tr>
                         <tr>
-                            <td style="color:#888;">Jumlah Transfer</td>
+                            <td style="color:#888;">Amount</td>
                             <td>: Rp ${invoiceData.total.toLocaleString('id-ID')}</td>
                         </tr>
                         <tr>
-                            <td style="color:#888;">No. Order</td>
+                            <td style="color:#888;">Order No.</td>
                             <td>: ${invoiceData.invoice_number}</td>
                         </tr>
                     </table>
@@ -347,20 +347,20 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
             <!-- BODY -->
             <div style="padding:40px;">
                 <h2 style="font-size:30px; line-height:1.2; color:#111111; margin:0 0 18px 0; letter-spacing:-1px;">
-                    Konfirmasi Pembelian
+                    Order Confirmation
                 </h2>
                 
                 <p style="font-size:16px; line-height:1.8; color:#555555; margin:0 0 8px 0;">
-                    Halo <strong>${invoiceData.username}</strong>,
+                    Hi <strong>${invoiceData.username}</strong>,
                 </p>
                 <p style="font-size:15px; line-height:1.8; color:#666666; margin-bottom:40px;">
-                    Terima kasih telah melakukan pembelian di GINYUU. Berikut adalah rincian pesanan dan instruksi pembayaran Anda.
+                    Thank you for your purchase at GINYUU. Below are your order details and payment instructions.
                 </p>
                         <!-- PRODUCT -->
                         <div style="border:1px solid #eeeeee; border-radius:18px; overflow:hidden; margin-bottom:28px;">
                             <div style="padding:18px 24px; background:#fafafa; border-bottom:1px solid #eeeeee;">
                                 <h3 style="margin:0; font-size:13px; letter-spacing:1px; text-transform:uppercase; color:#999999;">
-                                    Detail Produk
+                                    Product Details
                                 </h3>
                             </div>
                             <div style="padding:24px; font-size:15px; color:#444444; line-height:1.9;">
@@ -375,7 +375,7 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
                                 <td align="right">Rp ${invoiceData.subtotal.toLocaleString('id-ID')}</td>
                             </tr>
                             <tr>
-                                <td style="padding:10px 0; color:#777;">Diskon</td>
+                                <td style="padding:10px 0; color:#777;">                                    Discount</td>
                                 <td align="right" style="color:#999;">- Rp ${invoiceData.discount_amount.toLocaleString('id-ID')}</td>
                             </tr>
                             <tr>
@@ -385,7 +385,7 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
                             </tr>
                             <tr>
                                 <td style="padding-top:10px; font-size:18px; font-weight:700; color:#111;">
-                                    Total Tagihan
+                                    Total
                                 </td>
                                 <td align="right" style="padding-top:10px; font-size:24px; font-weight:800; color:#111;">
                                     Rp ${invoiceData.total.toLocaleString('id-ID')}
@@ -396,19 +396,19 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
                         <!-- PAYMENT METHOD -->
                         <div style="background:#fafafa; border:1px solid #eeeeee; border-radius:20px; padding:30px; margin-bottom:35px;">
                             <h3 style="margin-top:0; margin-bottom:25px; font-size:16px; color:#111111;">
-                                Instruksi Pembayaran
+                                Payment Instructions
                             </h3>
                             <table style="width:100%; font-size:14px; line-height:2; color:#555555; margin-bottom:10px;">
                                 <tr>
-                                    <td width="40%">Nomor Invoice</td>
+                                    <td width="40%">Invoice Number</td>
                                     <td>: ${invoiceData.invoice_number}</td>
                                 </tr>
                                 <tr>
-                                    <td>Atas Nama</td>
+                                    <td>Account Name</td>
                                     <td>: ${invoiceData.username}</td>
                                 </tr>
                                 <tr>
-                                    <td>Metode Pembayaran</td>
+                                    <td>Payment Method</td>
                                     <td>: ${invoiceData.payment_method.toUpperCase()}</td>
                                 </tr>
                             </table>
@@ -419,7 +419,7 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
                         <div style="text-align:center; margin-bottom:45px;">
                             <a href="https://wa.me/6281333477041" 
                             style="background:#111111; color:#ffffff; text-decoration:none; padding:14px 32px; border-radius:12px; display:inline-block; font-size:14px; font-weight:700;">
-                                Hubungi Kami
+                                Contact Us
                             </a>
                         </div>
 
@@ -429,8 +429,8 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
                                 <tr>
                                     <td>
                                         <strong style="display:block; font-size:15px; color:#111111; margin-bottom:4px;">
-                                            Admin Finance
-                                        </strong>
+                                        GINYUU Team
+                                    </strong>
                                         <span style="font-size:13px; color:#999999;">
                                             PT. Ginyuu Digital Product
                                         </span>
@@ -446,7 +446,7 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
 
                         <!-- COPYRIGHT -->
                         <div style="margin-top:45px; text-align:center; border-top:1px solid #f0f0f0; padding-top:24px;">
-                            <p style="font-size:12px; color:#999999; margin-Please scan the QR Code below to make a paymentbottom:12px; letter-spacing:.5px;">
+                            <p style="font-size:12px; color:#999999; margin-bottom:12px; letter-spacing:.5px;">
                                 HELP CENTER • SUPPORT 24/7 • ACCOUNT
                             </p>
                             <p style="font-size:11px; color:#aaaaaa; line-height:1.8; margin:0;">
