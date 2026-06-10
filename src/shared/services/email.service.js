@@ -62,7 +62,7 @@ exports.send_queue_worker = async () => {
           await sendWhatsApp(row.destination, row.pesan);
         }
 
-        await tx.execute(sql`UPDATE queue SET status = 'sent' WHERE id = ${row.id}`);
+        await tx.execute(sql`UPDATE queue SET status = 'success' WHERE id = ${row.id}`);
       } catch (err) {
         sendError = err;
         await tx.execute(sql`UPDATE queue SET status = 'failed' WHERE id = ${row.id}`);
