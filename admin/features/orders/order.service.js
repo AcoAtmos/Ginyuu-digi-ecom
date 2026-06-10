@@ -185,8 +185,9 @@ exports.update = async (id, fields) => {
 
             const [order] = (await tx.execute(sql`UPDATE orders SET ${sql.join(setItems, sql`, `)} WHERE id = ${id} RETURNING *`)).rows;
 
-            if (fields.status === 'cancelled') {
-                await tx.execute(sql`UPDATE invoices SET status_payment = 'cancelled' WHERE order_id = ${id} AND status_payment = 'pending'`);
+            if (fields.status === 'cancelled' || fields.status === 'completed') {
+                const newPaymentStatus = fields.status === 'completed' ? 'paid' : 'cancelled';
+                await tx.execute(sql`UPDATE invoices SET status_payment = ${newPaymentStatus} WHERE order_id = ${id} AND status_payment = 'pending'`);
             }
 
             return order || null;
@@ -221,8 +222,9 @@ exports.update = async (id, fields) => {
 
     const [order] = (await db.execute(sql`UPDATE orders SET ${sql.join(setItems, sql`, `)} WHERE id = ${id} RETURNING *`)).rows;
 
-    if (order && fields.status === 'cancelled') {
-        await db.execute(sql`UPDATE invoices SET status_payment = 'cancelled' WHERE order_id = ${id} AND status_payment = 'pending'`);
+    if (order && (fields.status === 'cancelled' || fields.status === 'completed')) {
+        const newPaymentStatus = fields.status === 'completed' ? 'paid' : 'cancelled';
+        await db.execute(sql`UPDATE invoices SET status_payment = ${newPaymentStatus} WHERE order_id = ${id} AND status_payment = 'pending'`);
     }
 
     return order || null;
