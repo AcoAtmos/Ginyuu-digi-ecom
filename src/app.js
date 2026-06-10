@@ -19,15 +19,15 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use((req, res, next) => {
-    res.locals.BE_URL = process.env.BASE_URL || process.env.BE_URL || `http://localhost:${process.env.PORT || 4100}`;
+    res.locals.PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 4100}`;
     next();
 });
 
 // Cors
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'https://yearning-batch-comment.ngrok-free.dev' );
+    res.setHeader('Access-Control-Allow-Origin', process.env.PUBLIC_URL );
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type'); 
     next();
 });
 
