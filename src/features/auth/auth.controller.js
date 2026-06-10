@@ -1,4 +1,4 @@
-const { register, login, forgotPassword, resetPassword, registerCheckout } = require("./auth.service");
+const { register, login, verifyEmail, resendVerification, forgotPassword, resetPassword, registerCheckout } = require("./auth.service");
 const jwt = require("jsonwebtoken");
 const { db } = require("../../../db");
 const { users } = require("../../../db/schema");
@@ -6,15 +6,48 @@ const { eq } = require("drizzle-orm");
 
 exports.register = async (req, res) => {
     try {
-        const result = await register(req.body);
+        await register(req.body);
         res.status(200).json({
             status: "success",
-            message: "User registered successfully",
-            data: result
+            message: "Please check your email to verify your account"
         });
     } catch (err) {
         return res.status(500).json({
-            status: "error server error cik",
+            status: "error",
+            message: err.message
+        });
+    }
+};
+
+exports.verifyEmail = async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) {
+            return res.status(400).json({ code: 400, status: "error", message: "Token is required" });
+        }
+        await verifyEmail(token);
+        res.render("verify-email", { status: "success", message: "Email verified! You can now login." });
+    } catch (err) {
+        res.render("verify-email", { status: "error", message: err.message });
+    }
+};
+
+exports.resendVerification = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ code: 400, status: "error", message: "Email is required" });
+        }
+        await resendVerification(email);
+        return res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "If the email is registered, a verification link has been sent"
+        });
+    } catch (err) {
+        return res.status(500).json({
+            code: 500,
+            status: "error",
             message: err.message
         });
     }
@@ -59,10 +92,12 @@ exports.login = async (req, res) => {
             },
         });
     } catch (err) {
-        return res.status(500).json({
-            code: 500,
+        const status = err.message.includes("Email not verified") ? 403 : 500;
+        return res.status(status).json({
+            code: status,
             status: "error",
             message: err.message,
+            canResend: err.message.includes("Email not verified"),
         });
     }
 };
@@ -72,10 +107,10 @@ exports.verifyToken = async (req, res) => {
     if (token) {
         jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
             if (err) {
-                return res.status(403).json({
-                    code: 403,
+                return res.status(401).json({
+                    code: 401,
                     status: "error",
-                    message: "Forbidden"
+                    message: "Unauthorized"
                 });
             }
             return res.status(200).json({
