@@ -264,6 +264,11 @@ async function handleLogin() {
     const pass = document.getElementById('loginPassword').value;
     if (!email || !pass) { showToast('⚠️ Fill all the fields'); return; }
 
+    const btn = document.getElementById('btnAuthLogin');
+    const originalText = 'Login';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Logging in...';
+
     const result = await Login(email, pass);
     if (result.status === "success") {
       localStorage['username'] = result.data.user.username;
@@ -282,9 +287,14 @@ async function handleLogin() {
     } else {
       showToast(result.message);
     }
+
+    btn.disabled = false;
+    btn.textContent = originalText;
   } catch (err) {
     console.error('Login error:', err);
     showToast('⚠️ An unexpected error occurred');
+    const btn = document.getElementById('btnAuthLogin');
+    if (btn) { btn.disabled = false; btn.textContent = 'Login'; }
   }
 }
 
@@ -296,6 +306,11 @@ async function handleRegister() {
     const confirmPass = document.getElementById('regConfirmPassword').value;
     const terms = document.getElementById('regTerms').checked;
 
+    const btn = document.getElementById('btnAuthRegister');
+    const originalText = 'Create Account';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Creating Account...';
+
     const result = await register(username, email, password, confirmPass, terms);
     if (result.status === "success") {
       document.getElementById('verifyEmailAddr').textContent = email;
@@ -304,9 +319,14 @@ async function handleRegister() {
     } else {
       showToast(result.message);
     }
+
+    btn.disabled = false;
+    btn.textContent = originalText;
   } catch (err) {
     console.error('Register error:', err);
     showToast('⚠️ An unexpected error occurred');
+    const btn = document.getElementById('btnAuthRegister');
+    if (btn) { btn.disabled = false; btn.textContent = 'Create Account'; }
   }
 }
 
