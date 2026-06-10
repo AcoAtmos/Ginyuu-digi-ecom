@@ -1,5 +1,5 @@
 {
-  "id": "2c021ca7-20a1-44a1-aff4-4c7ca444d38c",
+  "id": "57166767-7174-426e-b482-c010c7e99957",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -50,6 +50,13 @@
           "primaryKey": false,
           "notNull": false,
           "default": "'MEMBER'"
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'inactive'"
         },
         "terms": {
           "name": "terms",

@@ -6,6 +6,7 @@ CREATE TABLE "users" (
 	"phone" varchar,
 	"image_url" varchar,
 	"role" varchar DEFAULT 'MEMBER',
+	"status" varchar DEFAULT 'inactive',
 	"terms" boolean,
 	"created_at" timestamp DEFAULT now(),
 	CONSTRAINT "users_email_unique" UNIQUE("email")
