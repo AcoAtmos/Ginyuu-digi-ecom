@@ -8,6 +8,7 @@ const users = pgTable('users', {
   phone: varchar('phone'),
   imageUrl: varchar('image_url'),
   role: varchar('role').default('MEMBER'),
+  status: varchar('status').default('inactive'),
   terms: boolean('terms'),
   createdAt: timestamp('created_at').defaultNow(),
 });
