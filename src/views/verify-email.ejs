@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GINYUU — Verify Email</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/assets/css/landing.css"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#0a0a0a;--bg2:#111111;--bg3:#181818;--bg4:#222222;--border:#2a2a2a;--border2:#333333;--text:#f0f0f0;--text2:#999999;--text3:#555555;--accent:#ffffff;--accent2:#e0e0e0;--danger:#ff4444;--success:#22c55e;--shadow:0 20px 60px rgba(0,0,0,.6)}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    h1,h2,h3{font-family:'Syne',sans-serif}
+    .card{background:var(--bg2);border:1px solid var(--border2);border-radius:20px;max-width:440px;width:100%;padding:40px;box-shadow:var(--shadow);text-align:center}
+    .card .icon{font-size:48px;margin-bottom:16px}
+    .card h1{font-size:22px;font-weight:800;margin-bottom:8px}
+    .card p{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:24px}
+    .btn-auth{display:inline-block;padding:12px 32px;border-radius:10px;border:none;background:var(--accent);color:var(--bg);font-size:14px;font-weight:700;cursor:pointer;transition:all .25s;text-decoration:none;font-family:'DM Sans',sans-serif}
+    .btn-auth:hover{background:var(--accent2)}
+    .success{color:var(--success)}
+    .error{color:var(--danger)}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <% if (locals.status === 'success') { %>
+      <div class="icon">✅</div>
+      <h1>Email Verified!</h1>
+      <p><%= locals.message %></p>
+      <a href="/" class="btn-auth">Go to Homepage</a>
+    <% } else { %>
+      <div class="icon">❌</div>
+      <h1>Verification Failed</h1>
+      <p><%= locals.message %></p>
+      <a href="/" class="btn-auth">Go to Homepage</a>
+    <% } %>
+  </div>
+</body>
+</html>
