@@ -21,7 +21,7 @@ exports.getList = async ({ search, sort, page, limit }) => {
     const total = parseInt(countResult.rows[0].count);
 
     const result = await db.execute(sql`
-        SELECT id, username, email, phone, image_url, role, created_at
+        SELECT id, username, email, phone, image_url, role, status, created_at
         FROM users
         WHERE ${searchCondition}
         ORDER BY created_at ${sql.raw(orderDir)}
@@ -44,7 +44,7 @@ exports.getDetail = async (id) => {
     const [user] = await db.select({
         id: users.id, username: users.username, email: users.email,
         phone: users.phone, image_url: users.imageUrl, role: users.role,
-        created_at: users.createdAt
+        status: users.status, created_at: users.createdAt
     }).from(users).where(eq(users.id, id));
     if (!user) return null;
 
@@ -65,6 +65,7 @@ exports.create = async ({ username, email, password, phone }) => {
         password: hashed,
         phone: phone || null,
         role: 'MEMBER',
+        status: 'active',
     }).returning({
         id: users.id, username: users.username, email: users.email,
         phone: users.phone, role: users.role, created_at: users.createdAt
