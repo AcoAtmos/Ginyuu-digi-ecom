@@ -1,5 +1,5 @@
 
-import { showToast, Login, register, logout, checkAuthStatus, forgotPassword } from '../../common/main/main.js';
+import { showToast, Login, register, logout, checkAuthStatus, forgotPassword, resendVerification } from '../../common/main/main.js';
 import { Cart } from './cart.js';
 
 let currentUser = null;
@@ -230,19 +230,26 @@ function switchTab(tab) {
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
   const forgotForm = document.getElementById('forgotForm');
+  const verifyForm = document.getElementById('verifyEmailForm');
   const tabLogin = document.getElementById('tabLogin');
   const tabRegister = document.getElementById('tabRegister');
+
+  [loginForm, registerForm, forgotForm, verifyForm].forEach(el => { if (el) el.style.display = 'none'; });
 
   if (tab === 'forgot') {
     if (tabLogin) tabLogin.style.display = 'none';
     if (tabRegister) tabRegister.style.display = 'none';
-    if (loginForm) loginForm.style.display = 'none';
-    if (registerForm) registerForm.style.display = 'none';
     if (forgotForm) forgotForm.style.display = '';
     return;
   }
 
-  [loginForm, registerForm, forgotForm].forEach(el => { if (el) el.style.display = 'none'; });
+  if (tab === 'verify') {
+    if (tabLogin) tabLogin.style.display = 'none';
+    if (tabRegister) tabRegister.style.display = 'none';
+    if (verifyForm) verifyForm.style.display = '';
+    return;
+  }
+
   if (tabLogin) tabLogin.style.display = '';
   if (tabRegister) tabRegister.style.display = '';
   if (loginForm) loginForm.style.display = tab === 'login' ? '' : 'none';
@@ -269,6 +276,9 @@ async function handleLogin() {
       closeAuthModal();
       renderProfileDropdown();
       showToast(`👋 Welcome, ${currentUser.name}!`);
+    } else if (result.canResend) {
+      document.getElementById('verifyEmailAddr').textContent = email;
+      switchTab('verify');
     } else {
       showToast(result.message);
     }
@@ -288,19 +298,9 @@ async function handleRegister() {
 
     const result = await register(username, email, password, confirmPass, terms);
     if (result.status === "success") {
-      closeAuthModal();
-      const result = await Login(email, password);
-      if (result.status == "success") {
-        localStorage['username'] = result.data.user.username;
-        localStorage['email'] = result.data.user.email;
-        currentUser = { name: localStorage['username'], email: localStorage['email'] };
-        Cart.setLoggedIn(true);
-        await Cart.sync();
-        await updateCartBadge();
-        await renderCart();
-      }
-      renderProfileDropdown();
-      showToast(result.message);
+      document.getElementById('verifyEmailAddr').textContent = email;
+      switchTab('verify');
+      showToast('Check your email for verification link');
     } else {
       showToast(result.message);
     }
@@ -535,6 +535,17 @@ document.getElementById('btnAuthLogin')?.addEventListener('click', handleLogin);
 document.getElementById('btnAuthRegister')?.addEventListener('click', handleRegister);
 document.getElementById('forgotPasswordLink')?.addEventListener('click', () => switchTab('forgot'));
 document.getElementById('backToLogin')?.addEventListener('click', () => switchTab('login'));
+document.getElementById('backToLoginVerify')?.addEventListener('click', () => switchTab('login'));
+document.getElementById('btnResendVerification')?.addEventListener('click', async () => {
+  const email = document.getElementById('verifyEmailAddr').textContent;
+  const btn = document.getElementById('btnResendVerification');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  const result = await resendVerification(email);
+  btn.disabled = false;
+  btn.textContent = 'Resend Verification';
+  showToast(result.message);
+});
 document.getElementById('btnAuthForgot')?.addEventListener('click', handleForgotPassword);
 
 document.querySelectorAll('[data-switch-tab]').forEach(el => {
