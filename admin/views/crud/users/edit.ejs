@@ -19,6 +19,13 @@
           <option value="ADMIN">Admin</option>
         </select>
       </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" name="status" id="fieldStatus">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
       <div class="form-actions">
         <a href="/admin/users" class="btn btn-ghost">Cancel</a>
         <button class="btn btn-primary" type="submit">Save changes</button>
@@ -40,6 +47,7 @@
     document.getElementById('fieldEmail').value = u.email;
     document.getElementById('fieldPhone').value = u.phone || '';
     document.getElementById('fieldRole').value = u.role;
+    document.getElementById('fieldStatus').value = u.status;
   } catch(e) {}
 })();
 
