@@ -1,5 +1,4 @@
 const axios = require("axios");
-const { db } = require("../../config/database");
 
 exports.checkWhatsapp = async (phone) => {
     const { data } = await axios.post(
