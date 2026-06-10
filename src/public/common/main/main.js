@@ -129,7 +129,7 @@ async function resendVerification(email) {
     }
 }
 
-async function register(username, email, password, confirmPass, terms) {
+async function register(username, email, password, confirmPass, terms, phone) {
   if (!username || !email || !password || !confirmPass) {
     showToast('⚠️ Fill all the fields');
     return;
@@ -172,7 +172,8 @@ async function register(username, email, password, confirmPass, terms) {
                 username,
                 email, 
                 password,
-                terms
+                terms,
+                phone: phone || null
             }),
         });
         if (response.ok) {
