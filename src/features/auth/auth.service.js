@@ -6,10 +6,11 @@ const jwt = require('jsonwebtoken');
 const { normalizePhone } = require("../../shared/helpers/phone");
 
 exports.register = async (body) => {
-    const { username, email, password, terms } = body;
+    const { username, email, password, terms, phone } = body;
     const hashedPassword = await bcrypt.hash(password, 10);
+    const normalizedPhone = normalizePhone(phone);
     try {
-        const [inserted] = await db.insert(users).values({ username, email, password: hashedPassword, terms, status: 'inactive' }).returning({ id: users.id });
+        const [inserted] = await db.insert(users).values({ username, email, password: hashedPassword, phone: normalizedPhone, terms, status: 'inactive' }).returning({ id: users.id });
 
         const token = jwt.sign(
             { id: inserted.id, email, type: 'email_verification' },
