@@ -8,7 +8,7 @@ const respond = (req, res, status, message) => {
   return res.status(status).json({ code: status, status: "error", message });
 };
 
-// for BE
+
 exports.authenticateAdmin = (req, res, next) => {
   const token = req.cookies?.admin_token;
   if (!token) {
@@ -27,7 +27,7 @@ exports.authenticateAdmin = (req, res, next) => {
   }
 };
 
-// for FE
+
 exports.redirectIfAuthenticated = (req, res, next) => {
   const token = req.cookies?.admin_token;
   if (token) {
