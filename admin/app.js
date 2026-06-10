@@ -38,6 +38,7 @@ app.use((req, res, next) => {
 // Page routes (EJS views)
 const { authenticateAdmin } = require('./middleware/auth-admin.middleware');
 
+app.get("/", authenticateAdmin, (req, res) => res.redirect("/dashboard"));
 app.get("/profile", authenticateAdmin, (req, res) => res.render("profile/view", { title: "Profile", page: "profile" }));
 app.get("/profile/change-password", authenticateAdmin, (req, res) => res.render("profile/change-password", { title: "Change Password", page: "profile" }));
 
