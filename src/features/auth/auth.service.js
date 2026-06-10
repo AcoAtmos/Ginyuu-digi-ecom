@@ -220,3 +220,23 @@ exports.registerCheckout = async (body) => {
         throw new Error(err);
     }
 };
+
+exports.verifyEmailChange = async (token) => {
+    const jwt = require('jsonwebtoken');
+    let decoded;
+    try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+        throw new Error('Invalid or expired verification link');
+    }
+
+    if (decoded.type !== 'email_change') {
+        throw new Error('Invalid token type');
+    }
+
+    const [user] = await db.update(users).set({ email: decoded.new_email }).where(eq(users.id, decoded.id)).returning({ id: users.id });
+
+    if (!user) {
+        throw new Error('User not found');
+    }
+};
