@@ -2,6 +2,7 @@
 // PURCHASES — state management
 // ─────────────────────────────────────────────
 const ps = { search: "", status: "", sort: "desc", page: 1, limit: 10 };
+let currentEmail = "";
 
 // PROFILE
 
@@ -25,6 +26,7 @@ async function loadProfile() {
     const avatarEl = document.getElementById("avatarInitial");
     const usernameInput = document.getElementById("inputUsername");
     const phoneInput = document.getElementById("inputPhone");
+    const emailInput = document.getElementById("inputEmail");
     const emailAddrEl = document.getElementById("profileEmailAddr");
 
     if (nameEl) nameEl.textContent = user.username;
@@ -34,6 +36,10 @@ async function loadProfile() {
       avatarEl.textContent = (user.username || "?").charAt(0).toUpperCase();
     if (usernameInput) usernameInput.value = user.username || "";
     if (phoneInput) phoneInput.value = user.phone || "";
+    if (emailInput) {
+      emailInput.value = user.email || "";
+      currentEmail = user.email || "";
+    }
 
     if (sinceEl && user.createdAt) {
       const d = new Date(user.createdAt);
@@ -68,9 +74,15 @@ function validatePhoneInput(phone) {
 async function saveProfile() {
   const username = document.getElementById("inputUsername")?.value.trim();
   const phone = document.getElementById("inputPhone")?.value.trim();
+  const email = document.getElementById("inputEmail")?.value.trim();
 
   if (!username) {
     showToast("Username is required");
+    return;
+  }
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast("Invalid email format");
     return;
   }
 
@@ -108,7 +120,21 @@ async function saveProfile() {
       window.updateCurrentUser(user.username, user.email);
     }
 
-    showToast("Profile saved successfully");
+    if (email && email !== currentEmail) {
+      const emailRes = await fetch("/api/profile/email", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const emailResult = await emailRes.json();
+      if (!emailResult.success) {
+        showToast(emailResult.message || "Failed to send email verification");
+        return;
+      }
+      showToast("Verification email sent to your new address");
+    } else {
+      showToast("Profile saved successfully");
+    }
   } catch (err) {
     console.error(err);
     showToast("Failed to save profile");
