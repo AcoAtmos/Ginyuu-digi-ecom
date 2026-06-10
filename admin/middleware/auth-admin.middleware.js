@@ -2,14 +2,15 @@ const jwt = require("jsonwebtoken");
 
 const respond = (req, res, status, message) => {
   if (req.accepts('html')) {
+    res.clearCookie('admin_token', { path: '/' });
     return res.redirect('/auth/login');
   }
   return res.status(status).json({ code: status, status: "error", message });
 };
 
-// for BE 
+// for BE
 exports.authenticateAdmin = (req, res, next) => {
-  const token = req.cookies?.token;
+  const token = req.cookies?.admin_token;
   if (!token) {
     return respond(req, res, 401, "Unauthorized");
   }
@@ -28,14 +29,16 @@ exports.authenticateAdmin = (req, res, next) => {
 
 // for FE
 exports.redirectIfAuthenticated = (req, res, next) => {
-  const token = req.cookies?.token;
+  const token = req.cookies?.admin_token;
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.ADMIN_JWT_SECRET);
-      if (decoded.role === 'ADMIN') {
+      if (decoded.role === 'ADMIN' && decoded.status === 'active') {
         return res.redirect('/dashboard');
       }
-    } catch (_) {}
+    } catch (_) {
+      res.clearCookie('admin_token', { path: '/' });
+    }
   }
   next();
 };
