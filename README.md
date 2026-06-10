@@ -373,7 +373,7 @@ bun run admin         # Admin panel (Port 3100)
 - Failed entries are marked `'failed'` and skipped
 
 ### Security
-- Passwords: bcrypt (10 rounds)
+- Passwords: bcrypt (10 rounds )
 - Auth: JWT in HttpOnly cookie (not JS-accessible)
 - SQL injection: Drizzle ORM parameterized queries (auto-escaped)
 - Prices: server-side only (fetched from DB during checkout)
