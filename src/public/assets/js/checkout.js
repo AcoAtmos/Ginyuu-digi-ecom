@@ -278,11 +278,14 @@ async function submitOrder() {
   btn.querySelector('.btn-text').textContent = 'Processing...';
   btn.querySelector('.spinner').style.display = 'block';
 
+  const phone = document.getElementById('phone')?.value.trim() || null;
+
   const payload = {
     cart_items: cartItems.map(item => ({ id: item.id })),
     payment_method: selectedPayment,
     promo_code: promoApplied ? promoApplied.code : null,
-    terms: isLoggedIn ? document.getElementById('termsLoggedIn').checked : document.getElementById('terms').checked
+    terms: isLoggedIn ? document.getElementById('termsLoggedIn').checked : document.getElementById('terms').checked,
+    phone
   };
 
   if (!isLoggedIn) {
