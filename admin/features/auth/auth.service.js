@@ -33,6 +33,10 @@ exports.login = async ({ email, password }) => {
         throw new Error("Access denied. Admin only.");
     }
 
+    if (user.status !== 'active') {
+        throw new Error("Account is inactive");
+    }
+
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) {
         throw new Error("Invalid email or password");
@@ -44,7 +48,8 @@ exports.login = async ({ email, password }) => {
         email: user.email,
         phone: user.phone,
         image_url: user.imageUrl,
-        role: user.role
+        role: user.role,
+        status: user.status
     };
 };
 
@@ -62,7 +67,7 @@ exports.forgotPassword = async (email) => {
         { expiresIn: '15m' }
     );
 
-    const resetLink = `${process.env.ADMIN_BASE_URL || `http://localhost:${process.env.ADMIN_PORT || 3100}`}/auth/reset-password/${token}`;
+    const resetLink = `${process.env.ADMIN_PUBLIC_URL || `http://localhost:${process.env.ADMIN_PORT || 3100}`}/auth/reset-password/${token}`;
     const html = `
         <div style="font-family:'DM Sans',Arial,sans-serif;max-width:560px;margin:0 auto;background:#111;border:1px solid #2a2a2a;border-radius:20px;padding:40px">
             <div style="text-align:center;margin-bottom:24px">
