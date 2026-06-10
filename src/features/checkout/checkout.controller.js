@@ -27,8 +27,11 @@ exports.checkout = async (req, res) => {
             try {
                 const decoded = jwt.verify(token, process.env.JWT_SECRET);
                 loggedInUserId = decoded.id;
-                const [userRow] = await db.select({ id: users.id, username: users.username, email: users.email, phone: users.phone }).from(users).where(eq(users.id, loggedInUserId));
+                const [userRow] = await db.select({ id: users.id, username: users.username, email: users.email, phone: users.phone, status: users.status }).from(users).where(eq(users.id, loggedInUserId));
                 if (userRow) {
+                    if (userRow.status !== 'active') {
+                        return res.status(403).json({ code: 403, status: "error", message: "Please verify your email before checkout" });
+                    }
                     loggedInUser = userRow;
                 }
             } catch (err) {}

@@ -180,7 +180,7 @@ exports.checkout_add_user = async (result) => {
             return result;
         }
         const hashedPassword = await bcrypt.hash(result.payload.password, 10);
-        const [insertResult] = await db.insert(users).values({ email: result.payload.email, username: result.payload.username, password: hashedPassword, phone: result.payload.phone, terms: result.payload.terms }).returning({ id: users.id });
+        const [insertResult] = await db.insert(users).values({ email: result.payload.email, username: result.payload.username, password: hashedPassword, phone: result.payload.phone, terms: result.payload.terms, status: 'active' }).returning({ id: users.id });
         result.payload.idUser = insertResult.id;
     } catch (err) {
         result.status = "failed";
@@ -290,7 +290,7 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
                         </tr>
                         <tr>
                             <td style="color:#888;">No. Rekening</td>
-                            <td>: ${invoiceData.no_rek}</td>
+                            <td>: ${process.env.ACCOUNT_NUMBER || "1234567890"}</td>
                         </tr>
                         <tr>
                             <td style="color:#888;">Atas Nama</td>
