@@ -1,6 +1,6 @@
 # Ginyuu — Digital Product Store
 
-Full-stack e-commerce for digital products with guest checkout, multi-product cart, promo codes, invoice generation, automated email notifications, and user profile management.
+Full-stack e-commerce for digital products with guest checkout, multi-product cart, promo codes, invoice generation, automated email/WhatsApp notifications, email verification, and user profile management.
 
 ---
 
@@ -9,16 +9,16 @@ Full-stack e-commerce for digital products with guest checkout, multi-product ca
 Express 5 server (Port 4100) with EJS templates, vanilla JavaScript frontend, REST API, and PostgreSQL database managed via Drizzle ORM.
 
 **Frontend layers:**
-- Views: landing.ejs, checkout.ejs, waiting-payment.ejs, reset-password.ejs
+- Views: landing.ejs, checkout.ejs, waiting-payment.ejs, reset-password.ejs, verify-email.ejs
 - Profile pages: profile.ejs, purchases.ejs, settings.ejs, security.ejs
-- Partials: navbar.ejs, auth-modal.ejs, cart-sidebar.ejs
+- Partials: navbar.ejs (includes auth modal with verify tab), cart-sidebar.ejs
 - JavaScript: main.js (shared utilities), navbar.js, cart.js, landing.js, products.js, checkout.js, profile.js, waiting_for_payment.js
 
 **Backend features (route + controller + service per domain):**
 auth, cart, checkout, promo, payment, user, product, notification, whatsapp
 
 **Shared layer:**
-auth middleware, email service (Nodemailer + queue worker), whatsapp service
+auth middleware, email + WhatsApp queue worker (single worker handles both), whatsapp service
 
 **Database layer (Drizzle ORM):**
 db/schema/ directory with 10 table definitions, Drizzle query builder for all CRUD operations, automated migration support via drizzle-kit.
@@ -33,6 +33,7 @@ PostgreSQL tables: users, product, cart_items, orders, order_items, invoices, pr
 - **Runtime:** Bun (recommended) or Node.js ≥18
 - **Database:** PostgreSQL 14+
 - **Email:** Gmail account with App Password (for sending invoices)
+- **WhatsApp API:** Woowa API endpoint + API key (optional)
 
 ### 1. Clone & Install
 ```bash
@@ -48,25 +49,47 @@ bun run db:push
 ```
 
 ### 3. Configure Environment
-Edit `.env` at project root:
+Copy `.env.example` to `.env` and fill in:
 ```env
+# ── Server ──
 PORT=4100
+NODE_ENV=development
+
+# ── Database (PostgreSQL) ──
 DB_HOST=localhost
 DB_USER=postgres
 DB_PASSWORD=your_password
 DB_NAME=ginyuu
 DATABASE_URL=postgres://postgres:your_password@localhost:5432/ginyuu
+
+# ── JWT (Auth) ──
 JWT_SECRET=your_secret_key
-FE_URL=http://localhost:4100
+
+# ── URLs ──
+LOCAL_URL=http://localhost:4100
+PUBLIC_URL=http://localhost:4100
+
+# ── Bank Transfer ──
 ACCOUNT_NUMBER=1234567890
 
-# Email (Gmail SMTP)
+# ── Email (Gmail SMTP) ──
 EMAIL_SENDER=your_email@gmail.com
 EMAIL_PASSWORD=your_app_password
 
-# WhatsApp API
+# ── WhatsApp API ──
 API_URL=https://notifapi.com
-API_KEY=your_key
+API_KEY_WOOWA=your_key
+
+# ── QRIS Gateway (KlikQRIS) ──
+BASE_URL_SANDBOX_API=https://klikqris.com/api/sandbox/qris/create
+X_API_KEY=sk_sandbox_your_key
+ID_MERCHANT=your_merchant_id
+
+# ── Admin Panel ──
+ADMIN_PORT=3100
+ADMIN_LOCAL_URL=http://localhost:3100
+ADMIN_PUBLIC_URL=http://localhost:3100
+ADMIN_JWT_SECRET=your_admin_secret
 ```
 
 ### 4. Run
@@ -85,6 +108,7 @@ bun run admin         # Admin panel (Port 3100)
 | `/` | `landing.ejs` | Landing page — product grid, search, filters, auth modal, cart sidebar |
 | `/checkout` | `checkout.ejs` | Checkout — account info, payment selection, promo, order summary |
 | `/checkout/waiting-payment` | `waiting-payment.ejs` | Payment instructions page after checkout |
+| `/verify-email` | `verify-email.ejs` | Email verification result page (success/error) |
 | `/reset-password` | `reset-password.ejs` | Password reset page (token-based) |
 | `/profile` | `profile-user/profile.ejs` | User profile — avatar, name, email, username, phone |
 | `/profile/purchases` | `profile-user/purchases.ejs` | Purchase history — search, filter, sort, pagination |
@@ -95,8 +119,8 @@ bun run admin         # Admin panel (Port 3100)
 
 | File | Type | Purpose |
 |------|------|---------|
-| `common/main/main.js` | `<script>` | Shared utilities: `checkAuthStatus()`, `showToast()`, `logout()`, cookie helpers |
-| `assets/js/navbar.js` | `<script type="module">` | Navbar init, auth modal (login/register/forgot), cart sidebar, sidebar active state |
+| `common/main/main.js` | `<script type="module">` | Shared utilities: `checkAuthStatus()`, `showToast()`, `logout()`, `resendVerification()`, cookie helpers |
+| `assets/js/navbar.js` | `<script type="module">` | Navbar init, auth modal (login/register/forgot/verify), cart sidebar, sidebar active state |
 | `assets/js/cart.js` | `<script>` | Global `Cart` object — guest localStorage + authenticated API |
 | `assets/js/landing.js` | `<script>` | Product browsing, cart interactions |
 | `assets/js/products.js` | `<script>` | Product detail display |
@@ -127,9 +151,11 @@ bun run admin         # Admin panel (Port 3100)
 ### Auth
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `POST` | `/api/auth/register` | No | Register |
-| `POST` | `/api/auth/login` | No | Login (sets HttpOnly cookie) |
+| `POST` | `/api/auth/register` | No | Register (creates user as `inactive`, sends verification email) |
+| `POST` | `/api/auth/login` | No | Login — rejects `inactive` users with `canResend: true` |
 | `POST` | `/api/auth/verify_token` | No | Verify JWT (returns null for guests) |
+| `GET` | `/api/auth/verify-email` | No | Verify email via JWT token (`?token=`) |
+| `POST` | `/api/auth/resend-verification` | No | Resend verification email for inactive users |
 | `GET` | `/api/auth/me` | Yes | Current user profile |
 | `POST` | `/api/auth/logout` | No | Clear cookie |
 | `POST` | `/api/auth/forgot-password` | No | Send reset link (always 200) |
@@ -140,7 +166,7 @@ bun run admin         # Admin panel (Port 3100)
 |--------|------|------|-------------|
 | `POST` | `/api/checkout` | No* | Process checkout (guest auto-register or logged-in) |
 
-\* Optional auth — cookie checked if present.
+\* Optional auth — cookie checked if present. Logged-in users with `status !== 'active'` are rejected.
 
 ### Payment
 | Method | Path | Auth | Description |
@@ -149,6 +175,7 @@ bun run admin         # Admin panel (Port 3100)
 | `POST` | `/api/payment_process` | No | Confirm payment |
 | `POST` | `/api/payment/create-transaction` | Yes | Create QRIS transaction (KlikQRIS) |
 | `GET` | `/api/payment/check-status/:invoice` | Yes | Check payment status |
+| `POST` | `/api/payment/webhook` | No | KlikQRIS webhook — updates payment & enqueues success email |
 
 ### Promo
 | Method | Path | Auth | Description |
@@ -166,7 +193,9 @@ bun run admin         # Admin panel (Port 3100)
 ### Notifications
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| `POST` | `/api/notification/register-token` | No | Register FCM push token |
+| `GET` | `/api/notifications` | Yes | Get all notifications |
+| `PATCH` | `/api/notifications/:id/read` | Yes | Mark notification as read |
+| `PATCH` | `/api/notifications/read-all` | Yes | Mark all as read |
 
 ### WhatsApp
 | Method | Path | Auth | Description |
@@ -178,7 +207,7 @@ bun run admin         # Admin panel (Port 3100)
 ## Database Schema
 
 ### users
-`id (PK)`, `username`, `email (UQ)`, `password` (bcrypt), `phone`, `image_url`, `role` (default `'MEMBER'`), `terms`, `created_at`
+`id (PK)`, `username`, `email (UQ)`, `password` (bcrypt), `phone`, `image_url`, `role` (default `'MEMBER'`), `status` (default `'inactive'`, set to `'active'` on email verification), `terms`, `created_at`
 
 ### product
 `id (PK)`, `name`, `slug (UQ)`, `price`, `discount`, `category`, `preview`, `description`, `sales_count`, `created_at`
@@ -193,29 +222,31 @@ bun run admin         # Admin panel (Port 3100)
 `id (PK)`, `order_id (FK)`, `product_id (FK)`, `price` (snapshot at purchase)
 
 ### invoices
-`id (PK)`, `order_id (FK)`, `invoice_number (UQ)`, `discount_amount`, `total`, `issued_at`, `expires_at`, `unique_num`, `status` (pending/paid/expired), `created_at`
+`id (PK)`, `order_id (FK)`, `invoice_number (UQ)`, `discount_amount`, `total`, `expires_at`, `status_payment` (pending/paid/cancelled), `created_at`
 
 ### promo_codes
 `id (PK)`, `code (UQ)`, `discount_pct`, `max_usage`, `used_count`, `expires_at`, `is_active`, `created_at`
 **Seed codes:** `DIGI20` (20%), `HEMAT20` (20%), `WELCOME10` (10%), `NEWYEAR` (15%)
 
-### queue (Email queue)
-`id (PK)`, `order_id (FK)`, `destination`, `tipe`, `pesan` (HTML), `status` (pending/sent), `created_at`
+### queue (Message queue — email & WhatsApp)
+`id (PK)`, `order_id (FK)`, `destination` (email address or phone), `tipe` (email/whatsapp), `pesan` (HTML or plain text), `qris_url`, `status` (pending/sent/failed), `created_at`
 
 ### notifications
-`id (PK)`, `user_id (FK)`, `fcm_token`, `device_type`, `created_at`
+`id (PK)`, `user_id (FK)`, `icon`, `message`, `action_url`, `is_read`, `created_at`
 
-### payment_gateway
-`id (PK)`, `invoice_id (FK)`, `transaction_id`, `gateway`, `amount`, `status`, `raw_response` (JSON), `created_at`
+### payment_gateway_transactions
+`id (PK)`, `invoice_id (FK)`, `gateway`, `gateway_order_id`, `signature`, `qris_url`, `direct_url`, `amount`, `status`, `gateway_expired_at`, `created_at`, `updated_at`
 
 ---
 
 ## Key Flows
 
 ### Authentication
-- **Register** → bcrypt hash → insert user → return success
-- **Login** → verify password → create JWT (24h) → set HttpOnly cookie
-- **Forgot Password** → generate JWT (15-min expiry) → send email with reset link → always return 200
+- **Register** → bcrypt hash → insert user with `status: 'inactive'` → generate JWT `type: 'email_verification'` (24h) → send verification email
+- **Verify Email** → `GET /verify-email?token=` → verify JWT → set `status: 'active'` → redirect to success page
+- **Login** → verify password → reject if `status !== 'active'` (returns `canResend: true`) → create JWT (24h) → set HttpOnly cookie
+- **Resend Verification** → find inactive user → generate new JWT → resend email
+- **Forgot Password** → generate JWT (15-min expiry, `type: 'password_reset'`) → send email with reset link → always return 200
 - **Reset Password** → verify JWT token → update password in DB
 - **Logout** → clear cookie → redirect
 
@@ -231,18 +262,18 @@ bun run admin         # Admin panel (Port 3100)
 3. Apply promo code (validate expiry, usage, active flag)
 4. Add unique payment number (random 1–999, subtracted from total)
 5. Begin transaction:
-   - Find or create user (guest auto-registration)
+   - Find or create user (guest auto-registration creates user as `active`)
    - Create order + order_items
    - Create invoice (`INV-{ts}{userId}-{orderId}`, expires 3 days)
    - Clear cart_items
-   - Insert email into queue
+   - Insert payment-instruction email & WhatsApp (if phone provided) into queue
 6. Return invoice details
-7. Background worker polls queue every 10s → sends via Nodemailer
+7. Background worker polls queue every 10s → sends via Nodemailer or Woowa API
 
 ### Payment
-- **Bank transfer:** User transfers to `ACCOUNT_NUMBER` minus `unique_num` (e.g., Rp 50,000 − 123 = Rp 49,877)
-- **QRIS:** `POST /api/payment/create-transaction` creates KlikQRIS transaction
-- **Verification:** Manual via `/checkout/waiting-payment?invoice=INV-xxx` or IMAP email monitoring
+- **QRIS:** `POST /api/payment/create-transaction` creates KlikQRIS transaction → queue payment email + WhatsApp
+- **Webhook:** KlikQRIS notifies `/api/payment/webhook` → `updateInvoiceToPaid()` → send success email → create in-app notification
+- **Bank transfer:** User transfers to `ACCOUNT_NUMBER` (manual verification)
 
 ### Profile & Purchases
 - `/profile` loads user data via `GET /api/profile/me`, allows updating username/phone
@@ -258,24 +289,27 @@ bun run admin         # Admin panel (Port 3100)
 
 **Root level:**
 - .env - Environment variables (DB, JWT, Email, Payment gateway)
+- .env.example - Template for environment variables with all required keys
 - package.json - Dependencies with scripts
 - drizzle.config.ts - Drizzle Kit configuration for migrations
 - db/ - Database layer (Drizzle ORM)
   - schema/ - 10 table definitions (users, product, cartItems, orders, etc.)
   - index.js - Drizzle client initialization
-  - migrations/ - Auto-generated SQL migration files
+  - migrations/ - Auto-generated SQL migration files + meta/ (journal, snapshots)
 - admin/ - Admin panel (Express on Port 3100)
   - app.js, seed.js
   - config/, features/ (auth, dashboard, orders, profile, users), views/, public/
+  - middleware/auth-admin.middleware.js - Admin auth with role + status check
 - src/ - Main store application (Express on Port 4100)
-  - app.js - Express entry point
+  - app.js - Express entry point (sets up res.locals.PUBLIC_URL, queue worker)
   - config/database.js - Database connection (re-exports Drizzle client)
   - controllers/web.controller.js - Page render handlers
   - features/ - Feature modules (route + controller + service per domain)
     - auth, cart, checkout, notification, payment, product, promo, user, whatsapp
-  - shared/ - Shared middleware (auth.middleware.js) and services (email, whatsapp)
+  - shared/ - Shared middleware (auth.middleware.js) and services (email + whatsapp queue worker, whatsapp service)
+  - public/common/ - Shared JS modules (main.js with auth, toast, cookie utilities)
   - public/assets/ - CSS and JavaScript files for frontend
-  - views/ - EJS templates (landing, checkout, profile pages, partials)
+  - views/ - EJS templates (landing, checkout, waiting-payment, verify-email, profile pages, partials)
 
 ---
 
@@ -284,19 +318,27 @@ bun run admin         # Admin panel (Port 3100)
 | Variable | Purpose |
 |----------|---------|
 | `PORT` | Server port (default 4100) |
+| `NODE_ENV` | Environment (development/production) |
 | `DB_HOST` | PostgreSQL host |
 | `DB_USER` | PostgreSQL user |
 | `DB_PASSWORD` | PostgreSQL password |
 | `DB_NAME` | Database name |
-| `DATABASE_URL` | Connection string for Drizzle Kit (format: postgres://user:pass@host:5432/db) |
-| `JWT_SECRET` | JWT signing key |
-| `FE_URL` | Frontend URL (CORS origin) |
-| `BASE_URL` | Base URL for email links |
-| `ACCOUNT_NUMBER` | Bank account for transfers |
-| `EMAIL_SENDER` | Gmail address |
+| `DATABASE_URL` | Connection string for Drizzle Kit |
+| `JWT_SECRET` | JWT signing key (user auth) |
+| `ACCOUNT_NUMBER` | Bank account number for transfers |
+| `PUBLIC_URL` | Public-facing URL for email links (verification, reset) |
+| `LOCAL_URL` | Internal server URL (default http://localhost:4100) |
+| `EMAIL_SENDER` | Gmail address for sending emails |
 | `EMAIL_PASSWORD` | Gmail App Password |
-| `API_URL` / `API_KEY` | WhatsApp API credentials |
-| `BASE_URL_SANDBOX_API` / `X_API_KEY` / `ID_MERCHANT` | KlikQRIS gateway credentials |
+| `API_URL` | Woowa API endpoint |
+| `API_KEY_WOOWA` | Woowa API key |
+| `BASE_URL_SANDBOX_API` | KlikQRIS API endpoint |
+| `X_API_KEY` | KlikQRIS API key |
+| `ID_MERCHANT` | KlikQRIS merchant ID |
+| `ADMIN_PORT` | Admin panel port (default 3100) |
+| `ADMIN_PUBLIC_URL` | Public URL for admin email links |
+| `ADMIN_LOCAL_URL` | Internal admin server URL |
+| `ADMIN_JWT_SECRET` | JWT signing key (admin auth) |
 
 ---
 
@@ -309,15 +351,30 @@ bun run admin         # Admin panel (Port 3100)
 
 ### Database changes
 - Edit table definitions in `db/schema/` directory
-- Generate migration: `bun run db:generate`
+- Generate migration: `bun run db:generate` (creates `.sql` in `db/migrations/`)
 - Apply migration: `bun run db:migrate`
-- Or push directly to database: `bun run db:push`
+- Or push directly to database (dev only): `bun run db:push`
 - Browse database via Drizzle Studio: `bun run db:studio`
 - All foreign keys use `ON DELETE CASCADE`
+- **Migration workflow:** change schema → `db:generate` → `db:migrate` → commit both `.sql` and `meta/` changes
+- **⚠️ Never** delete or manually edit migration files after they've been applied
+
+### Email Verification Flow
+1. User registers → created as `status: 'inactive'` → verification email sent
+2. User clicks link → JWT verified → `status` set to `'active'`
+3. Login checks `status === 'active'` — inactive users see a "verify email" prompt
+4. Guest checkout and register-by-checkout users are created as `active` (no verification needed)
+
+### Message Queue
+- Single queue worker runs every 10s in `src/app.js`
+- Processes both `email` and `whatsapp` queue entries via `send_queue_worker()`
+- Email sent via Nodemailer (Gmail SMTP)
+- WhatsApp sent via Woowa API
+- Failed entries are marked `'failed'` and skipped
 
 ### Security
 - Passwords: bcrypt (10 rounds)
 - Auth: JWT in HttpOnly cookie (not JS-accessible)
 - SQL injection: Drizzle ORM parameterized queries (auto-escaped)
 - Prices: server-side only (fetched from DB during checkout)
-- CORS: restricted to `FE_URL`
+- Admin: JWT signed with separate `ADMIN_JWT_SECRET`, middleware checks both `role` and `status`
