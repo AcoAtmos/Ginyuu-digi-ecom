@@ -1,4 +1,4 @@
-const { register, login, verifyEmail, resendVerification, forgotPassword, resetPassword, registerCheckout } = require("./auth.service");
+const { register, login, verifyEmail, resendVerification, verifyEmailChange, forgotPassword, resetPassword, registerCheckout } = require("./auth.service");
 const jwt = require("jsonwebtoken");
 const { db } = require("../../../db");
 const { users } = require("../../../db/schema");
@@ -172,6 +172,20 @@ exports.resetPassword = async (req, res) => {
             return res.status(400).json({ code: 400, status: "error", message: err.message });
         }
         return res.status(500).json({ code: 500, status: "error", message: err.message });
+    }
+};
+
+exports.verifyEmailChange = async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) {
+            return res.status(400).json({ code: 400, status: "error", message: "Token is required" });
+        }
+        await verifyEmailChange(token);
+        res.clearCookie("token");
+        res.render("verify-email", { status: "success", message: "Your email has been updated. Please login again with your new email." });
+    } catch (err) {
+        res.render("verify-email", { status: "error", message: err.message });
     }
 };
 
