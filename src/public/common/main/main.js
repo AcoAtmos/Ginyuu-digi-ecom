@@ -104,12 +104,29 @@ async function Login(email, password) {
             }
         } else {
             const error = await response.json();
-            return { status: "error", message: error.message };
+            return { status: "error", message: error.message, canResend: error.canResend };
         }
     } catch (error) {
         console.error("Error during login:", error);
         return { status: "error", message: "An error occurred during login" };
     } 
+}
+
+async function resendVerification(email) {
+    try {
+        const response = await fetch("/api/auth/resend-verification", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email }),
+        });
+        const data = await response.json();
+        return { status: data.status, message: data.message };
+    } catch (error) {
+        console.error("Error during resend verification:", error);
+        return { status: "error", message: "An error occurred" };
+    }
 }
 
 async function register(username, email, password, confirmPass, terms) {
@@ -249,6 +266,7 @@ export {
     logout,
     register,
     forgotPassword,
+    resendVerification,
     showToast
 }
 
@@ -265,3 +283,4 @@ window.setCookie = setCookie;
 window.getCookie = getCookie;
 window.deleteCookie = deleteCookie;
 window.isCookieSet = isCookieSet;
+window.resendVerification = resendVerification;
