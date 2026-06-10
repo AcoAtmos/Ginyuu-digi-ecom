@@ -2,6 +2,7 @@ const { db } = require("../../config/db");
 const { eq, sql } = require("drizzle-orm");
 const { users, orders } = require("../../../db/schema");
 const bcrypt = require('bcrypt');
+const { normalizePhone, validatePhone } = require("../../../src/shared/helpers/phone");
 
 exports.getList = async ({ search, sort, page, limit }) => {
     const pageNum = Math.max(1, parseInt(page) || 1);
@@ -58,12 +59,13 @@ exports.getDetail = async (id) => {
 };
 
 exports.create = async ({ username, email, password, phone }) => {
+    const normalized = normalizePhone(phone);
     const hashed = await bcrypt.hash(password, 10);
     const [user] = await db.insert(users).values({
         username,
         email,
         password: hashed,
-        phone: phone || null,
+        phone: normalized,
         role: 'MEMBER',
         status: 'active',
     }).returning({
@@ -76,6 +78,10 @@ exports.create = async ({ username, email, password, phone }) => {
 exports.update = async (id, fields) => {
     const allowed = ['username', 'email', 'phone', 'image_url', 'role'];
     const setItems = [];
+
+    if (fields.phone !== undefined) {
+        fields.phone = normalizePhone(fields.phone);
+    }
 
     for (const key of allowed) {
         if (fields[key] !== undefined) {
