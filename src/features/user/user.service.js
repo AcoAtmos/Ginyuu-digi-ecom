@@ -2,6 +2,7 @@ const { db } = require("../../../db");
 const { users, product, orders, orderItems, invoices } = require("../../../db/schema");
 const { eq, desc, asc, sql } = require("drizzle-orm");
 const { normalizePhone, validatePhone } = require("../../shared/helpers/phone");
+const jwt = require("jsonwebtoken");
 
 exports.get_profile = async (req, res) => {
     try {
@@ -57,6 +58,52 @@ exports.update_my_profile = async (req, res) => {
     } catch (error) {
         console.error("update_my_profile error:", error);
         res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.requestEmailChange = async (userId, newEmail) => {
+    const [user] = await db.select({ id: users.id, email: users.email, username: users.username }).from(users).where(eq(users.id, userId));
+    if (!user) throw new Error("User not found");
+    if (user.email === newEmail) throw new Error("New email is the same as current email");
+
+    const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.email, newEmail));
+    if (existing) throw new Error("Email already in use");
+
+    const token = jwt.sign(
+        { id: user.id, new_email: newEmail, type: "email_change" },
+        process.env.JWT_SECRET,
+        { expiresIn: "24h" }
+    );
+
+    const baseUrl = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 4100}`;
+    const verifyLink = `${baseUrl}/api/auth/verify-email-change?token=${token}`;
+
+    const { send_email } = require("../../shared/services/email.service");
+    const html = `
+        <div style="font-family:'DM Sans',Arial,sans-serif;max-width:560px;margin:0 auto;background:#111;border:1px solid #2a2a2a;border-radius:20px;padding:40px">
+            <div style="text-align:center;margin-bottom:24px">
+                <div style="font-family:Syne,sans-serif;font-size:24px;font-weight:800;color:#f0f0f0">GINYUU</div>
+            </div>
+            <div style="font-size:14px;color:#999;line-height:1.8">
+                <p style="color:#f0f0f0;font-size:16px">Hi ${user.username},</p>
+                <p>Please confirm your new email address by clicking the button below.</p>
+                <p style="font-size:12px;color:#555">This link expires in 24 hours.</p>
+                <div style="text-align:center;margin:28px 0">
+                    <a href="${verifyLink}" style="display:inline-block;background:#fff;color:#0a0a0a;text-decoration:none;padding:12px 32px;border-radius:10px;font-weight:600;font-size:14px">Confirm Email Change</a>
+                </div>
+                <p style="font-size:12px;color:#555">If you didn't request this, please ignore this email.</p>
+            </div>
+            <div style="border-top:1px solid #2a2a2a;margin-top:24px;padding-top:16px;font-size:11px;color:#555;text-align:center">
+                Ginyuu Digital Product
+            </div>
+        </div>
+    `;
+
+    try {
+        await send_email(newEmail, "Confirm Your New Email — GINYUU", html);
+    } catch (err) {
+        console.error("Failed to send email change verification:", err);
+        throw new Error("Failed to send verification email");
     }
 };
 
