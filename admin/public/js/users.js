@@ -8,7 +8,7 @@ const state = {
 async function loadUsers() {
   const tbody = document.getElementById('usersBody');
   const pagination = document.getElementById('pagination');
-  tbody.innerHTML = '<tr><td colspan="6" class="table-empty"><div class="loader"><div class="loader-spinner"></div></div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="table-empty"><div class="loader"><div class="loader-spinner"></div></div></td></tr>';
   try {
     const params = new URLSearchParams({ search: state.search, sort: state.sort, page: state.page, limit: state.limit });
     const res = await fetch(`/api/admin/users?${params}`);
@@ -16,7 +16,7 @@ async function loadUsers() {
     if (!data.success) throw new Error(data.message);
 
     if (!data.data.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="table-empty">No customers found</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="table-empty">No customers found</td></tr>';
       pagination.innerHTML = '';
       return;
     }
@@ -27,6 +27,7 @@ async function loadUsers() {
         <td>${u.email}</td>
         <td>${u.phone || '—'}</td>
         <td>${statusBadge(u.role)}</td>
+        <td>${statusBadge(u.status)}</td>
         <td>${formatDate(u.created_at)}</td>
         <td class="col-actions">
           <a href="/admin/users/edit/${u.id}" class="btn btn-ghost btn-xs">Edit</a>
