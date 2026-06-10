@@ -3,6 +3,7 @@ const { users } = require("../../../db/schema");
 const { eq } = require("drizzle-orm");
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { normalizePhone } = require("../../shared/helpers/phone");
 
 exports.register = async (body) => {
     const { username, email, password, terms } = body;
@@ -211,8 +212,9 @@ exports.resetPassword = async (token, newPassword) => {
 exports.registerCheckout = async (body) => {
     const { username, email, password, phone } = body;
     const hashedPassword = await bcrypt.hash(password, 10);
+    const normalizedPhone = normalizePhone(phone);
     try {
-        const [inserted] = await db.insert(users).values({ username, email, password: hashedPassword, phone, status: 'active' }).returning();
+        const [inserted] = await db.insert(users).values({ username, email, password: hashedPassword, phone: normalizedPhone, status: 'active' }).returning();
         return inserted;
     } catch (err) {
         throw new Error(err);
