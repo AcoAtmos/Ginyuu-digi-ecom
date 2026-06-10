@@ -305,13 +305,14 @@ async function handleRegister() {
     const password = document.getElementById('regPassword').value;
     const confirmPass = document.getElementById('regConfirmPassword').value;
     const terms = document.getElementById('regTerms').checked;
+    const phone = document.getElementById('regPhone').value.trim();
 
     const btn = document.getElementById('btnAuthRegister');
     const originalText = 'Create Account';
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span>Creating Account...';
 
-    const result = await register(username, email, password, confirmPass, terms);
+    const result = await register(username, email, password, confirmPass, terms, phone);
     if (result.status === "success") {
       document.getElementById('verifyEmailAddr').textContent = email;
       switchTab('verify');
