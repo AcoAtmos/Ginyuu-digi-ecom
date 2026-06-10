@@ -2,6 +2,7 @@ const { db } = require("../../../db");
 const { users, product, orders, orderItems, invoices, cartItems, promoCodes, queue } = require("../../../db/schema");
 const { eq, and, inArray, sql } = require("drizzle-orm");
 const bcrypt = require("bcrypt");
+const { normalizePhone } = require("../../shared/helpers/phone");
 
 exports.capturePayload = async (data) => {
     let loggedInUserId = data?.loggedInUserId || null;
@@ -17,7 +18,7 @@ exports.capturePayload = async (data) => {
             terms: data?.terms || true,
             loggedInUserId: loggedInUserId,
             accountNumber: process.env.ACCOUNT_NUMBER || "1234567890",
-            phone: data?.phone || null
+            phone: normalizePhone(data?.phone) || null
         },
         code: 200,
         status: "success",
