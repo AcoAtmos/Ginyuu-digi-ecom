@@ -9,14 +9,14 @@ dotenv.config();
 const app = express();
 
 // middleware
-app.use(cors({ origin: process.env.ADMIN_PUBLIC_URL || `http://localhost:${process.env.ADMIN_PORT || 3100}`, credentials: true }));
+app.use(cors({ origin: process.env.ADMIN_PUBLIC_URL, credentials: true }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // EJS config
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, 'views')); 
 
 app.use((req, res, next) => {
     res.locals.ADMIN_PUBLIC_URL = process.env.ADMIN_PUBLIC_URL || `http://localhost:${process.env.ADMIN_PORT || 3100}`;
@@ -26,7 +26,7 @@ app.use((req, res, next) => {
 // Static files
 app.use("/assets", express.static(path.join(__dirname, "public")));
 
-// CORS headers 
+// CORS headers
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', process.env.ADMIN_PUBLIC_URL);
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
@@ -36,8 +36,6 @@ app.use((req, res, next) => {
 
 // Page routes (EJS views)
 const { authenticateAdmin } = require('./middleware/auth-admin.middleware');
-
-app.get("/", (req, res) => res.redirect("/dashboard"));
 
 app.get("/profile", authenticateAdmin, (req, res) => res.render("profile/view", { title: "Profile", page: "profile" }));
 app.get("/profile/change-password", authenticateAdmin, (req, res) => res.render("profile/change-password", { title: "Change Password", page: "profile" }));
