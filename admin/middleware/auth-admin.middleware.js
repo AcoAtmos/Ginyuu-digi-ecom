@@ -16,8 +16,8 @@ exports.authenticateAdmin = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.ADMIN_JWT_SECRET);
-    if (decoded.role !== 'ADMIN') {
-      return respond(req, res, 403, "Admin only");
+    if (decoded.role !== 'ADMIN' || decoded.status !== 'active') {
+      return respond(req, res, 403, "Access denied");
     }
     req.user = decoded;
     next();
