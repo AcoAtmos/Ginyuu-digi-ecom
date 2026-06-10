@@ -71,3 +71,155 @@ exports.updateInvoiceToPaid = async (invoiceId) =>{
     });
 }
 
+exports.sendOrderSuccessEmail = async (invoiceId) => {
+    try {
+        const result = await db.execute(sql`
+            SELECT i.invoice_number, i.total, i.discount_amount, o.subtotal,
+                o.payment_method, u.email, u.username,
+                oi.product_name, oi.price
+            FROM invoices i
+            JOIN orders o ON o.id = i.order_id
+            JOIN users u ON u.id = o.user_id
+            JOIN LATERAL (
+                SELECT p.name AS product_name, oi2.price
+                FROM order_items oi2
+                JOIN product p ON p.id = oi2.product_id
+                WHERE oi2.order_id = o.id
+            ) oi ON TRUE
+            WHERE i.id = ${invoiceId}
+        `);
+
+        const rows = result.rows;
+        if (rows.length === 0) return;
+
+        const email = rows[0].email;
+        const username = rows[0].username;
+        const invoiceNumber = rows[0].invoice_number;
+        const subtotal = rows[0].subtotal;
+        const discount = rows[0].discount_amount;
+        const total = rows[0].total;
+        const paymentMethod = rows[0].payment_method;
+
+        const productListHtml = rows.map((r, i) => `
+            <tr>
+                <td style="padding:10px 0; border-bottom:${i < rows.length - 1 ? '1px solid #f0f0f0' : 'none'};">
+                    <span style="font-size:15px;color:#333;">${r.product_name}</span>
+                </td>
+                <td align="right" style="padding:10px 0; border-bottom:${i < rows.length - 1 ? '1px solid #f0f0f0' : 'none'};">
+                    <span style="font-size:15px;color:#333;">Rp ${Number(r.price).toLocaleString('id-ID')}</span>
+                </td>
+            </tr>
+        `).join('');
+
+        const messageEmail = `
+            <div style="background-color:#f6f6f6; padding:40px 20px; font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+                <div style="max-width:640px; margin:0 auto; background:#ffffff; border-radius:24px; overflow:hidden;">
+                    <div style="padding:40px 40px 0 40px; text-align:center;">
+                        <div style="font-family:'Syne',sans-serif; font-size:28px; font-weight:800; letter-spacing:-1px; margin-bottom:4px;">
+                            <span style="color:#111111;">GIN</span><span style="color:#999999;">YUU</span>
+                        </div>
+                        <div style="font-size:12px; color:#aaaaaa; letter-spacing:2px; margin-bottom:30px;">DIGITAL PRODUCTS</div>
+                        <div style="font-size:56px; margin-bottom:16px;">&#x2705;</div>
+                        <h1 style="margin:0 0 8px 0; font-size:24px; color:#111111; font-weight:700;">Payment Successful!</h1>
+                        <p style="margin:0 0 4px 0; font-size:14px; color:#888888;">Invoice #${invoiceNumber}</p>
+                    </div>
+
+                    <div style="padding:40px;">
+                        <p style="font-size:16px; line-height:1.8; color:#555555; margin:0 0 8px 0;">
+                            Hi <strong>${username}</strong>,
+                        </p>
+                        <p style="font-size:15px; line-height:1.8; color:#666666; margin-bottom:35px;">
+                            Thank you for your purchase at GINYUU. Your payment has been confirmed and your order is now complete. You can access your products anytime from your profile page.
+                        </p>
+
+                        <div style="border:1px solid #eeeeee; border-radius:18px; overflow:hidden; margin-bottom:28px;">
+                            <div style="padding:18px 24px; background:#fafafa; border-bottom:1px solid #eeeeee;">
+                                <h3 style="margin:0; font-size:13px; letter-spacing:1px; text-transform:uppercase; color:#999999;">Order Summary</h3>
+                            </div>
+                            <div style="padding:24px; font-size:15px; color:#444444;">
+                                <table style="width:100%; border-collapse:collapse;">
+                                    ${productListHtml}
+                                </table>
+                            </div>
+                        </div>
+
+                        <table style="width:100%; border-collapse:collapse; margin-bottom:30px; font-size:15px;">
+                            <tr>
+                                <td style="padding:6px 0; color:#777;">Subtotal</td>
+                                <td align="right">Rp ${Number(subtotal).toLocaleString('id-ID')}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:6px 0; color:#777;">Discount</td>
+                                <td align="right" style="color:#999;">- Rp ${Number(discount).toLocaleString('id-ID')}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="2">
+                                    <div style="border-top:1px dashed #dddddd; margin:16px 0;"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-top:10px; font-size:18px; font-weight:700; color:#111;">Total Paid</td>
+                                <td align="right" style="padding-top:10px; font-size:24px; font-weight:800; color:#111;">
+                                    Rp ${Number(total).toLocaleString('id-ID')}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-top:10px; color:#777;">Payment Method</td>
+                                <td align="right" style="padding-top:10px; color:#555; text-transform:uppercase;">${paymentMethod}</td>
+                            </tr>
+                        </table>
+
+                        <div style="text-align:center; margin-bottom:45px;">
+                            <a href="https://wa.me/6281333477041"
+                            style="background:#111111; color:#ffffff; text-decoration:none; padding:14px 32px; border-radius:12px; display:inline-block; font-size:14px; font-weight:700;">
+                                Contact Us
+                            </a>
+                        </div>
+
+                        <div style="border-top:1px solid #f0f0f0; padding-top:30px;">
+                            <table width="100%">
+                                <tr>
+                                    <td>
+                                        <strong style="display:block; font-size:15px; color:#111111; margin-bottom:4px;">
+                                            GINYUU Team
+                                        </strong>
+                                        <span style="font-size:13px; color:#999999;">
+                                            PT. Ginyuu Digital Product
+                                        </span>
+                                    </td>
+                                    <td align="right">
+                                        <div style="font-family:'Syne',sans-serif; font-size:18px; font-weight:800; letter-spacing:-1px;">
+                                            <span style="color:#111111;">GIN</span><span style="color:#999999;">YUU</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="margin-top:45px; text-align:center; border-top:1px solid #f0f0f0; padding-top:24px;">
+                            <p style="font-size:12px; color:#999999; margin-bottom:12px; letter-spacing:.5px;">
+                                HELP CENTER &bull; SUPPORT 24/7 &bull; ACCOUNT
+                            </p>
+                            <p style="font-size:11px; color:#aaaaaa; line-height:1.8; margin:0;">
+                                Copyright &copy; 2026 PT. Ginyuu Digital Product.<br>
+                                All Rights Reserved.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const { queue } = require("../../../db/schema");
+        await db.insert(queue).values({
+            destination: email,
+            tipe: "email",
+            pesan: messageEmail,
+            status: "pending"
+        });
+        console.log("success email queued for", email);
+    } catch (err) {
+        console.error("sendOrderSuccessEmail error:", err);
+    }
+};
+

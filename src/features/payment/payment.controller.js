@@ -2,7 +2,8 @@ const {
     getInvoiceByNumber,
     saveGatewayTransaction,
     getGatewayTransactionByInvoiceId,
-    updateInvoiceToPaid 
+    updateInvoiceToPaid,
+    sendOrderSuccessEmail
 } = require("./payment.service");
 
 const { createNotification } = require("../notification/notification.service");
@@ -26,6 +27,7 @@ exports.getInvoice = async (req, res) => {
 };
 
 exports.createQris = async (req, res) => {
+    let invoiceData;
     try{
         //7 get invoice 
         const {invoice_number} = req.body;
@@ -41,7 +43,7 @@ exports.createQris = async (req, res) => {
         
         
 
-        const invoiceData = invoice.data;
+        invoiceData = invoice.data;
 
         // check if theres a Qris transaction before create a new one 
         const existing = await getGatewayTransactionByInvoiceId(invoiceData.invoice_id);
@@ -201,6 +203,8 @@ exports.webhookHandler = async (req, res) =>{
                     action_url: `/checkout/waiting-payment?invoice=${transaction.invoice_number}`
                 });
             }
+
+            await sendOrderSuccessEmail(transaction.invoice_id);
         }
 
         return res.status(200).json({
