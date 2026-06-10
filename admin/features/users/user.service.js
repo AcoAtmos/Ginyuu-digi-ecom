@@ -76,7 +76,7 @@ exports.create = async ({ username, email, password, phone }) => {
 };
 
 exports.update = async (id, fields) => {
-    const allowed = ['username', 'email', 'phone', 'image_url', 'role'];
+    const allowed = ['username', 'email', 'phone', 'image_url', 'role', 'status'];
     const setItems = [];
 
     if (fields.phone !== undefined) {
@@ -98,7 +98,7 @@ exports.update = async (id, fields) => {
         return user || null;
     }
 
-    const [user] = (await db.execute(sql`UPDATE users SET ${sql.join(setItems, sql`, `)} WHERE id = ${id} RETURNING id, username, email, phone, image_url, role, created_at`)).rows;
+    const [user] = (await db.execute(sql`UPDATE users SET ${sql.join(setItems, sql`, `)} WHERE id = ${id} RETURNING id, username, email, phone, image_url, role, status, created_at`)).rows;
     return user || null;
 };
 
