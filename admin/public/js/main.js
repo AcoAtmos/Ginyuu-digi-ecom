@@ -121,6 +121,12 @@ function formatDate(d) {
 }
 function statusBadge(status) {
   const s = (status || '').toLowerCase();
-  const cls = s === 'pending' ? 'badge-pending' : s === 'paid' || s === 'completed' ? 'badge-paid' : 'badge-cancelled';
+  const cls = s === 'admin' ? 'badge-admin'
+    : s === 'member' ? 'badge-member'
+    : s === 'active' ? 'badge-active'
+    : s === 'inactive' ? 'badge-inactive'
+    : s === 'pending' ? 'badge-pending'
+    : s === 'paid' || s === 'completed' ? 'badge-paid'
+    : 'badge-cancelled';
   return `<span class="badge ${cls}"><span class="badge-dot"></span>${status}</span>`;
 }
