@@ -1,6 +1,7 @@
 const { db } = require("../../../db");
 const { users, product, orders, orderItems, invoices } = require("../../../db/schema");
 const { eq, desc, asc, sql } = require("drizzle-orm");
+const { normalizePhone, validatePhone } = require("../../shared/helpers/phone");
 
 exports.get_profile = async (req, res) => {
     try {
@@ -41,7 +42,12 @@ exports.update_my_profile = async (req, res) => {
         const userId = req.user.id;
         const { username, phone } = req.body;
 
-        const [row] = await db.update(users).set({ username, phone }).where(eq(users.id, userId)).returning({ id: users.id, username: users.username, email: users.email, phone: users.phone, imageUrl: users.imageUrl, role: users.role, createdAt: users.createdAt });
+        const normalized = normalizePhone(phone);
+        if (phone && !validatePhone(normalized)) {
+            return res.status(400).json({ success: false, message: "Invalid phone number (10-15 digits expected)" });
+        }
+
+        const [row] = await db.update(users).set({ username, phone: normalized }).where(eq(users.id, userId)).returning({ id: users.id, username: users.username, email: users.email, phone: users.phone, imageUrl: users.imageUrl, role: users.role, createdAt: users.createdAt });
 
         if (!row) {
             return res.status(404).json({ success: false, message: "User not found" });
