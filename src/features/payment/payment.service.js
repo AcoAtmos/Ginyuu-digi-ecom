@@ -75,7 +75,7 @@ exports.sendOrderSuccessEmail = async (invoiceId) => {
     try {
         const result = await db.execute(sql`
             SELECT i.invoice_number, i.total, i.discount_amount, o.subtotal,
-                o.payment_method, u.email, u.username,
+                o.payment_method, u.email, u.phone, u.username,
                 oi.product_name, oi.price
             FROM invoices i
             JOIN orders o ON o.id = i.order_id
@@ -99,6 +99,7 @@ exports.sendOrderSuccessEmail = async (invoiceId) => {
         const discount = rows[0].discount_amount;
         const total = rows[0].total;
         const paymentMethod = rows[0].payment_method;
+        const phone = rows[0].phone;
 
         const productListHtml = rows.map((r, i) => `
             <tr>
@@ -217,6 +218,31 @@ exports.sendOrderSuccessEmail = async (invoiceId) => {
             status: "pending"
         });
         console.log("success email queued for", email);
+
+        if (phone) {
+            const itemsList = rows.map(r => `• ${r.product_name} - Rp ${Number(r.price).toLocaleString('id-ID')}`).join('\n');
+            const waMessage = `Hi ${username},
+
+Pembayaran untuk invoice #${invoiceNumber} telah berhasil dikonfirmasi ✅
+
+Terima kasih telah berbelanja di GINYUU.
+
+Total dibayar: Rp ${Number(total).toLocaleString('id-ID')}
+
+${itemsList}
+
+Akses produk kamu di: ${process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 4100}`}/profile/purchases
+
+For inquiries, please contact us.`;
+
+            await db.insert(queue).values({
+                destination: phone,
+                tipe: "whatsapp",
+                pesan: waMessage,
+                status: "pending"
+            });
+            console.log("success whatsapp queued for", phone);
+        }
     } catch (err) {
         console.error("sendOrderSuccessEmail error:", err);
     }
