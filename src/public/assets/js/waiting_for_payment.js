@@ -426,4 +426,4 @@ function formatRp(n) {
   return 'Rp ' + (n || 0).toLocaleString('id-ID');
 }
 
-window.cancelOrder = cancelOrder;
+
