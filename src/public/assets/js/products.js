@@ -108,12 +108,12 @@ function openProductModal(id) {
   if (!p) return;
   currentProduct = p;
 
-  document.getElementById('modalEmoji').textContent = p.emoji;
+  document.getElementById('modalEmoji').textContent = p.emoji || '📦';
   document.getElementById('modalCategory').textContent = p.category.toUpperCase();
   document.getElementById('modalTitle').textContent = p.name;
-  document.getElementById('modalRating').innerHTML = `<span class="star">★★★★★</span> ${p.rating} · ${p.reviews} ulasan`;
+  document.getElementById('modalRating').innerHTML = `<span class="star">★★★★★</span> ${p.rating || ''}${p.reviews ? (' · ' + p.reviews + ' ulasan') : ''}`;
   document.getElementById('modalDesc').textContent = p.description;
-  document.getElementById('modalTags').innerHTML = p.tags.map(t => `<span class="tag">${t}</span>`).join('');
+  document.getElementById('modalTags').innerHTML = (p.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
   document.getElementById('modalPriceOld').textContent = p.oldPrice ? formatRp(p.oldPrice) : '';
   document.getElementById('modalPrice').textContent = formatRp(p.price);
 
