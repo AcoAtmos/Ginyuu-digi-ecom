@@ -2,7 +2,7 @@
 // CHECKOUT PAGE - Real API Integration
 // ════════════════════════════════════════════
 
-import { checkAuthStatus, showToast, logout } from '../../common/main/main.js';
+import { checkAuthStatus, showToast } from '../../common/main/main.js';
 import { Cart } from './cart.js';
 
 let cartItems = [];
