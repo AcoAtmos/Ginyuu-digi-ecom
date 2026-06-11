@@ -84,32 +84,6 @@ exports.createQris = async (req, res) => {
             expiredAt: result.data.expired_at
         });
 
-
-//       invoiceData : {
-    //   invoice_id: 65,
-    //   invoice_number: "INV-177865876574825-69",
-    //   discount_amount: 0,
-    //   total: 74000,
-    //   expires_at: 2026-05-16T07:52:45.748Z,
-    //   status_payment: "pending",
-    //   order_id: 69,
-    //   subtotal: 74000,
-    //   payment_method: "qris",
-    //   order_date: 2026-05-13T07:52:45.743Z,
-    //   username: "aco atmos",
-    //   email: "acoatmos@gmail.com",
-    //   phone: null,
-    //   items: [
-    //     {
-    //       product_name: "Python Basics for Non-Programmers",
-    //       product_slug: "python-basics-for-non-programmers",
-    //       price: 74000,
-    //     }
-    //   ],
-    //   product_name: "Python Basics for Non-Programmers",
-    //   amount: 1,
-    // }
-
         // make queue 
         const {checkout_add_queue}= require("../checkout/checkout.service")
         await checkout_add_queue(invoiceData, result.data.qris_url); 
