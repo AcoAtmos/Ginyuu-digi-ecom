@@ -327,6 +327,38 @@ async function loadPurchases() {
   }
 }
 
+// SECURITY
+
+async function changePassword() {
+  const cur = document.getElementById("curPassword")?.value.trim();
+  const baru = document.getElementById("newPassword")?.value;
+  const confirm = document.getElementById("confirmPassword")?.value;
+
+  if (!cur || !baru || !confirm) { showToast("⚠️ Semua field wajib diisi"); return; }
+  if (baru.length < 8) { showToast("⚠️ Password minimal 8 karakter"); return; }
+  if (baru !== confirm) { showToast("⚠️ Password baru tidak cocok"); return; }
+
+  try {
+    const res = await fetch("/api/profile/password", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword: cur, newPassword: baru, confirmPassword: confirm })
+    });
+    const json = await res.json();
+    if (json.success) {
+      showToast("✅ " + json.message);
+      document.getElementById("curPassword").value = "";
+      document.getElementById("newPassword").value = "";
+      document.getElementById("confirmPassword").value = "";
+    } else {
+      showToast("❌ " + json.message);
+    }
+  } catch (err) {
+    console.error(err);
+    showToast("⚠️ Terjadi kesalahan");
+  }
+}
+
 // LOAD CONTENT
 document.addEventListener("DOMContentLoaded", () => {
   const path = window.location.pathname.replace(/\/+$/, "");
@@ -355,6 +387,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.target === document.getElementById("confirmModal"))
         closeConfirmModal();
     });
+  }
+
+  if (path === "/profile/security") {
+    document.getElementById("btnUpdatePassword")?.addEventListener("click", changePassword);
   }
 
   if (path === "/profile/purchases") {
