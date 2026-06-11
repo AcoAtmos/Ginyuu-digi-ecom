@@ -1,4 +1,4 @@
-const { get_my_profile, update_my_profile, requestEmailChange, get_my_purchases, get_all_purchases } = require("./user.service");
+const { get_my_profile, update_my_profile, requestEmailChange, changePasswordService, get_my_purchases, get_all_purchases } = require("./user.service");
 
 exports.get_my_profile = async (req, res) => {
     await get_my_profile(req, res);
@@ -26,6 +26,29 @@ exports.requestEmailChange = async (req, res) => {
             return res.status(400).json({ success: false, message: err.message });
         }
         console.error("requestEmailChange error:", err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+exports.changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword, confirmPassword } = req.body;
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            return res.status(400).json({ success: false, message: "Semua field wajib diisi" });
+        }
+        if (newPassword.length < 8) {
+            return res.status(400).json({ success: false, message: "Password minimal 8 karakter" });
+        }
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ success: false, message: "Password baru tidak cocok" });
+        }
+        await changePasswordService(req.user.id, currentPassword, newPassword);
+        res.status(200).json({ success: true, message: "Password updated successfully" });
+    } catch (err) {
+        if (err.message === "Current password is incorrect") {
+            return res.status(400).json({ success: false, message: err.message });
+        }
+        console.error("changePassword error:", err);
         res.status(500).json({ success: false, message: err.message });
     }
 };
