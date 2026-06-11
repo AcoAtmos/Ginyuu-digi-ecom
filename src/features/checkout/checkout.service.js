@@ -463,7 +463,7 @@ exports.checkout_add_queue = async (invoiceData, payment_url) => {
         const [queueResult] = await db.insert(queue).values({
             orderId: invoiceData.order_id,
             destination: invoiceData.email,
-            tipe: "email",
+            tipe: "email_invoice",
             pesan: messageEmail,
             status: "pending",
             qrisUrl: payment_url || null
