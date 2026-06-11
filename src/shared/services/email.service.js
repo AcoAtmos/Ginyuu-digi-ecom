@@ -50,12 +50,20 @@ exports.send_queue_worker = async () => {
       }
 
       try {
-        if (row.tipe === 'email') {
+        if (row.tipe === 'email' || row.tipe === 'email_invoice') {
           const transporter = createTransporter();
           await transporter.sendMail({
             from: `"Ginyuu" <${process.env.EMAIL_SENDER}>`,
             to: row.destination,
             subject: "Invoice has been created",
+            html: row.pesan
+          });
+        } else if (row.tipe === 'email_payment') {
+          const transporter = createTransporter();
+          await transporter.sendMail({
+            from: `"Ginyuu" <${process.env.EMAIL_SENDER}>`,
+            to: row.destination,
+            subject: "Payment Successful",
             html: row.pesan
           });
         } else if (row.tipe === 'whatsapp') {
