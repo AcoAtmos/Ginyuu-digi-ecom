@@ -213,7 +213,7 @@ exports.sendOrderSuccessEmail = async (invoiceId) => {
         const { queue } = require("../../../db/schema");
         await db.insert(queue).values({
             destination: email,
-            tipe: "email",
+            tipe: "email_payment",
             pesan: messageEmail,
             status: "pending"
         });
@@ -223,17 +223,17 @@ exports.sendOrderSuccessEmail = async (invoiceId) => {
             const itemsList = rows.map(r => `• ${r.product_name} - Rp ${Number(r.price).toLocaleString('id-ID')}`).join('\n');
             const waMessage = `Hi ${username},
 
-                Payment for invoice #${invoiceNumber} has been successfully confirmed 
+Payment for invoice #${invoiceNumber} has been successfully confirmed 
 
-                Thank you for shopping at GINYUU.
+Thank you for shopping at GINYUU.
 
-                Total paid: Rp ${Number(total).toLocaleString('id-ID')}
+Total paid: Rp ${Number(total).toLocaleString('id-ID')}
 
-                ${itemsList}
+${itemsList}
 
-                Access your product at: ${process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 4100}`}/profile/purchases
+Access your product at: ${process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || 4100}`}/profile/purchases
 
-                For inquiries, please contact us.`;
+For inquiries, please contact us.`;
 
             await db.insert(queue).values({
                 destination: phone,
