@@ -3,6 +3,7 @@ const { users, product, orders, orderItems, invoices } = require("../../../db/sc
 const { eq, desc, asc, sql } = require("drizzle-orm");
 const { normalizePhone, validatePhone } = require("../../shared/helpers/phone");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
 
 exports.get_profile = async (req, res) => {
     try {
@@ -59,6 +60,17 @@ exports.update_my_profile = async (req, res) => {
         console.error("update_my_profile error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
+};
+
+exports.changePasswordService = async (userId, currentPassword, newPassword) => {
+    const [user] = await db.select({ password: users.password }).from(users).where(eq(users.id, userId));
+    if (!user) throw new Error("User not found");
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) throw new Error("Current password is incorrect");
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await db.update(users).set({ password: hashed }).where(eq(users.id, userId));
 };
 
 exports.requestEmailChange = async (userId, newEmail) => {
